@@ -40,7 +40,7 @@ def main():
     )
     
     
-    st.sidebar.info('Ultima Actualización: 09/11/2025')
+    st.sidebar.info('Ultima Actualización: 18/11/2025')
     
     if opcion_seleccionada != 'Seleccionar...':
         st.title(opcion_seleccionada)
