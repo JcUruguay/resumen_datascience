@@ -1,7 +1,14 @@
 import streamlit as st
 from PIL import Image
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 def main():
+    st.set_page_config(layout='wide')
+    
     # Crear sidebar con opciones
     #st.sidebar.header('Seleccionar Opcion:')
     
@@ -16,10 +23,10 @@ def main():
     st.sidebar.write('---')
     
     # Lista de opciones del sidebar
-    opciones_2 = ['Seleccionar...', 'Análisis Exploratorio de Datos (EDA)', 'Modelado de Datos (ML)']
+    opciones_2 = ['Seleccionar...', 'Modelado de Datos']
     
     opcion_seleccionada_2 = st.sidebar.selectbox(
-        '**Data Science - Machine Learning:**',
+        '**Machine Learning:**',
         opciones_2
     )
     
@@ -44,6 +51,14 @@ def main():
             numpy()
         elif opcion_seleccionada == 'Pandas':
             pandas()
+        elif opcion_seleccionada == 'Matplotlib':
+            matplotlib()
+            
+    if opcion_seleccionada_2 != 'Seleccionar...':
+        st.title(opcion_seleccionada_2)
+        
+        if opcion_seleccionada_2 == 'Modelado de Datos':
+            ml_modelado()        
             
     if opcion_seleccionada_3 != 'Seleccionar...':
         st.title(opcion_seleccionada_3)
@@ -51,6 +66,159 @@ def main():
         if opcion_seleccionada_3 == 'Git y GitHub':
             git()
         
+        
+        
+def ml_modelado():
+    opciones_mlmodleado = ['tips']
+    
+    col1, col2 = st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar Data Frame: ', opciones_mlmodleado)
+        st.success(f'##### **{opcion_seleccionada}** ')
+    
+
+    if opcion_seleccionada == 'tips':
+        st.write('##### Data Frame que muestra las Propinas de un Restaurante')
+        
+        #codigo
+        codigo = '''
+df = pd.read_csv('DataFrames/tips.csv')
+st.dataframe(df.head(10))'''
+        st.code(codigo)
+        
+
+        
+        # Carga de Datos
+        df = pd.read_csv('DataFrames/tips.csv')
+        
+        # Visualizacion de 10 primeros registros
+        st.write('##### Visualización de los primeros 10 registros')
+        st.dataframe(df.head(10))
+        
+        st.write('---')
+        
+        st.write('##### Pie Chart y Bar Chart con Matplotlib')
+        
+        #codigo
+        codigo = '''
+data_types = df.dtypes      # Obtiene los tipos de datos del dataframe (int, float, object)
+cat_cols = tuple(data_types[data_types == 'object'].index)      # Devuelve tupla con las columnas de tipo object
+feature = st.selectbox('Seleccionar categoría', cat_cols, width=400)    # Seleccion de la columna
+value = df[feature].value_counts()      # DataFrame con la cantidad por tipo
+
+st.write('Pie Chart')
+fig,ax = plt.subplots()
+ax.pie(value,labels=value.index,autopct='%0.2f%%')
+st.pyplot(fig)
+
+st.write('Bar Chart')
+fig,ax = plt.subplots()
+ax.bar(value.index,value)       
+st.pyplot(fig)
+
+st.dataframe(value)'''
+        st.code(codigo)        
+        
+        
+        # Crear contenedor para seleccion de categoria
+        with st.container(border=True):
+            
+            data_types = df.dtypes
+            cat_cols = tuple(data_types[data_types == 'object'].index)
+            
+            feature = st.selectbox('Seleccionar categoría', cat_cols, width=400)
+
+            value = df[feature].value_counts()
+            col_1, col_2 = st.columns(2)
+            
+            
+            with col_1:
+                st.write('Pie Chart')
+                # pie chart
+                fig,ax = plt.subplots()
+                ax.pie(value,
+                    labels=value.index,
+                    autopct='%0.2f%%')
+                
+                st.pyplot(fig)
+            
+            with col_2:
+                # bar char
+                st.write('Bar Chart')
+                fig,ax = plt.subplots()
+                ax.bar(value.index,value)
+                
+                st.pyplot(fig)
+                 
+            with st.expander(f'Cantidad por {feature}', width=400):
+                    st.dataframe(value)        
+        
+        
+        st.write('---')
+        
+        st.write('##### Graficos Box, Violin, Kdeplot y Hisplot con Seaborn')
+        
+        #codigo
+        codigo = '''
+grafico = st.selectbox('Seleccionar tipo de gráfico', ('Box','Violin','Kdeplot','Histogram'), width=300)
+fig,ax = plt.subplots()
+if grafico == 'Box':
+    sns.boxplot(x='sex',y='total_bill', hue='sex', data=df)
+elif grafico == 'Violin':
+    sns.violinplot(x='sex', y='total_bill', hue='sex', data=df)
+elif grafico == 'Kdeplot':
+    sns.kdeplot(data=df, x='total_bill', hue='sex', fill=True)
+elif grafico == 'Histogram':
+    sns.histplot(x='total_bill', hue='sex',data=df)
+    
+st.pyplot(fig)'''
+        st.code(codigo)            
+        
+        
+        with st.container(border=True, width=1200):
+            st.write('Distribución de Total Gastado por sexo')            
+    
+            # box, violin, kdeplot, histogram
+            grafico = st.selectbox('Seleccionar tipo de gráfico', ('Box','Violin','Kdeplot','Histogram'), width=300)
+            
+            fig,ax = plt.subplots()
+            if grafico == 'Box':
+                sns.boxplot(x='sex',y='total_bill', hue='sex', data=df)
+            elif grafico == 'Violin':
+                sns.violinplot(x='sex', y='total_bill', hue='sex', data=df)
+            elif grafico == 'Kdeplot':
+                sns.kdeplot(data=df, x='total_bill', hue='sex', fill=True)
+            elif grafico == 'Histogram':
+                sns.histplot(x='total_bill', hue='sex',data=df)
+            
+            st.pyplot(fig)
+                
+                
+        st.write('---')
+        
+        st.write('##### Grafico Scatterplot con Seaborn')
+        
+        #codigo
+        codigo = '''
+fig,ax = plt.subplots() 
+hue_type = st.selectbox('Seleccionar categoría', cat_cols, width=300)
+sns.scatterplot(x='total_bill',y='tip',hue=hue_type,data=df)   
+ 
+st.pyplot(fig)
+'''
+        st.code(codigo)                  
+                
+                
+        with st.container(border=True, width=1200):
+            st.write('Grafico Scatter Total Gastado vs Propina')
+            
+            fig,ax = plt.subplots()
+            hue_type = st.selectbox('Seleccionar categoría', cat_cols, width=300)
+            
+            sns.scatterplot(x='total_bill',y='tip',hue=hue_type,data=df)
+            st.pyplot(fig)
+
         
 def python():
 
@@ -536,6 +704,17 @@ def pandas():
         st.write('##### DataSet')
         st.markdown('''Un DataSet son los datos que estan organizados de cierta manera en un archivo txt, csv, xlsx, etc.
     ''')
+        
+        st.markdown('''
+        Parámetros del read_csv 
+        - sep: el caracter utilizado para separar los valores (delimitador). El predeterminado es la coma ','.
+        - header: la fila que se usará como encabezado, header=0 (primera fila) o header=None.
+        - names: una lista de nombres de columna para usar en caso de que el archivo no tenga encabezado.
+        - index_col: especifica la columna a usar como índice del DataFrame.
+        - na_values: se utiliza para especificar que valores deben interpretarse como valores faltantes (NaN) al cargarlo en un DataFrame. 
+        Se pueden pasar una lista de cadenas (n/a, ---, ?, etc.) ademas de los valores predeterminados como '', 'NULL', 'NA', etc.
+        ''')
+        
         imagen = Image.open('Imagenes/pandas_11.png')
         st.image(imagen, width=1478) 
         imagen = Image.open('Imagenes/pandas_12.png')
@@ -636,6 +815,10 @@ def pandas():
         st.image(imagen, width=1478) 
         
         
+        st.write('#### Obtener tupla con las columnas de un tipo determinado')
+        imagen = Image.open('Imagenes/pandas_55.png')
+        st.image(imagen, width=1479)        
+        
         st.write('---')
                   
 
@@ -725,6 +908,253 @@ def pandas():
         st.image(imagen, width=1482)
 
 
+def matplotlib():
+
+    opciones_plt = ['plot','scatter','hist','bar','boxplot','pie']
+    
+    # Carga de Datos
+    df = pd.read_csv('DataFrames/tips.csv')
+    
+    col1, col2 = st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_plt)
+        st.success(f'##### **{opcion_seleccionada}** ')
+    
+    if opcion_seleccionada == 'plot':
+        st.write('Función que genera gráficos de línea')
+        
+        codigo = '''import matplotlib.pyplot as plt
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()'''
+        st.code(codigo)
+        st.dataframe(df.head())
+
+
+        codigo = '''x = np.linspace(0,5,11)     
+y = x**2
+z = x**3'''     
+        st.code(codigo)
+        
+        
+        x = np.linspace(0,5,11)
+        y = x**2
+        z = x**3
+        
+        st.write('##### Parámetros')
+        st.markdown('''
+        * figsize -> (ancho, alto)          
+        * label -> determina el nombre de la etiqueta     
+        * color -> color del grafico (nombre o codigo hexadecimal)    
+        * linewidth o lw -> ancho de la linea
+        * linestyle o ls -> tipo de linea (--)(-.)(:)(steps)
+        * marker -> puntos de interseccion de x e y (o)(+)(*)(s)
+        * markersize -> tamaño del marker
+        * markerfacecolor -> color interior marker
+        * markeredgewith -> tamano del borde del maker
+        * markeredgecolor -> color del borde del maker
+        * legend -> muestra leyenda con las etiquetas)
+        * loc -> determina el lugar de legenda (0: best)
+        * title -> titulo del grafico
+        * xlabel -> etiqueta eje x
+        * ylabel -> etiqueta eje y''')
+        
+        codigo = '''fig,ax = plt.subplots(figsize=(6,6))
+ax.plot(x,y,label='X Square', color='blue', linewidth=3, linestyle='--')
+ax.plot(x,z,label='X Cubed', color='#ff8c00', linewidth=.8, marker='s', markersize=7, markerfacecolor='yellow', markeredgewidth=1, markeredgecolor='green')
+ax.legend(loc=0)
+
+plt.title('Grafico de lineas')
+plt.xlabel("Eje X")
+plt.ylabel("Eje Y")
+
+st.pyplot(fig)'''
+        st.code(codigo)
+        
+        
+        # plot
+        with st.container(width=800):
+            fig,ax = plt.subplots(figsize=(6,6))
+            
+            ax.plot(x,y,label='X Square', color='blue', linewidth=3, linestyle='--')  
+            ax.plot(x,z,label='X Cubed', color='#ff8c00', linewidth=.8, marker='s', markersize=7, markerfacecolor='yellow', markeredgewidth=1, markeredgecolor='green')
+            ax.legend(loc=0)
+            
+            plt.title('Grafico de lineas')
+            plt.xlabel("Eje X")
+            plt.ylabel("Eje Y")
+            
+            st.pyplot(fig)   
+
+
+    if opcion_seleccionada == 'scatter':
+        st.write('Función que se usa para crear diagramas de dispersión, que son gráficos que muestran la relación entre dos variables numéricas utilizando puntos en un plano cartesiano')
+        
+        codigo = '''import matplotlib.pyplot as plt
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()'''
+        st.code(codigo)
+        st.dataframe(df.head())
+
+        st.write('##### Parámetros')
+        st.markdown('''
+        * set_title -> Titulo del grafico          
+        * st_xlabel -> Label eje x
+        * st_ylabel -> Label eje y
+        ''')
+
+        codigo = '''fig,ax = plt.subplots()   
+ax.scatter(x=df['total_bill'], y=df['tip'], color='#ff8c00')
+ax.set_title('Diagrama de Dispersión (Total de la Cuenta vs Propina)')
+ax.set_xlabel('Total de la cuenta')
+ax.set_ylabel('Propina')
+
+st.pyplot(fig)'''     
+        st.code(codigo)
+
+        # scatter
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+
+            ax.scatter(x=df['total_bill'], y=df['tip'], color='#ff8c00')
+            ax.set_title('Diagrama de Dispersión (Total de la Cuenta vs Propina)')
+            ax.set_xlabel('Total de la cuenta')
+            ax.set_ylabel('Propina')
+            st.pyplot(fig)
+            
+    if opcion_seleccionada == 'hist':
+        st.write('Función para crear histogramas y visualizar la distribución de datos numéricos, agrupándolos en intervalos (bins) y mostrando la frecuencia de los valores en cada uno.')
+        
+        codigo = '''import matplotlib.pyplot as plt
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()'''
+        st.code(codigo)
+        st.dataframe(df.head())
+
+        st.write('##### Parámetros')
+        st.markdown('''
+        * bins -> define el nro de columnas que se muestran en el grafico         
+        * edgecolor -> estable el color de los bordes de las barras.  
+        * color -> define el color de la barra   
+        * alpha -> determina la opacidad''')
+
+
+        codigo = '''fig,ax = plt.subplots()   
+ax.hist(x=df['total_bill'], bins=15, edgecolor='#000000', color='#8b92cc', alpha=.8)
+ax.set_title('Histograma (Distribución del Total de la Cuenta)')
+ax.set_xlabel('Total de la Cuenta')
+ax.set_ylabel('Frecuencia')
+
+st.pyplot(fig)'''     
+        st.code(codigo)
+
+        # hist
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+
+            ax.hist(x=df['total_bill'], bins=15, edgecolor='#000000', color='#8b92cc', alpha=.8)
+            ax.set_title('Histograma (Distribución del Total de la Cuenta)')
+            ax.set_xlabel('Total de la Cuenta')
+            ax.set_ylabel('Frecuencia')
+            st.pyplot(fig)
+            
+    if opcion_seleccionada == 'bar':
+        st.write('Función para crear gráficos de barra.')
+        
+        codigo = '''import matplotlib.pyplot as plt
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()'''
+        st.code(codigo)
+        st.dataframe(df.head())        
+            
+            
+        codigo = '''fig,ax = plt.subplots()   
+ax.bar(df['day'],df['total_bill'])
+ax.set_title('Total de la Cuenta por día')
+ax.set_xlabel('Día')
+ax.set_ylabel('Total de la Cuenta')
+
+st.pyplot(fig)'''     
+        st.code(codigo)
+
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+
+            ax.bar(df['day'],df['total_bill'])
+            ax.set_title('Total de la Cuenta por día')
+            ax.set_xlabel('Día')
+            ax.set_ylabel('Total de la Cuenta')
+            st.pyplot(fig)            
+            
+            
+ 
+    if opcion_seleccionada == 'boxplot':
+        st.write('Función para crear diagramas de caja.')
+        
+        codigo = '''import matplotlib.pyplot as plt
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()'''
+        st.code(codigo)
+        st.dataframe(df.head())              
+            
+ 
+ 
+        codigo = '''fig,ax = plt.subplots()   
+ax.boxplot(df['total_bill'])
+ax.set_title('Total de la Cuenta por día')
+ax.set_ylabel('Total de la Cuenta')
+
+st.pyplot(fig)'''     
+        st.code(codigo)
+
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+
+            ax.boxplot(df['total_bill'])
+            ax.set_title('Total de la Cuenta por día')
+            ax.set_ylabel('Total de la Cuenta')
+            st.pyplot(fig)     
+
+ 
+    if opcion_seleccionada == 'pie':
+        st.write('Función para crear gráficos circulares.')
+        
+        codigo = '''import matplotlib.pyplot as plt
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()'''
+        st.code(codigo)
+        st.dataframe(df.head())  
+ 
+        st.write('##### Parámetros')
+        st.markdown('''
+        * autopct -> de que forma se ve el valor del %          
+        * colors -> colores''') 
+ 
+ 
+        codigo = '''colores = ['#87ceeb', '#6095']
+value = df['sex'].value_counts()       
+
+fig,ax = plt.subplots()   
+ax.pie(value,labels=value.index,autopct='%0.2f%%')
+ax.set_title('Total de registros por sexo')
+
+st.pyplot(fig)'''     
+        st.code(codigo)
+
+        
+        with st.container(width=800):
+            colores = ['#87ceeb', '#6095ed']
+            fig,ax = plt.subplots()
+            value = df['sex'].value_counts()
+            
+            ax.pie(value,labels=value.index,autopct='%0.2f%%', colors=colores)
+            ax.set_title('Total de registros por sexo')
+            st.pyplot(fig)     
+ 
+ 
+            
 def git():
 
     opciones_git = ['Git', 'GitHub']
@@ -735,7 +1165,7 @@ def git():
         opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_git)
         st.success(f'##### **{opcion_seleccionada}** ')
     
-    # ------------------------------------------- PRINT() -------------------------------------------------------
+
     if opcion_seleccionada == 'Git':
         st.markdown('''**Definción:** es un sistema de Control de Versiones.    
 GIT permite compartir el codigo con otras personas. Existe un concepto que se llama Deployment, la idea es que cuando el proyecto este finalizado y se quiera llevar a produccion, se pueda hacer el deploy en la nube.    
