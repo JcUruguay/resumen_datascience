@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import plotly.express as px
+import io
 
 def main():
     st.set_page_config(layout='wide')
@@ -13,7 +14,7 @@ def main():
     #st.sidebar.header('Seleccionar Opcion:')
     
     # Lista de opciones del sidebar
-    opciones = ['Seleccionar...', 'Python','Numpy','Pandas','Matplotlib','Seaborn','Plotly']
+    opciones = ['Seleccionar...', 'Python','Numpy','Pandas','Matplotlib','Seaborn','Plotly','Bokeh']
     
     opcion_seleccionada = st.sidebar.selectbox(
         '**Bibliotecas:**',
@@ -23,7 +24,7 @@ def main():
     st.sidebar.write('---')
     
     # Lista de opciones del sidebar
-    opciones_2 = ['Seleccionar...', 'Modelado de Datos']
+    opciones_2 = ['Seleccionar...', 'Modelado de Datos','Regresión Lineal']
     
     opcion_seleccionada_2 = st.sidebar.selectbox(
         '**Machine Learning:**',
@@ -59,6 +60,9 @@ def main():
         
         if opcion_seleccionada_2 == 'Modelado de Datos':
             ml_modelado()        
+        elif opcion_seleccionada_2 == 'Regresión Lineal': 
+            ml_regresion_lineal()
+          
             
     if opcion_seleccionada_3 != 'Seleccionar...':
         st.title(opcion_seleccionada_3)
@@ -219,7 +223,176 @@ st.pyplot(fig)
             sns.scatterplot(x='total_bill',y='tip',hue=hue_type,data=df)
             st.pyplot(fig)
 
+
+        st.write('---')
         
+        st.write('##### Gráfico Histograma con Plotly ')
+        
+        
+        #codigo
+        codigo = '''
+fig,ax = plt.subplots() 
+hue_type = st.selectbox('Seleccionar categoría', cat_cols, width=300)
+sns.scatterplot(x='total_bill',y='tip',hue=hue_type,data=df)   
+ 
+st.pyplot(fig)
+'''
+        st.code(codigo)                  
+                        
+        
+        
+        with st.container(border=True, width=1200):
+            st.write('Grafico Histograma Total Gastado')
+            
+            # histogram (total bill)
+            fig = px.histogram(df, x='total_bill', width=800)
+            st.plotly_chart(fig)
+
+            # histogram (total bill y color por sexo)
+            fig = px.histogram(df, x='total_bill', color='sex', width=800)
+            st.plotly_chart(fig)  
+
+
+
+
+def ml_regresion_lineal():
+    
+    buffer = io.StringIO()
+    
+    st.write('#### Definición')
+    st.markdown('''
+La regresión lineal es un método estadístico que trata de modelar la relación entre una variable continua y una o más variables independientes mediante el ajuste de una ecuación lineal.   
+Se llama regresión lineal simple cuando solo hay una variable independiente y regresión lineal múltiple cuando hay más de una.  
+Dependiendo del contexto, a la variable modelada se le conoce como variable dependiente o variable respuesta, y a las variables independientes como regresores, predictores o features.''')
+    st.write('---')
+    
+    
+    opciones_mlreglin = ['USA Housing']
+    
+    col1, col2 = st.columns([2,2])
+    
+    
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlreglin)
+        st.success(f'##### **{opcion_seleccionada}** ')
+    
+        @st.cache_data
+        def load_data():
+            # Carga del dataframe
+            df = pd.read_csv('DataFrames/USA_housing.csv')
+
+            return df
+    
+    # Precios de casa en Estados Unidos
+    if opcion_seleccionada == 'USA Housing':
+        st.write('##### Data Frame con los precios de casas en Estados Unidos')
+        
+        codigo = '''df = pd.read_csv('DataFrames/USA_housing.csv')
+st.dataframe(df.head(10))       # head'''
+        st.code(codigo)
+        
+        df = load_data()    
+        st.dataframe(df.head(10))       # head
+        st.write('##### info')
+        codigo = '''df = pd.read_csv('DataFrames/USA_housing.csv')
+st.dataframe(df.info())       # info'''
+        st.code(codigo)        
+        
+        df.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')
+
+        st.write('##### Histograma Precio')
+        codigo = '''fig, ax = plt.subplots()
+st.dataframe(df.info())       
+ax.hist(x=df['Price'], bins=40, edgecolor='#000000')
+ax.set_title('Histograma Precio Propiedades')
+ax.set_xlabel('Precio')
+ax.set_ylabel('Frecuencia')
+st.pyplot(fig)'''        
+        st.code(codigo)
+        
+        with st.container(width=800):
+            fig, ax = plt.subplots()
+            ax.hist(x=df['Price'], bins=40, edgecolor='#000000')
+            ax.set_title('Histograma Precio Propiedades')
+            ax.set_xlabel('Precio')
+            ax.set_ylabel('Frecuencia')
+            st.pyplot(fig)     
+                
+        st.write('##### Matriz de Correlación')
+
+        codigo = '''df_numericas = df.select_dtypes(include=['float64'])
+matrix_correlacion = df_numericas.corr()     
+st.write(matrix_correlacion)'''
+        st.code(codigo)
+
+        df_numericas = df.select_dtypes(include=['float64'])
+        matrix_correlacion = df_numericas.corr()
+        st.write(matrix_correlacion)
+
+        codigo = '''fig, ax = plt.subplots()
+sns.heatmap(matrix_correlacion, annot=True, cmap='coolwarm', fmt='.2f', linewidths=.3)
+ax.set_title('Heatmap')
+st.pyplot(fig)'''   
+        st.code(codigo)
+
+        with st.container(width=800):
+            fig, ax = plt.subplots()
+            sns.heatmap(matrix_correlacion, annot=True, cmap='coolwarm', fmt='.2f', linewidths=.3)
+            ax.set_title('Heatmap')
+            st.pyplot(fig)
+        
+        
+        st.write('---')
+        st.write('##### Separacion de los datos del modelo')
+        
+        codigo = '''X = df[['Avg. Area Income', 'Avg. Area House Age', 'Avg. Area Number of Rooms','Avg. Area Number of Bedrooms', 'Area Population']]  # Datos Independientes
+y = df['Price']     # Dato a predecir'''
+        st.code(codigo)
+        
+        X = df[['Avg. Area Income', 'Avg. Area House Age', 'Avg. Area Number of Rooms','Avg. Area Number of Bedrooms', 'Area Population']]  # Datos Indendientes
+        y = df['Price']     # Dato a predecir
+        
+        st.write('##### Entrenamiento del Modelo')
+        st.markdown('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.     
+Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test.     
+El parámetro random_state permite conseguir cierta repetición de los resultados.
+* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)
+                    
+''')
+        codigo = '''from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
+
+lm = LinearRegression()     # instancia del objeto LinearRegression
+lm.fit(X_train, y_train)    # entrenamiento del modelo
+lm.intercept_               # punto de intreseccion con el eje y (x=0)
+lm.coef_                    # coeficiente para cada caracteristica.
+'''
+        st.code(codigo)
+        
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LinearRegression
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
+        
+        lm = LinearRegression()     # instancia del objeto LinearRegression
+        lm.fit(X_train, y_train)    # entranemiento del modelo
+        
+        st.write('**intercept_**')
+        codigo = 'st.text(lm.intercept_)'
+        st.code(codigo)
+        
+        st.text(lm.intercept_)   # punto de intercepcion con el eje y (x=0)
+        
+        st.write('**coef_**')
+        codigo = 'st.dataframe(pd.DataFrame(lm.coef_, index=X.columns), columns=[\'Coeficiente\'], width=400) # DataFrame con los coeficientes para cada caracteristica'     
+        st.code(codigo)
+        
+        cdf = st.dataframe(pd.DataFrame(lm.coef_, index=X.columns, columns=['Coeficiente']), width=400)        # coeficiente para cada caracteristica   
+
+        st.markdown('''Para un incremento de 1 metro cuadrado en Area Income, significa un aumento de U$S 21.57 en el precio e la casa.''')
+
 def python():
 
     opciones_py = ['print','input','type','Conversión de Tipo','Operadores', 'Métodos de Cadenas (strings)','round',
@@ -1181,10 +1354,6 @@ en un conjunto de archivos a lo largo del tiempo de modo que se pueda recuperar 
                     
                     
 ''')
-
-
-
-
 
 
 if __name__ == '__main__':
