@@ -5,7 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
+from sklearn import metrics
 import io
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
 
 def main():
     st.set_page_config(layout='wide')
@@ -24,7 +27,7 @@ def main():
     st.sidebar.write('---')
     
     # Lista de opciones del sidebar
-    opciones_2 = ['Seleccionar...', 'Modelado de Datos','Regresión Lineal']
+    opciones_2 = ['Seleccionar...', 'Modelado de Datos','Regresión Lineal','Regresión Logística']
     
     opcion_seleccionada_2 = st.sidebar.selectbox(
         '**Machine Learning:**',
@@ -54,6 +57,8 @@ def main():
             pandas()
         elif opcion_seleccionada == 'Matplotlib':
             matplotlib()
+        elif opcion_seleccionada == 'Seaborn':
+            seaborn()
             
     if opcion_seleccionada_2 != 'Seleccionar...':
         st.title(opcion_seleccionada_2)
@@ -62,6 +67,8 @@ def main():
             ml_modelado()        
         elif opcion_seleccionada_2 == 'Regresión Lineal': 
             ml_regresion_lineal()
+        elif opcion_seleccionada_2 == 'Regresión Logística':
+            ml_regresion_logistica()
           
             
     if opcion_seleccionada_3 != 'Seleccionar...':
@@ -254,24 +261,36 @@ st.pyplot(fig)
 
 
 
+def ml_regresion_logistica():
+    st.write('#### Definición')
+    st.write('''La regresión logística es un método estadístico para predecir la probabilidad de un resultado categórico, como \'si\' o \'no\'.     
+Utiliza una función logística (curva sigmoidea) para modelar la relación entre las variables independientes y una variable dependiente binaria (que solo tiene dos resultados).
+Este modelo es útil en campos como la medicina para predecir la probabilidad de enfermedades o en la economía para predecir resultados de acciones.''')
+    st.write('---')
+    
+    opciones_mlreglog = ['Opcion']
+
+    col1, col2= st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlreglog)
+        
+    if opcion_seleccionada == 'Opcion':
+        st.write('##### Data Frame')                                        
 
 def ml_regresion_lineal():
     
     buffer = io.StringIO()
     
     st.write('#### Definición')
-    st.markdown('''
+    st.write('''
 La regresión lineal es un método estadístico que trata de modelar la relación entre una variable continua y una o más variables independientes mediante el ajuste de una ecuación lineal.   
 Se llama regresión lineal simple cuando solo hay una variable independiente y regresión lineal múltiple cuando hay más de una.  
 Dependiendo del contexto, a la variable modelada se le conoce como variable dependiente o variable respuesta, y a las variables independientes como regresores, predictores o features.''')
     st.write('---')
     
-    
-    opciones_mlreglin = ['USA Housing']
-    
+    opciones_mlreglin = ['USA Housing', 'Ecommerce Customers']
     col1, col2 = st.columns([2,2])
-    
-    
     
     with col1:
         opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlreglin)
@@ -281,21 +300,22 @@ Dependiendo del contexto, a la variable modelada se le conoce como variable depe
         def load_data():
             # Carga del dataframe
             df = pd.read_csv('DataFrames/USA_housing.csv')
-
+            
             return df
     
     # Precios de casa en Estados Unidos
     if opcion_seleccionada == 'USA Housing':
         st.write('##### Data Frame con los precios de casas en Estados Unidos')
         
-        codigo = '''df = pd.read_csv('DataFrames/USA_housing.csv')
+        codigo = '''# Carga de csv con los datos
+df = pd.read_csv('DataFrames/USA_housing.csv')
 st.dataframe(df.head(10))       # head'''
         st.code(codigo)
         
         df = load_data()    
         st.dataframe(df.head(10))       # head
-        st.write('##### info')
-        codigo = '''df = pd.read_csv('DataFrames/USA_housing.csv')
+        codigo = '''# info
+df = pd.read_csv('DataFrames/USA_housing.csv')
 st.dataframe(df.info())       # info'''
         st.code(codigo)        
         
@@ -303,8 +323,7 @@ st.dataframe(df.info())       # info'''
         st.code(buffer.getvalue(), language='html')
 
         st.write('##### Histograma Precio')
-        codigo = '''fig, ax = plt.subplots()
-st.dataframe(df.info())       
+        codigo = '''fig, ax = plt.subplots()    
 ax.hist(x=df['Price'], bins=40, edgecolor='#000000')
 ax.set_title('Histograma Precio Propiedades')
 ax.set_xlabel('Precio')
@@ -343,7 +362,6 @@ st.pyplot(fig)'''
             ax.set_title('Heatmap')
             st.pyplot(fig)
         
-        
         st.write('---')
         st.write('##### Separacion de los datos del modelo')
         
@@ -353,13 +371,12 @@ y = df['Price']     # Dato a predecir'''
         
         X = df[['Avg. Area Income', 'Avg. Area House Age', 'Avg. Area Number of Rooms','Avg. Area Number of Bedrooms', 'Area Population']]  # Datos Indendientes
         y = df['Price']     # Dato a predecir
-        
+        st.write('---')
         st.write('##### Entrenamiento del Modelo')
-        st.markdown('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.     
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.     
 Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test.     
 El parámetro random_state permite conseguir cierta repetición de los resultados.
-* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)
-                    
+* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)             
 ''')
         codigo = '''from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
@@ -370,9 +387,6 @@ lm.intercept_               # punto de intreseccion con el eje y (x=0)
 lm.coef_                    # coeficiente para cada caracteristica.
 '''
         st.code(codigo)
-        
-        from sklearn.model_selection import train_test_split
-        from sklearn.linear_model import LinearRegression
         
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
         
@@ -391,8 +405,257 @@ lm.coef_                    # coeficiente para cada caracteristica.
         
         cdf = st.dataframe(pd.DataFrame(lm.coef_, index=X.columns, columns=['Coeficiente']), width=400)        # coeficiente para cada caracteristica   
 
-        st.markdown('''Para un incremento de 1 metro cuadrado en Area Income, significa un aumento de U$S 21.57 en el precio e la casa.''')
+        st.write('''Para un incremento de 1 metro cuadrado en Area Income, significa un aumento de U$S 21.57 en el precio e la casa.''')
 
+
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('''* **predict**: función que se utiliza para obtener predicciones de un modelo entrenado.      
+Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.''')
+
+        codigo = '''predictions = lm.predict(X_test)'''
+        st.code(codigo)
+        
+        predictions = lm.predict(X_test)
+        st.write('Valores predichos de las casas: ')
+        st.text(predictions)
+        
+        codigo = '''fig, ax = plt.subplots()
+ax.scatter(x=y_test, y=predictions)
+ax.set_xlabel('y_test')
+ax.set_ylabel('Predicciones')
+            
+st.pyplot(fig)'''
+        st.code(codigo)      
+        
+        
+        with st.container(width=800):
+            st.write('##### Scatter de y_test vs predicciones')
+            fig, ax = plt.subplots()
+            ax.scatter(x=y_test, y=predictions)
+            ax.set_xlabel('y_test')
+            ax.set_ylabel('Predicciones')
+            
+            st.pyplot(fig)
+            
+        st.write('---')
+        st.write('##### Métricas de Evaluación')
+        st.write('''**MAE**: Error absoluto medio - es una medida de la diferencia entre dos valores, permite saber que tan diferente es el vaor predicho y el valor real u observado.     
+**MSE**: Error medio cuadratico - esta métrica es útil para saber que tan cerca es la línea de ajuste de la regresión a las observaciones. Entre más cercano a 0 es mejor.  
+**RMSE**: Raíz del error medio cuadrado - es la raíz cuadrada del MSE.
+''')    
+        codigo = '''from sklearn import metrics
+st.write(f'MAE: {metrics.mean_absolute_error(y_test, predictions)}')
+st.write(f'MSE: {metrics.mean_squared_error(y_test, predictions)}')
+st.write(f'RMSE: {np.sqrt(metrics.mean_squared_error(y_test, predictions))}') '''
+        st.code(codigo)
+                  
+        st.write(f'MAE: {metrics.mean_absolute_error(y_test, predictions)}')
+        st.write(f'MSE: {metrics.mean_squared_error(y_test, predictions)}')
+        st.write(f'RMSE: {np.sqrt(metrics.mean_squared_error(y_test, predictions))}')            
+    
+    
+    
+    # Ecommerce Customers
+    if opcion_seleccionada == 'Ecommerce Customers':
+        st.write('##### Data Frame con los datos de compras Ecommerce de clientes.')
+        
+        st.code('''# Carga de csv con los datos
+df = pd.read_csv('DataFrames/Ecommerce Customers')
+st.dataframe(df.head(10))       # head''')
+        
+        df = pd.read_csv('DataFrames/Ecommerce Customers')
+        st.dataframe(df.head(10))       # head
+        
+        st.code('''# info
+df = pd.read_csv('DataFrames/Ecommerce Customers')
+st.dataframe(df.info())''')     
+        
+        df.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')
+    
+        st.write('---')
+        st.write('#### EDA')
+        
+        st.code('''# Seleccion de variables numericas
+df_numericas = df.select_dtypes(include=['float64'])
+st.dataframe(df_numericas.head())''')
+        
+        # Seleccion de variablees numericas
+        df_numericas = df.select_dtypes(include=['float64'])
+        st.dataframe(df_numericas.head())
+    
+        st.write('###### Visualización')
+    
+        st.code('''sns.set_style('whitegrid')
+graf = sns.jointplot(data=df_numericas, x='Time on Website', y='Yearly Amount Spent')
+st.pyplot(graf.figure)                         
+''')  
+ 
+        st.code('''sns.set_style('whitegrid')
+graf = sns.jointplot(data=df_numericas, x='Time on App', y='Yearly Amount Spent')
+st.pyplot(graf.figure)                         
+''')   
+  
+        col_1, col_2 = st.columns(2)
+            
+        with col_1:
+            with st.container(border=True):
+
+                st.write('##### Time on Website vs Yearly Amount Spent')
+                sns.set_style('whitegrid')
+                graf = sns.jointplot(data=df_numericas, x='Time on Website', y='Yearly Amount Spent')
+                st.pyplot(graf.figure) 
+
+        with col_2:
+            with st.container(border=True):
+                st.write('##### Time on App vs Yearly Amount Spent')
+                sns.set_style('whitegrid')
+                graf = sns.jointplot(data=df_numericas, x='Time on App', y='Yearly Amount Spent')
+                st.pyplot(graf.figure)         
+            
+        st.code('''sns.set_style('whitegrid')
+graf = sns.jointplot(data=df_numericas, x='Time on App', y='Yearly Amount Spent',kind='hex')
+st.pyplot(graf.figure)                   
+''')    
+        st.code('''sns.set_style('whitegrid')
+graf = sns.lmplot(data=df_numericas, x='Yearly Amount Spent', y='Length of Membership')                 
+st.pyplot(graf.figure) ''')    
+            
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            with st.container(border=True):
+                st.write('##### Time on app vs Lenght of Membership (2d hex)')
+                sns.set_style('whitegrid')
+                graf = sns.jointplot(data=df_numericas, x='Time on App', y='Length of Membership',kind='hex')
+                st.pyplot(graf.figure)              
+         
+        with col_2:
+             with st.container(border=True):
+                st.write('##### Yearly Amount Spent vs Length of Membership')
+                sns.set_style('whitegrid')
+                graf = sns.lmplot(data=df_numericas, x='Yearly Amount Spent', y='Length of Membership') 
+                st.pyplot(graf.figure) 
+         
+        st.write('---') 
+        st.write('#### Separación de los datos del modelo') 
+
+        st.write('''**train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.  
+Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test.     
+El parámetro random_state permite conseguir cierta repetición de los resultados.   
+El parámetro shuffle realiza un reordenamiento aleatorio de los datos.             
+''')
+        
+        st.code('''from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression                
+''')        
+        
+        st.code('''X = df[['Avg. Session Length','Time on App','Time on Website','Length of Membership']]
+y = df['Yearly Amount Spent']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=101, shuffle=True)
+''')
+        
+        X = df[['Avg. Session Length','Time on App','Time on Website','Length of Membership']]
+        y = df['Yearly Amount Spent']
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=101, shuffle=True)
+
+        st.write('---') 
+        st.write('#### Entrenamiento del modelo')  
+        st.write('''**fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)''')
+    
+        st.code('''lm = LinearRegression()
+lm.fit(X_train, y_train)   
+lm.coef_             
+''')
+    
+        lm = LinearRegression()
+        lm.fit(X_train, y_train)
+
+        cdf = st.dataframe(pd.DataFrame(lm.coef_, index=X.columns, columns=['Coeficiente']), width=400)        # coeficiente para cada caracteristica   
+          
+        st.write('El aumento de un año en la membresía del cliente, aumenta en U$S 61.28 lo gastado.')  
+          
+        st.write('---') 
+        st.write('#### Predicciones del conjunto de test')
+        st.write('''**predict**: función que se utiliza para obtener predicciones de un modelo entrenado.
+Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.''')            
+        
+        st.code('predictions = lm.predict(X_test) ')
+          
+        predictions = lm.predict(X_test)   
+        
+        st.code('''fig, ax = plt.subplots()
+ax.scatter(x=y_test,y=predictions)  
+ax.set_title('Scatter y_test vs predicciones')  
+st.pyplot(fig)            
+''')
+        
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            with st.container(border=True):
+        
+                fig, ax = plt.subplots()
+                ax.scatter(x=y_test,y=predictions)
+                ax.set_title('Scatter y_test vs predicciones')
+                st.pyplot(fig)
+        
+
+        st.write('---') 
+        st.write('#### Evaluación del modelo')
+        
+        st.write('''**MAE**: Error absoluto medio - es una medida de la diferencia entre dos valores, permite saber que tan diferente es el valor predicho y el valor real u observado.     
+**MSE**: Error medio cuadratico - esta métrica es útil para saber que tan cerca es la línea de ajuste de la regresión a las observaciones. Entre más cercano a 0 es mejor.  
+**RMSE**: Raíz del error medio cuadrado - es la raíz cuadrada del MSE.
+''')    
+        codigo = '''from sklearn import metrics
+        
+st.write(f'MAE: {metrics.mean_absolute_error(y_test, predictions)}')
+st.write(f'MSE: {metrics.mean_squared_error(y_test, predictions)}')
+st.write(f'RMSE: {np.sqrt(metrics.mean_squared_error(y_test, predictions))}') '''
+        st.code(codigo)
+                  
+        st.write(f'MAE: {metrics.mean_absolute_error(y_test, predictions)}')
+        st.write(f'MSE: {metrics.mean_squared_error(y_test, predictions)}')
+        st.write(f'RMSE: {np.sqrt(metrics.mean_squared_error(y_test, predictions))}') 
+        
+        
+        st.code('''sns.set_style('whitegrid')
+graf = sns.displot(data=y_test-predictions, bins=50, kde=True) 
+st.pyplot(graf.figure)                 
+''')
+        
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            with st.container(border=True):
+        
+                sns.set_style('whitegrid')
+                graf = sns.displot(data=y_test-predictions, bins=50, kde=True) 
+                st.pyplot(graf.figure) 
+         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            
 def python():
 
     opciones_py = ['print','input','type','Conversión de Tipo','Operadores', 'Métodos de Cadenas (strings)','round',
@@ -419,7 +682,7 @@ def python():
         st.image(imagen, width=1465)         
         
         st.write('---')
-        st.markdown('''
+        st.write('''
             **format()** es una funcion que permite formatear una cadena de texto.  
             **f-string** permite concatenar diferentes tipos de datos dentro de un string
         ''') 
@@ -458,7 +721,7 @@ def python():
 
     if opcion_seleccionada == 'Conversión de Tipo':   
         st.write('Funciones que permiten convertir el tipo de dato')
-        st.markdown('''
+        st.write('''
             **str()** convierte un numero a un string.     
             **float()** convierte un entero o string a un float.        
             **int()** convierte un float o string a un int.
@@ -502,7 +765,7 @@ def python():
 
         st.write('---')
         st.write('**Indexación de Strings**')
-        st.markdown('''
+        st.write('''
         * [0:3] : devuelve a partir de la posición 0 hasta la 2 (la posición 3 no se incluye)     
         * [::2] : devuelve desde la primera a la ultima posición con un paso de 2      
         ''')
@@ -680,7 +943,7 @@ def python():
         st.write('##### Referencias externas')          
         
     if opcion_seleccionada == 'filter':         
-        st.markdown('''Verifica que los elementos de una secuencia cumplan una condicion, 
+        st.write('''Verifica que los elementos de una secuencia cumplan una condicion, 
         devolviendo un iterador con los elementos que cumplen dicha condicion.
     ''')
 
@@ -691,7 +954,7 @@ def python():
         st.write('##### Referencias externas')    
              
     if opcion_seleccionada == 'map':         
-        st.markdown('''Aplica una funcion a cada elemento de un iterable devolviendo una lista con los resultados.
+        st.write('''Aplica una funcion a cada elemento de un iterable devolviendo una lista con los resultados.
     ''')
 
         imagen = Image.open('Imagenes/map.png')
@@ -701,7 +964,7 @@ def python():
         st.write('##### Referencias externas')            
  
     if opcion_seleccionada == 'reduce':         
-        st.markdown('''Aplica una funcion que calcula el produco de todos los elementos de una lista.
+        st.write('''Aplica una funcion que calcula el produco de todos los elementos de una lista.
     ''')
 
         imagen = Image.open('Imagenes/reduce.png')
@@ -711,7 +974,7 @@ def python():
         st.write('##### Referencias externas')    
  
     if opcion_seleccionada == 'Generadores':         
-        st.markdown('''Es una funcion que devuelve varios valores en tiempo de ejecucion.
+        st.write('''Es una funcion que devuelve varios valores en tiempo de ejecucion.
     ''')
 
         imagen = Image.open('Imagenes/generador.png')
@@ -740,7 +1003,7 @@ def numpy():
         st.success(f'##### **{opcion_seleccionada}** ')
 
     if opcion_seleccionada == 'array':         
-        st.markdown('''Es una funcion que crear un array (vector o matriz).
+        st.write('''Es una funcion que crear un array (vector o matriz).
     ''')
 
         imagen = Image.open('Imagenes/numpy_1.png')
@@ -772,7 +1035,7 @@ def numpy():
         st.write('##### Referencias externas')    
 
     if opcion_seleccionada == 'random':         
-        st.markdown('''Funcion que crea numeros pseudoaleatorios.
+        st.write('''Funcion que crea numeros pseudoaleatorios.
     ''')
         
         imagen = Image.open('Imagenes/numpy_7.png')
@@ -833,7 +1096,7 @@ def pandas():
         st.success(f'##### **{opcion_seleccionada}** ')
 
     if opcion_seleccionada == 'Series':         
-        st.markdown('''Una Serie es una estructura de datos unidimensional que puede contener cualquier tipo de datos.
+        st.write('''Una Serie es una estructura de datos unidimensional que puede contener cualquier tipo de datos.
     Es como una columna de una tabla.
     ''')
         
@@ -863,7 +1126,7 @@ def pandas():
         st.image(imagen, width=1479) 
 
     if opcion_seleccionada == 'Data Frames':         
-        st.markdown('''Un DataFrame es una estructura de datos bidimensional con etiquetas que se asemeja a una hoja de cálculo o una tabla
+        st.write('''Un DataFrame es una estructura de datos bidimensional con etiquetas que se asemeja a una hoja de cálculo o una tabla
     de base de datos.   
     Se compone de filas y columnas, donde cada columna puede contener un tipo de dato diferente.
     ''')
@@ -875,10 +1138,10 @@ def pandas():
         st.write('---')
 
         st.write('##### DataSet')
-        st.markdown('''Un DataSet son los datos que estan organizados de cierta manera en un archivo txt, csv, xlsx, etc.
+        st.write('''Un DataSet son los datos que estan organizados de cierta manera en un archivo txt, csv, xlsx, etc.
     ''')
         
-        st.markdown('''
+        st.write('''
         Parámetros del read_csv 
         - sep: el caracter utilizado para separar los valores (delimitador). El predeterminado es la coma ','.
         - header: la fila que se usará como encabezado, header=0 (primera fila) o header=None.
@@ -902,7 +1165,7 @@ def pandas():
         imagen = Image.open('Imagenes/pandas_18.png')
         st.image(imagen, width=1478)                       
  
-        st.markdown('''
+        st.write('''
         ##### Acceder por el metodo loc:
         Se utiliza para seleccionar datos de un DataFrame utilizando etiquetas (nombres) de fila y columna  
         ''')
@@ -912,7 +1175,7 @@ def pandas():
         imagen = Image.open('Imagenes/pandas_20.png')
         st.image(imagen, width=1478)          
         
-        st.markdown('''
+        st.write('''
         ##### Acceder por el metodo iloc:
         Permite seleccionar los datos en un DataFrame utilizando posiciones enteras  
         ''')
@@ -1047,7 +1310,7 @@ def pandas():
         st.image(imagen, width=1479)                  
 
     if opcion_seleccionada == 'Fusionar, Combinar y Concatenar Data Frames': 
-        st.markdown('''
+        st.write('''
             **merge():** fusiona dos DataFarmes basandose en valores comunes de una o mas columnas.  
         ''') 
         imagen = Image.open('Imagenes/pandas_34.png')
@@ -1056,14 +1319,14 @@ def pandas():
         st.image(imagen, width=1474) 
         st.write('---')
         
-        st.markdown('''
+        st.write('''
             **join():**: permite unir dos DataFrames a partir de un indice o una columna clave .  
         ''') 
         imagen = Image.open('Imagenes/pandas_36.png')
         st.image(imagen, width=1475) 
         st.write('---')
         
-        st.markdown('''
+        st.write('''
             **concat():**: permite unir dos DataFrames a partir de un eje (vertical o horizontal) .  
         ''')         
         imagen = Image.open('Imagenes/pandas_37.png')
@@ -1115,7 +1378,8 @@ z = x**3'''
         z = x**3
         
         st.write('##### Parámetros')
-        st.markdown('''
+        
+        st.write('''
         * figsize -> (ancho, alto)          
         * label -> determina el nombre de la etiqueta     
         * color -> color del grafico (nombre o codigo hexadecimal)    
@@ -1170,7 +1434,7 @@ tips.head()'''
         st.dataframe(df.head())
 
         st.write('##### Parámetros')
-        st.markdown('''
+        st.write('''
         * set_title -> Titulo del grafico          
         * st_xlabel -> Label eje x
         * st_ylabel -> Label eje y
@@ -1205,7 +1469,7 @@ tips.head()'''
         st.dataframe(df.head())
 
         st.write('##### Parámetros')
-        st.markdown('''
+        st.write('''
         * bins -> define el nro de columnas que se muestran en el grafico         
         * edgecolor -> estable el color de los bordes de las barras.  
         * color -> define el color de la barra   
@@ -1301,7 +1565,7 @@ tips.head()'''
         st.dataframe(df.head())  
  
         st.write('##### Parámetros')
-        st.markdown('''
+        st.write('''
         * autopct -> de que forma se ve el valor del %          
         * colors -> colores''') 
  
@@ -1327,6 +1591,132 @@ st.pyplot(fig)'''
             st.pyplot(fig)     
  
  
+ 
+def seaborn():
+    
+    opciones_sns = ['displot','jointplot','pairplot','rugplot','kdeplot','barplot']
+    
+    # Carga de Datos
+    df = pd.read_csv('DataFrames/tips.csv')
+    
+    col1, col2 = st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_sns)
+        st.success(f'##### **{opcion_seleccionada}** ')
+    
+    if opcion_seleccionada == 'displot':
+        st.write('Gráfico que se utiliza para conjuntos de observaciones univariantes y los visualiza mediante un histograma.')
+        
+        st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+        st.dataframe(df.head())
+
+        st.write('##### Parámetros')
+        
+        st.write('''
+        * bins -> define los intervalos en un histograma.        
+        * kde -> crea una curva suave que representa la función de densidad de probabilidad de los datos.     
+''')
+        
+        st.code('''graf = sns.displot(
+    data = df,
+    x='total_bill',
+    bins=20,
+    kde=True
+)
+
+st.pyplot(graf)''')
+
+        # displot
+        with st.container(border=True, width=800):
+            graf = sns.displot(
+                data = df,
+                x='total_bill',
+                bins=20, 
+                kde=True
+            )
+            
+            st.pyplot(graf)  
+ 
+    if opcion_seleccionada == 'jointplot':
+        st.write('''Gráfico que se utiliza para visualizar la relación entre dos variables.    
+Combina un gráfico bivariado en el centro con histogramas o gráficos de densidad en los márgenes para mostrar la distribución''')
+        
+        st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+        st.dataframe(df.head())
+
+        st.write('##### Parámetros')
+        
+        st.write('''
+        * kind -> permite definir el tipo de representacion (hex=hexagonal)(reg=regresion)(kde=densidad de puntos)        
+''')
+        
+        st.code('''graf = sns.jointplot(
+    data = df,
+    x='total_bill',
+    y='tip',
+    kind='reg'
+)
+
+st.pyplot(graf)''')
+
+        # displot
+        with st.container(border=True, width=800):
+            graf = sns.jointplot(
+                data = df,
+                x='total_bill',
+                y='tip',
+                kind='reg'
+            )
+            
+            st.pyplot(graf)  
+ 
+ 
+    if opcion_seleccionada == 'pairplot':
+        st.write('''Crea una matriz de visulaizaciones para explorar relaciones entre variables en un conjunto de datos.    
+La función grafica diagramas de dispersión para las relaciones por pares y utiliza gráficos univariados en la diagonal para mostrar la distribución de cada variable individual.''')
+        
+        st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+        st.dataframe(df.head())
+
+        st.write('##### Parámetros')
+        
+        st.write('''
+        * hue -> argumento para diferenciar colores por categoria.    
+        * palette -> define la paleta de colores: deep, muted, bright, pastel, dark, colorblind, husl, RdYBlyu, magma, YlOrBr, crest, rocket_r, mako, viridis''')
+        
+        st.code('''graf = sns.pairplot(
+    data = df,
+    hue= 'sex',
+    palette='rocket_r'
+)
+
+st.pyplot(graf)''')
+
+        # displot
+        with st.container(border=True):
+            graf = sns.pairplot(
+                data = df,
+                hue= 'sex',
+                palette='rocket_r'
+            )
+            
+            st.pyplot(graf)   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
             
 def git():
 
@@ -1340,7 +1730,7 @@ def git():
     
 
     if opcion_seleccionada == 'Git':
-        st.markdown('''**Definción:** es un sistema de Control de Versiones.    
+        st.write('''**Definción:** es un sistema de Control de Versiones.    
 GIT permite compartir el codigo con otras personas. Existe un concepto que se llama Deployment, la idea es que cuando el proyecto este finalizado y se quiera llevar a produccion, se pueda hacer el deploy en la nube.    
 
 **Sistema de control de versiones:** es un conjunto de prodcedimientos que registra los cambios en una archivo
