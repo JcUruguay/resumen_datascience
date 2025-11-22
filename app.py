@@ -299,7 +299,7 @@ Dependiendo del contexto, a la variable modelada se le conoce como variable depe
         @st.cache_data
         def load_data():
             # Carga del dataframe
-            df = pd.read_csv('DataFrames/USA_housing.csv')
+            df = pd.read_csv('DataFrames/Casas.csv')
             
             return df
     
