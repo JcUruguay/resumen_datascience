@@ -44,7 +44,8 @@ def main():
     )
     
     
-    st.sidebar.info('Ultima Actualización: 18/11/2025')
+    st.sidebar.info('Ultima Actualización: 27/11/2025')
+    st.sidebar.success('App en constante actualización.')
     
     if opcion_seleccionada != 'Seleccionar...':
         st.title(opcion_seleccionada)
@@ -76,7 +77,8 @@ def main():
         
         if opcion_seleccionada_3 == 'Git y GitHub':
             git()
-        
+        elif opcion_seleccionada_3 == 'Docker':
+            docker()
         
         
 def ml_modelado():
@@ -262,22 +264,263 @@ st.pyplot(fig)
 
 
 def ml_regresion_logistica():
+    
+    buffer = io.StringIO()
+    
     st.write('#### Definición')
     st.write('''La regresión logística es un método estadístico para predecir la probabilidad de un resultado categórico, como \'si\' o \'no\'.     
 Utiliza una función logística (curva sigmoidea) para modelar la relación entre las variables independientes y una variable dependiente binaria (que solo tiene dos resultados).
 Este modelo es útil en campos como la medicina para predecir la probabilidad de enfermedades o en la economía para predecir resultados de acciones.''')
     st.write('---')
     
-    opciones_mlreglog = ['Opcion']
+    opciones_mlreglog = ['titanic']
 
     col1, col2= st.columns([2,2])
     
     with col1:
         opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlreglog)
+        st.success(f'##### **{opcion_seleccionada}** ')
         
-    if opcion_seleccionada == 'Opcion':
-        st.write('##### Data Frame')                                        
+        @st.cache_data
+        def load_data_titanic():
+            # Carga del dataframe
+            df_train = pd.read_csv('DataFrames/titanic_train.csv')
+            df_test = pd.read_csv('DataFrames/titanic_test.csv')
 
+            return df_train, df_test
+        
+    if opcion_seleccionada == 'titanic':
+        st.write('##### Data Frame con datos del naufragio del Titanic')                                        
+
+        st.code('''# Carga de csv con los datos de train y test
+df_train = pd.read_csv('DataFrames/titanic_train.csv')      
+df_test = pd.read_csv('DataFrames/titanic_test.csv')
+st.dataframe(df_train.head(10))       # head''')
+        
+        df_train, df_test = load_data_titanic()    
+        st.dataframe(df_train.head(10))       # head
+        st.code('''# info
+st.dataframe(df_train.info())''') 
+        
+        df_train.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')
+
+        st.write('---')
+        st.write('#### EDA')
+
+        st.write('##### Conteo de Sobrevivientes en el set train')
+        st.write('''0 : No sobrevivió   
+1 : Sobrevivió.''')     
+        
+        st.code('df_train[\'Survived\'].value_counts()')
+        st.dataframe(df_train['Survived'].value_counts(), width=300)
+
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # sobrevivientes Male
+            st.write('Sobrevivientes Hombres')
+            st.code('''filtro = df_train['Sex'] == 'male'
+df_train[filtro]['Survived'].value_counts()''')
+            filtro = df_train['Sex'] == 'male'
+            st.dataframe(df_train[filtro]['Survived'].value_counts())
+        
+        with col2:
+            # sobrevivientes Female
+            st.write('Sobrevivientes Mujeres')
+            st.code('''filtro = df_train['Sex'] == 'female'
+df_train[filtro]['Survived'].value_counts()''')            
+            filtro = df_train['Sex'] == 'female'
+            st.dataframe(df_train[filtro]['Survived'].value_counts())        
+               
+
+        with st.container(border=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write('###### Grafico de conteo de Sobrevivientes.')
+                st.code('''fig,ax = plt.subplots()
+sns.set_style('darkgrid')   
+sns.countplot(data=df_train, x='Survived')            
+st.pyplot(fig)''')
+        
+                fig,ax = plt.subplots()
+                sns.set_style('darkgrid')
+                sns.countplot(data=df_train, x='Survived')
+                st.pyplot(fig)
+
+            with col2:
+                st.write('###### Grafico de conteo de Sobrevivientes por Sexo.')
+                st.code('''fig,ax = plt.subplots()
+sns.set_style('darkgrid')   
+sns.countplot(data=df_train, x='Survived',hue='Sex')         
+st.pyplot(fig)''')
+                
+                fig,ax = plt.subplots()
+                sns.set_style('darkgrid')
+                sns.countplot(data=df_train, x='Survived',hue='Sex')
+                st.pyplot(fig)
+  
+
+        with st.container(border=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write('###### Grafico de conteo de Sobrevivientes por Clase.')
+                st.code('''fig,ax = plt.subplots()
+sns.set_style('darkgrid')   
+sns.countplot(data=df_train, x='Survived')            
+st.pyplot(fig)''')
+                fig,ax = plt.subplots()
+                sns.set_style('darkgrid')
+                sns.countplot(data=df_train, x='Survived',hue='Pclass')
+                st.pyplot(fig)
+                
+            with col2:
+                st.write('###### Grafico de distribución de Pasajeros por Edad.' )
+                st.code('''fig,ax = plt.subplots()
+sns.set_style('darkgrid')   
+fig = sns.displot(data=df_train, x='Age',bins=30,kde=True)          
+st.pyplot(fig)''')
+                fig,ax = plt.subplots()
+                sns.set_style('darkgrid')
+                fig = sns.displot(data=df_train, x='Age',bins=30,kde=True)
+                st.pyplot(fig)
+
+        st.write('---')
+
+        st.write('##### Reemplazo de datos nulos.')
+        st.write('''Existen datos nulos en Age, por lo tanto se puede reemplazar los valores nulos por el promedio de edad.     
+Se calcula el promedio de edad por clase.''')
+        st.code('''df_train.isnull().sum()      
+df_test.isnull().sum()''')
+        
+        col1, col2 = st.columns(2)
+        
+        with st.container(width=250):
+            with col1:
+                st.dataframe(df_train.isnull().sum())
+            with col2:
+                st.dataframe(df_test.isnull().sum())
+        
+
+        median_train_1 = df_train[df_train['Pclass'] == 1]['Age'].median()      # edad promedio 1era Clase
+        median_train_2 = df_train[df_train['Pclass'] == 2]['Age'].median()      # edad promedio 2da Clase
+        median_train_3 = df_train[df_train['Pclass'] == 3]['Age'].median()      # edad promedio 3era Calse
+        
+        median_test = df_test['Age'].median()
+        
+        st.write('Cálculo de la media de Edad para train y test')
+        st.code('''median_train_1 = df_train[df_train['Pclass'] == 1]['Age'].median()   
+median_train_2 = df_train[df_train['Pclass'] == 2]['Age'].median()  
+median_train_3 = df_train[df_train['Pclass'] == 3]['Age'].median()''')
+        
+        st.code(f'''Media de edad df_train:     
+1era clase: {median_train_1}        
+2da clase: {median_train_2}
+3era clase: {median_train_3}''')
+       
+
+        
+        st.write('''##### apply()
+Es una herramienta de propósito general para aplicar una función a lo largo de un eje (filas o columnas) de un DataFrame o a cada elemento de una Serie.    
+Se utiliza para realizar transformaciones, cálculos y lógica condicional compleja, siendo una alternativa más eficiente y limpia que los bucles.    
+Para usarlo, se le pasa la función a aplicar, y el parámetro axis determina si se aplica a las columnas (\(0\)) o a las filas (\(1\)
+''')
+        
+        
+        def categorizar(fila):
+            if pd.isnull(fila['Age']):          # Valor de la fila en el campo Age es nulo
+                if fila['Pclass'] == 1:
+                    return median_train_1
+                elif fila['Pclass'] == 2:
+                    return median_train_2
+                elif fila ['Pclass'] == 3:
+                    return median_train_3
+            else:
+                return fila['Age']
+        
+        
+        df_train['Age'] = df_train.apply(categorizar, axis=1)
+        
+        st.code('''def categorizar(fila):
+    if pd.isnull(fila['Age']):      # Valor de la fila en el campo Age es nulo
+        if fila['Pclass'] == 1:
+            return median_train_1
+        elif fila['Pclass'] == 2:
+            return median_train_2
+        elif fila ['Pclass'] == 3:
+            return median_train_3
+    else:
+        return fila['Age']  
+        
+df_train['Age'] = df_train.apply(categorizar, axis=1)       # axis = 1 (se aplica sobre las filas)
+''')
+
+        st.write('---')
+        st.write('##### Eliminación de columnas.')
+        st.write('''Existe muchos datos nulos en la columna Cabin, por lo tanto es conveniente eliminar la columna del DataFrame.        
+También se eliminan las columnas Passenger Id, Name y Ticket ya que no son relevantes.''')
+        st.code('''df_train.drop(['Cabin','PassengerId,''Name','Ticket'], axis=1, inplace=True)''')     
+
+        df_train.drop(['Cabin','PassengerId','Name','Ticket'], axis=1, inplace=True)
+
+    
+        st.write('---')
+        st.write('##### Eliminación de filas.')
+        st.write('''Existes dos filas con valor nulo en la columna Embarked. Se eliminan los 2 registros.''')
+        st.code('''df_train.dropna(axis=0, inplace=True)''')     
+        
+        df_train.dropna(axis=0, inplace=True)
+        
+  
+        st.write('---')
+        st.write('##### Reemplazo de Variables categorícas.')
+        st.write('''Es necesario reemplazar las variables categóricas (Sex, Embarked) por valores numéricos     
+Sex = 0 (female), 1 (male)  
+Embarked = S (1), C (2), Q (3)
+''')
+
+        def mod_sexo(sex):
+            if sex == 'female':
+                return 0
+            elif sex == 'male':
+                return 1
+            
+        def mod_ciudad(ciudad):
+            if ciudad == 'S':
+                return 1
+            elif ciudad == 'C':    
+                return 2
+            elif ciudad == 'Q':
+                return 3
+            
+        df_train['Sex'] = df_train['Sex'].map(mod_sexo)
+        df_train['Embarked'] = df_train['Embarked'].map(mod_ciudad)
+        
+        st.code('''def mod_sexo(sex):
+    if sex == 'female':
+        return 0
+    elif sex == 'male':
+        return 1
+
+def mod_ciudad(ciudad):
+     if ciudad == 'S':
+        return 1
+    elif ciudad == 'C':    
+        return 2
+    elif ciudad == 'Q':
+        return 3        
+         
+df_train['Sex'] = df_train['Sex'].map(mod_sexo)
+df_train['Embarked'] = df_train['Embarked'].map(mod_ciudad)''')
+        
+  
+        st.write(f'Cantiad de filas/columnas: {df_train.shape}')
+        st.dataframe(df_train.head(10))
+  
+        st.write('---')
+        st.write('##### Entrenamiento del Modelo')
+        
 def ml_regresion_lineal():
     
     buffer = io.StringIO()
@@ -297,7 +540,7 @@ Dependiendo del contexto, a la variable modelada se le conoce como variable depe
         st.success(f'##### **{opcion_seleccionada}** ')
     
         @st.cache_data
-        def load_data():
+        def load_data_usahouse():
             # Carga del dataframe
             df = pd.read_csv('DataFrames/Casas.csv')
             
@@ -312,10 +555,9 @@ df = pd.read_csv('DataFrames/USA_housing.csv')
 st.dataframe(df.head(10))       # head'''
         st.code(codigo)
         
-        df = load_data()    
+        df = load_data_usahouse()    
         st.dataframe(df.head(10))       # head
         codigo = '''# info
-df = pd.read_csv('DataFrames/USA_housing.csv')
 st.dataframe(df.info())       # info'''
         st.code(codigo)        
         
@@ -468,7 +710,6 @@ st.dataframe(df.head(10))       # head''')
         st.dataframe(df.head(10))       # head
         
         st.code('''# info
-df = pd.read_csv('DataFrames/Ecommerce Customers')
 st.dataframe(df.info())''')     
         
         df.info(buf=buffer)             # info
@@ -1739,12 +1980,111 @@ en un conjunto de archivos a lo largo del tiempo de modo que se pueda recuperar 
 - Regresar a versiones anteriores del proyecto completo.
 - Comparar cambios a lo largo del tiempo.
 - Ver quien modifico un archivo en un momento especifico.
-- Recuperar archivos perdidos o arruinados.
-
-                    
-                    
+- Recuperar archivos perdidos o arruinados.            
 ''')
 
+def docker():
+    st.write('##### Definición')
+    st.write('''Es una plataforma de código abierto que permite a los desarrolladores crear, desplegar y ejecutar aplicaciones en contenedores,     
+que son unidades estandarizadas y aisladas que incluyen todo lo necesario para que el software funcione, como el código, las bibliotecas y las dependencias.    
+Su uso principal es estandarizar y automatizar el ciclo de vida del desarrollo y la implementación de software, garantizando que una aplicación se ejecute de la misma
+manera en cualquier entorno.
+
+Docker crea un conjunto de herramientas para que se pueda extender, normalizar y generalizar el uso e los contenedores.     
+Así, a través de Docker, podemos crear, desplegar y ejecutar aplicaciones mediante el uso e contenedores.
+
+Docker permite a los desarrolladores y operadores empaquetar aplicaciones dentro de estos contenedores y a la vez intgrar este proceso a Pipeline.
+
+**CI (Continuous Integration)**: es una de las metodologías de software muy ligada a la metoología ágil que nos permite una integración continuna y un despligue continuo.  
+**CD (Continuous Delivery)**: liberación automática al repositorio de código.   
+**CD (Continuous Deployment)**: despliegue automático hacia producción.
+''')
+    
+    st.write('---')
+    st.write('##### Instalación')
+    st.write('''**Web descarga**: https://docs.docker.com/   
+Docker Desktop para Windows: https://docs.docker.com/desktop/setup/install/windows-install/
+         
+''')
+    
+    imagen = Image.open('Imagenes/docker_1.png')
+    st.image(imagen, width=919)        
+    
+    st.write('---')
+    st.write('##### Ejecución Imagen de Docker')
+    st.write('''**Imagenes**: https://hub.docker.com/
+''')
+    
+    imagen = Image.open('Imagenes/docker_2.png')
+    st.image(imagen, width=1826)       
+    st.write('')
+    st.write('**Seleccion de Imagenes postgres**')
+    imagen = Image.open('Imagenes/docker_3.png')
+    st.image(imagen, width=1150)     
+    
+    st.write('---')    
+    st.write('##### Descargar Imagen (latest)')
+    
+    st.code('docker run postgres',language='cmd')
+    
+    imagen = Image.open('Imagenes/docker_4.png')
+    st.image(imagen, width=1133)          
+    imagen = Image.open('Imagenes/docker_5.png')
+    st.image(imagen, width=1254)          
+
+    st.code('docker run -e POSTGRES_PASSWORD=password postgres',language='cmd')
+    imagen = Image.open('Imagenes/docker_6.png')
+    st.image(imagen, width=1143)       
+
+    st.write('docker images muestra las imagenes que estan en la PC')
+    st.code('docker images',language='cmd')
+    imagen = Image.open('Imagenes/docker_7.png')
+    st.image(imagen, width=1104)      
+
+    st.write('docker ps muestra los contenedores que estén en marcha.')
+    st.code('docker ps',language='cmd')
+    imagen = Image.open('Imagenes/docker_8.png')
+    st.image(imagen, width=1171)      
+
+    st.write('---')
+    st.write('##### Descargar Imagen con otro TAG')
+    imagen = Image.open('Imagenes/docker_9.png')
+    st.image(imagen, width=1342)   
+
+    st.code('docker run -d -e POSTGRES_PASSWORD=password postgres:bookworm')
+    
+    imagen = Image.open('Imagenes/docker_10.png')
+    st.image(imagen, width=1342)   
+    
+    st.write('Se descargan dos imagenes (versiones de Postgres diferentes).')
+    
+    
+    imagen = Image.open('Imagenes/docker_11.png')
+    st.image(imagen, width=1218)       
+    
+    st.write('---')
+    st.write('##### Crear contenedor con nombre personalizado')
+    st.code('docker run -d -e POSTGRES_PASSWORD=password --name bookworm_container postgres:bookworm')
+    imagen = Image.open('Imagenes/docker_12.png')
+    st.image(imagen, width=1232)     
+
+    st.write('---')
+    st.write('##### Eliminar contenedores')
+    st.code('''# Contenedores en marcha y detenidos     
+docker ps -a''', language='html')
+    imagen = Image.open('Imagenes/docker_13.png')
+    st.image(imagen, width=1232)  
+    
+    st.code('''# Eliminar un contenedor inactivo por su Container ID  o Name 
+docker rm ba64470c600d''', language='html')
+  
+    st.code('''# Eliminar un contenedor activo por su Container ID o Name. Para poder eliminarlo se debe forzar mediante el parámetro -f  
+docker rm -f ba64470c600d quizzical_chandrasekhar''', language='html')
+    imagen = Image.open('Imagenes/docker_14.png')
+    st.image(imagen, width=1232)     
+
+    st.write('---')
+    st.write('##### Eliminar imagenes')
 
 if __name__ == '__main__':
     main()
