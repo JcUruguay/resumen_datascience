@@ -27,7 +27,7 @@ def main():
     st.sidebar.write('---')
     
     # Lista de opciones del sidebar
-    opciones_2 = ['Seleccionar...', 'Modelado de Datos','Regresión Lineal','Regresión Logística']
+    opciones_2 = ['Seleccionar...', 'Modelado de Datos','Regresión Lineal','Regresión Logística', 'KNN, K vecinos más cercanos','Arbol de Decisión y Bosque Aleatorio']
     
     opcion_seleccionada_2 = st.sidebar.selectbox(
         '**Machine Learning:**',
@@ -70,7 +70,10 @@ def main():
             ml_regresion_lineal()
         elif opcion_seleccionada_2 == 'Regresión Logística':
             ml_regresion_logistica()
-          
+        elif opcion_seleccionada_2 == 'KNN, K vecinos más cercanos':
+            ml_knn()
+        elif opcion_seleccionada_2 == 'Arbol de Decisión y Bosque Aleatorio':
+            ml_trees()
             
     if opcion_seleccionada_3 != 'Seleccionar...':
         st.title(opcion_seleccionada_3)
@@ -262,7 +265,488 @@ st.pyplot(fig)
             st.plotly_chart(fig)  
 
 
+def ml_trees():
+    buffer = io.StringIO()   
 
+    st.write('#### Definición')
+    st.write('''Un árbol de decisión (Decision tree) es un modelo de Aprendizaje Automático que toma decisiones a través de un diagrama de árbol,   
+mientras que un bosque aleatorio (Random forest) es un modelo de conjunto que utiliza múltiples árboles de decisión para lograr predicciones más precisas y robustas.   
+El bosque aleatorio combina las predicciones de varios árboles entrenados con diferentes subconjuntos de datos y característicasm lo que hace menos propenso al sobreajuste (overfitting) que un solo árbol.''')
+    st.write('---')    
+    
+    opciones_mltrees = ['Kyphosis', 'Prestamos']
+
+    col1, col2= st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mltrees)
+        st.success(f'##### **{opcion_seleccionada}** ')
+
+        @st.cache_data
+        def load_data_trees():
+            df_kyphosis = pd.read_csv('DataFrames/kyphosis.csv')
+            
+            return df_kyphosis
+        
+        @st.cache_data
+        def load_date_prestamos():
+            df_prestamos = pd.read_csv('DataFrames/loan_data.csv')
+            
+            return df_prestamos
+      
+      
+      
+    if opcion_seleccionada == 'Prestamos':
+        st.write('##### Data Frame con los datos de Prestatarios')  
+        st.write('Se intenta predecir si el prestamo fue devuelvo en su totalidad o no mediante la columna not.fully.paid del Data Frame.')
+        st.code('''# Carga de csv con los datos de Prestamos
+df_prestamos = pd.read_csv('DataFrames/df_prestamos.csv')     
+df_prestamos.head(10)       # head''')  
+
+        df_prestamos = load_date_prestamos()
+        st.dataframe(df_prestamos.head(10))
+    
+        st.code('''# info
+df_prestamos.info()''') 
+        
+        df_prestamos.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')          
+        
+        st.write('---')
+        st.write('#### EDA')
+
+        with st.container(border=True):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+            
+                st.write('##### Histograma de fico vs credit.policy')
+                
+                st.code('''fig,ax = plt.subplots()
+sns.histplot(df_prestamos, x='fico', hue='credit.policy', bins=35)
+
+st.pyplot(fig)''')
+                
+                fig,ax = plt.subplots()
+                sns.histplot(df_prestamos, x='fico', hue='credit.policy', bins=35)
+                
+                st.pyplot(fig)
+
+            with col2:
+            
+                st.write('##### Histograma de fico vs not.fully.paid')
+               
+                st.code('''fig,ax = plt.subplots()
+sns.histplot(df_prestamos, x='fico', hue='not.fully.paid', bins=35)
+
+st.pyplot(fig)''')               
+               
+                
+                fig,ax = plt.subplots()
+                sns.histplot(df_prestamos, x='fico', hue='not.fully.paid', bins=35)
+                
+                st.pyplot(fig)
+
+
+        with st.container(border=True):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+            
+                st.write('##### Countplot de purpose por not.fully.paid')
+                
+                st.code('''fig,ax = plt.subplots()
+sns.countplot(data=df_prestamos, x='purpose', hue='not.fully.paid')
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+
+st.pyplot(fig)''')                     
+                
+                fig,ax = plt.subplots()
+               
+                sns.countplot(data=df_prestamos, x='purpose', hue='not.fully.paid')
+                ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+                
+                st.pyplot(fig)
+
+            with col2:
+                
+                st.write('##### Joinplot fico vs interest rate')
+
+                st.code('''graf = sns.jointplot(data=df_prestamos, x='fico',y='int.rate', kind='reg')
+                        
+st.pyplot(graf)     
+
+
+
+''')      
+
+                graf = sns.jointplot(data=df_prestamos, x='fico',y='int.rate', kind='reg')
+                st.pyplot(graf)
+
+
+        with st.container(border=True):
+            st.write('##### Lmplot de fico vs interest rate')
+            
+            fig = sns.lmplot(data=df_prestamos, x='fico', y='int.rate', hue='credit.policy', col='not.fully.paid', palette='Set1')
+            st.pyplot(fig)
+
+
+        st.write('---')
+        st.write('##### Reemplazo de variables categóricas')
+        
+        st.code('''data = {
+    'debt_consolidation':1,
+    'credit_card':2,
+    'all_other':3,
+    'home_improvement':4,
+    'small_business':5,
+    'major_purchase':6,
+    'educational':7
+}                              
+''')
+        
+        data = {
+            'debt_consolidation':1,
+            'credit_card':2,
+            'all_other':3,
+            'home_improvement':4,
+            'small_business':5,
+            'major_purchase':6,
+            'educational':7
+        }
+
+        st.code('''df_prestamos['purpose'] = df_prestamos['purpose'].map(data) 
+df_prestamos.head(10)''')
+        
+        df_prestamos['purpose'] = df_prestamos['purpose'].map(data)    
+        st.dataframe(df_prestamos.head(10))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if opcion_seleccionada == 'Kyphosis':
+        st.write('##### Data Frame con los datos de Cirugias de columna.')
+    
+        st.code('''# Carga de csv con los datos de Kyphosis
+df_kyphosis = pd.read_csv('DataFrames/df_kyphosis.csv')     
+df_kyphosis.head(10)       # head''')  
+
+        df_kyphosis = load_data_trees()
+        st.dataframe(df_kyphosis.head(10))
+    
+        st.code('''# info
+df_kyphosis.info()''') 
+        
+        df_kyphosis.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')    
+    
+        st.write('---')
+        st.write('##### Seperación de los datos del modelo')  
+
+        st.code('''X = df_kyphosis.drop('Kyphosis', axis=1)
+y = df_kyphosis['Kyphosis']''')
+
+        X = df_kyphosis.drop('Kyphosis', axis=1)
+        y = df_kyphosis['Kyphosis']        
+
+
+        st.write('---')
+        st.write('##### Entrenamiento del modelo (Decision Tree)')  
+
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.    
+Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test.
+El parámetro random_state permite conseguir cierta repetición de los resultados.    
+* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)''')
+        
+        st.code('''from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)''')
+        
+        st.code('''from sklearn.tree import DecisionTreeClassifier
+                
+dtree = DecisionTreeClassifier()
+dtree.fit(X_train, y_train)
+''')
+        from sklearn.model_selection import train_test_split 
+        X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=.3, random_state=101)
+        
+        from sklearn.tree import DecisionTreeClassifier
+        
+        dtree = DecisionTreeClassifier()
+        dtree.fit(X_train, y_train)
+
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('''* **predict**: función que se utiliza para obtener predicciones de un modelo entrenado.
+Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.''')
+        
+        st.code('predictions = dtree.predict(X_test)')
+        
+        predictions = dtree.predict(X_test)
+        
+        st.write('---')
+        st.write('##### Reporte de clasificación')
+        
+        st.code('''from sklearn.metrics import classification_report
+                
+st.dataframe(classification_report(y_test, predictions, output_dict=True))''')
+            
+        from sklearn.metrics import classification_report
+        st.dataframe(classification_report(y_test, predictions, output_dict=True))
+
+
+        st.write('---')
+        st.write('##### Matrix de Confusión')    
+
+        st.code('''from sklearn.metrics import confusion_matrix
+                
+confusion_matrix(y_test, predictions)''')
+        
+        from sklearn.metrics import confusion_matrix
+        with st.container(width=300):
+            st.write(confusion_matrix(y_test, predictions))
+
+        st.write('---')
+        st.write('##### Entrenamiento del modelo (Random Forest)')  
+
+        st.code('''from sklearn.ensemble import RandomForestClassifier
+                
+rfc = RandomForestClassifier(n_estimators=200)
+rfc.fit(X_train, y_train)''')
+
+        from sklearn.ensemble import RandomForestClassifier
+
+        rfc = RandomForestClassifier(n_estimators=200)
+        rfc.fit(X_train, y_train)
+
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        
+        st.code('predictions = rfc.predict(X_test)')
+        
+        predictions = rfc.predict(X_test)
+
+        st.write('---')
+        st.write('##### Reporte de clasificación')
+
+        st.code('st.dataframe(classification_report(y_test, predictions, output_dict=True))')
+        st.dataframe(classification_report(y_test, predictions, output_dict=True))
+
+        st.write('---')
+        st.write('##### Matrix de Confusión')  
+
+        st.code('confusion_matrix(y_test, predictions)')
+        
+        with st.container(width=300):
+            st.write(confusion_matrix(y_test, predictions))
+
+
+
+def ml_knn():
+    buffer = io.StringIO()
+    
+    st.write('#### Definición')
+    st.write('''Es un algoritmo de aprendizaje automático superviasado que se utiliza para tareas de clasificación y regresión.     
+El algoritmo funciona encontrando los "k" puntos de datos más próximos a un nuevo punto de datos y asignando a este nuevo punto la etiqueta más común entre sus vecinos (para clasificación)        
+o el promedio de sus valores (para regresión).''')
+    st.write('---')    
+    
+    opciones_mlknn = ['Classified Data', '']
+
+    col1, col2= st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlknn)
+        st.success(f'##### **{opcion_seleccionada}** ')
+
+
+        @st.cache_data
+        def load_data_classified_data():
+            df_classified = pd.read_csv('DataFrames/Classified Data', index_col=0)
+            
+            return df_classified
+
+    if opcion_seleccionada == 'Classified Data':
+        st.write('##### Data Frame con los datos Clasificados de Personal.')
+    
+        st.code('''# Carga de csv con los datos de Classified Data
+df_classified = pd.read_csv('DataFrames/Classified Data', index_col=0)     
+df_classfied.head(10)       # head''')  
+
+        df_classified = load_data_classified_data()
+        st.dataframe(df_classified.head(10))
+    
+        st.code('''# info
+df_classfied.info()''') 
+        
+        df_classified.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')    
+    
+        st.write('---')
+        st.write('##### Escalamiento de datos')    
+
+        st.write('''* **StandardScaler**: es una herrmaienta de preprocesamiento de datos que se utiliza para estandarizar funciones eliminando la media y escalando a la varianza media.     
+Muchos algoritmos de ML funcionan mejor o convergen más rápido cuando las funciones están en una escala similar y centradas alrededor de cero.       
+StandardScaler aborda esto transformando los datos de modo que cada característica tenga una media de 0 y una desviación estándar de 1.
+* **fit(data)**: se utiliza para calcular la media y la desviación estándar de una característica determinada que se utilizará posteriormente para escalar.
+* **transform(data)**: se utiliza para realizar el escalamiento utilizando la media y la desviación estándar calculadas utilizando el método .fit()
+''')
+        
+        st.code('''from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+scaler.fit(df_classified.drop('TARGET CLASS', axis=1))
+scaled_features = scaler.transform(df_classified.drop('TARGET CLASS', axis=1))     
+           
+df_feat = pd.DataFrame(scaled_features, columns=df_classified.columns[:-1])   # Todas las columnas menos la ultima TARGET CLASS
+st.dataframe(df_feat.head(10))''')
+        
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        scaler.fit(df_classified.drop('TARGET CLASS', axis=1))
+        
+        scaled_features = scaler.transform(df_classified.drop('TARGET CLASS', axis=1))
+        
+        df_feat = pd.DataFrame(scaled_features, columns=df_classified.columns[:-1])   # Todas las columnas menos la ultima TARGET CLASS
+        
+        st.dataframe(df_feat.head(10))
+
+        st.write('---')
+        st.write('##### Seperación de los datos del modelo')
+        
+        st.code('''X = df_feat
+y = df_classified['TARGET CLASS']''')
+        
+        X = df_feat
+        y = df_classified['TARGET CLASS']
+        
+        st.write('---')
+        st.write('##### Entrenamiento del modelo')
+
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.    
+Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test.
+El parámetro random_state permite conseguir cierta repetición de los resultados.    
+* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)''')
+        
+        st.code('''from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)''')
+        
+        st.code('''from sklearn.neighbors import KNeighborsClassifier
+                
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(X_train, y_train)
+''')
+        from sklearn.model_selection import train_test_split 
+        X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=.3, random_state=101)
+        
+        from sklearn.neighbors import KNeighborsClassifier
+        knn = KNeighborsClassifier(n_neighbors=1)
+        knn.fit(X_train, y_train)
+
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('''* **predict**: función que se utiliza para obtener predicciones de un modelo entrenado.
+Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.''')
+        
+        st.code('predictions = knn.predict(X_test)')
+        
+        predictions = knn.predict(X_test)
+        
+        st.write('---')
+        st.write('##### Reporte de clasificación')
+        
+        st.code('''from sklearn.metrics import classification_report
+                
+target = ['Target Class = 0','Target Class = 1']
+st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))''')
+            
+        target = ['Clicked on ad = 0','Clicked on ad = 1']
+        from sklearn.metrics import classification_report
+        st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))
+
+    
+        st.write('---')
+        st.write('##### Matrix de Confusión')    
+
+        st.code('''from sklearn.metrics import confusion_matrix
+                
+confusion_matrix(y_test, predictions)''')
+        
+        from sklearn.metrics import confusion_matrix
+        with st.container(width=300):
+            st.write(confusion_matrix(y_test, predictions))
+        
+        st.write('---')
+        st.write('##### Tasa de Error') 
+        
+        st.code('''error_rate = []
+for i in range(1,40):
+    knn = KNeighborsClassifier(n_neighbors=i)
+    knn.fit(X_train, y_train)
+            
+    pred_i = knn.predict(X_test)
+    error_rate.append(np.mean(pred_i != y_test))                     # Tasa de error promedio
+    
+    
+fig, ax = plt.subplots()
+ax.plot(range(1,40), error_rate, color='blue', linestyle='dashed', marker='o',markerfacecolor='red', markersize=10)
+            
+plt.title('Error Rate vs K Value')
+plt.xlabel('K')
+plt.ylabel("Error Rate")
+            
+st.pyplot(fig)    
+''')
+    
+        error_rate = []
+        for i in range(1,40):
+            knn = KNeighborsClassifier(n_neighbors=i)
+            knn.fit(X_train, y_train)
+            
+            pred_i = knn.predict(X_test)
+            error_rate.append(np.mean(pred_i != y_test))                     # Tasa de error promedio
+         
+        with st.container(border=True, width=1000):        
+            fig, ax = plt.subplots()
+            ax.plot(range(1,40), error_rate, color='blue', linestyle='dashed', marker='o',markerfacecolor='red', markersize=10)
+            
+            plt.title('Error Rate vs K Value')
+            plt.xlabel('K')
+            plt.ylabel("Error Rate")
+            
+            st.pyplot(fig)
+        
+    st.write('---')
+    st.write('**Entrenamiento del modelo con k=17**')   
+    
+    st.code('''knn = KNeighborsClassifier(n_neighbors=17)
+knn.fit(X_train, y_train)
+predictions = knn.predict(X_test)
+    
+st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))
+
+confusion_matrix(y_test, predictions) 
+''')
+    
+    knn = KNeighborsClassifier(n_neighbors=17)
+    knn.fit(X_train, y_train)
+    predictions = knn.predict(X_test)
+    
+    st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))
+    with st.container(width=300):
+        st.write(confusion_matrix(y_test, predictions))       
+        
+        
 def ml_regresion_logistica():
     
     buffer = io.StringIO()
@@ -273,7 +757,7 @@ Utiliza una función logística (curva sigmoidea) para modelar la relación entr
 Este modelo es útil en campos como la medicina para predecir la probabilidad de enfermedades o en la economía para predecir resultados de acciones.''')
     st.write('---')
     
-    opciones_mlreglog = ['titanic']
+    opciones_mlreglog = ['titanic','advertising']
 
     col1, col2= st.columns([2,2])
     
@@ -285,22 +769,185 @@ Este modelo es útil en campos como la medicina para predecir la probabilidad de
         def load_data_titanic():
             # Carga del dataframe
             df_train = pd.read_csv('DataFrames/titanic_train.csv')
-            df_test = pd.read_csv('DataFrames/titanic_test.csv')
+           # df_test = pd.read_csv('DataFrames/titanic_test.csv')
 
-            return df_train, df_test
+            return df_train  #, df_test
         
+        @st.cache_data
+        def load_data_advertising():
+            df_advertising = pd.read_csv('DataFrames/advertising.csv')
+            
+            return df_advertising
+        
+    if opcion_seleccionada == 'advertising':
+        st.write('##### Data Frame con los datos de clics en anuncios de internet por parte de los usuarios.')
+    
+        st.code('''# Carga de csv con los datos de advertising
+df_advertising = pd.read_csv('DataFrames/advertising.csv')      
+df_advertising.head(10)       # head''')  
+
+        df_advertising = load_data_advertising()
+        st.dataframe(df_advertising.head(10))
+    
+        st.code('''# info
+df_advertising.info()''') 
+        
+        df_advertising.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')    
+    
+        st.write('---')
+        st.write('#### EDA')    
+    
+        with st.container(border=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write('###### Histograma Age')   
+                st.code('''fig, ax = plt.subplots()
+ax.hist(x=df_advertising['Age'], bins=20, edgecolor='#000000', 
+color='#8b92cc', alpha=.8)
+ax.set_xlabel('Edad')
+ax.set_ylabel('Frecuencia')
+
+st.pyplot(fig)''')
+
+                fig, ax = plt.subplots()
+                ax.hist(x=df_advertising['Age'], bins=30, edgecolor='#000000', color='#8b92cc', alpha=.8)
+                ax.set_title('Histograma Edades Usuarios')
+                ax.set_xlabel('Edad')
+                ax.set_ylabel('Frecuencia')
+
+                st.pyplot(fig)
+                
+                
+            with col2:
+                st.write('###### Joinplot Area Income vs Age')
+                st.code('''graf = sns.jointplot(data=df_advertising, x='Age',y='Area Income', kind='reg')
+                        
+st.pyplot(graf)
+
+
+
+
+
+''')
+                graf = sns.jointplot(data=df_advertising, x='Age',y='Area Income', kind='reg')
+
+                st.pyplot(graf)
+    
+    
+        with st.container(border=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write('###### Joinplot mostrando distribución kde de Daily Time spent on site vs. Age.')   
+                st.code('''graf = sns.jointplot(data=df_advertising, x='Age', y='Daily Time Spent on Site', 
+kind='kde', color='red') 
+st.pyplot(graf)''')
+                    
+                                       
+                graf = sns.jointplot(data=df_advertising, x='Age', y='Daily Time Spent on Site', kind='kde', color='red')                   
+                st.pyplot(graf)
+
+            with col2:
+                st.write('###### Joinplot de Daily Time Spent on Site vs. Daily Internet Usage')                        
+                st.code('''graf = sns.jointplot(data=df_advertising, x='Daily Time Spent on Site', y='Daily Internet Usage', kind='scatter')   
+                        
+st.pyplot(graf) ''')
+                
+                
+                graf = sns.jointplot(data=df_advertising, x='Daily Time Spent on Site', y='Daily Internet Usage', kind='scatter')                   
+                st.pyplot(graf)                    
+                    
+        with st.container(border=True):
+            st.write('##### Pairplot sobre Clicked on Ad')      
+            st.code('''graf = sns.pairplot(data=df_advertising, hue='Clicked on Ad') 
+                    
+st.pyplot(graf)''')
+            graf = sns.pairplot(data=df_advertising, hue='Clicked on Ad')      
+            st.pyplot(graf)
+    
+    
+
+        st.write('---')
+        st.write('##### Separación de los datos del Modelo')       
+        
+        st.code('''X = df_advertising.drop(['Ad Topic Line','City','Country','Timestamp','Clicked on Ad'], axis=1)
+y = df_advertising['Clicked on Ad']   ''')    
+        
+        X = df_advertising.drop(['Ad Topic Line','City','Country','Timestamp','Clicked on Ad'], axis=1)
+        y = df_advertising['Clicked on Ad']     
+            
+        
+        st.write('---')
+        st.write('##### Entrenamiento del Modelo')  
+
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.    
+Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test.
+El parámetro random_state permite conseguir cierta repetición de los resultados.    
+* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)''')
+        
+        st.code('''from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)''')
+        
+        st.code('''from sklearn.linear_model import LogisticRegression
+                
+lg = LogisticRegression()
+lg.fit(X_train, y_train)
+''')
+        from sklearn.model_selection import train_test_split 
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)
+
+        from sklearn.linear_model import LogisticRegression
+        lg = LogisticRegression()
+        lg.fit(X_train, y_train)
+    
+    
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('''* **predict**: función que se utiliza para obtener predicciones de un modelo entrenado.
+Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.''')
+
+        st.code('''predictions = lg.predict(X_test)''')
+        predictions = lg.predict(X_test)
+    
+    
+        st.write('---')
+        st.write('##### Reporte de clasificación')
+        
+        st.code('''from sklearn.metrics import classification_report
+                
+target = ['Clicked on ad = 0','Clicked on ad = 1']
+st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))''')
+            
+        target = ['Clicked on ad = 0','Clicked on ad = 1']
+        from sklearn.metrics import classification_report
+        st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))
+
+    
+        st.write('---')
+        st.write('##### Matrix de Confusión')    
+
+        st.code('''from sklearn.metrics import confusion_matrix
+                
+confusion_matrix(y_test, predictions)''')
+        
+        from sklearn.metrics import confusion_matrix
+        with st.container(width=300):
+            st.write(confusion_matrix(y_test, predictions))
+    
     if opcion_seleccionada == 'titanic':
         st.write('##### Data Frame con datos del naufragio del Titanic')                                        
 
-        st.code('''# Carga de csv con los datos de train y test
+        st.code('''# Carga de csv con los datos de train
 df_train = pd.read_csv('DataFrames/titanic_train.csv')      
-df_test = pd.read_csv('DataFrames/titanic_test.csv')
-st.dataframe(df_train.head(10))       # head''')
+df_train.head(10)       # head''')
         
-        df_train, df_test = load_data_titanic()    
+        #df_test = pd.read_csv('DataFrames/titanic_test.csv')
+        
+       # df_train, df_test = load_data_titanic()    
+        df_train = load_data_titanic()
         st.dataframe(df_train.head(10))       # head
         st.code('''# info
-st.dataframe(df_train.info())''') 
+df_train.info()''') 
         
         df_train.info(buf=buffer)             # info
         st.code(buffer.getvalue(), language='html')
@@ -308,7 +955,7 @@ st.dataframe(df_train.info())''')
         st.write('---')
         st.write('#### EDA')
 
-        st.write('##### Conteo de Sobrevivientes en el set train')
+        st.write('##### Conteo de Sobrevivientes')
         st.write('''0 : No sobrevivió   
 1 : Sobrevivió.''')     
         
@@ -391,23 +1038,21 @@ st.pyplot(fig)''')
         st.write('##### Reemplazo de datos nulos.')
         st.write('''Existen datos nulos en Age, por lo tanto se puede reemplazar los valores nulos por el promedio de edad.     
 Se calcula el promedio de edad por clase.''')
-        st.code('''df_train.isnull().sum()      
-df_test.isnull().sum()''')
+        st.code('''df_train.isnull().sum()''')
         
-        col1, col2 = st.columns(2)
+        #col1, col2 = st.columns(2)
         
-        with st.container(width=250):
-            with col1:
-                st.dataframe(df_train.isnull().sum())
-            with col2:
-                st.dataframe(df_test.isnull().sum())
+        with st.container(width=200):
+            #with col1:
+            st.dataframe(df_train.isnull().sum())
+           # with col2:
+            #    st.dataframe(df_test.isnull().sum())
         
-
         median_train_1 = df_train[df_train['Pclass'] == 1]['Age'].median()      # edad promedio 1era Clase
         median_train_2 = df_train[df_train['Pclass'] == 2]['Age'].median()      # edad promedio 2da Clase
         median_train_3 = df_train[df_train['Pclass'] == 3]['Age'].median()      # edad promedio 3era Calse
         
-        median_test = df_test['Age'].median()
+        #median_test = df_test['Age'].median()
         
         st.write('Cálculo de la media de Edad para train y test')
         st.code('''median_train_1 = df_train[df_train['Pclass'] == 1]['Age'].median()   
@@ -517,9 +1162,78 @@ df_train['Embarked'] = df_train['Embarked'].map(mod_ciudad)''')
   
         st.write(f'Cantiad de filas/columnas: {df_train.shape}')
         st.dataframe(df_train.head(10))
-  
+ 
+        st.write('---')
+        st.write('##### Separación de los datos del Modelo') 
+
+        st.code('''X = df_train.drop('Survived', axis=1)
+y = df_train['Survived']''')
+        
+        X = df_train.drop('Survived', axis=1)
+        y = df_train['Survived']
+    
         st.write('---')
         st.write('##### Entrenamiento del Modelo')
+        
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.    
+Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test.
+El parámetro random_state permite conseguir cierta repetición de los resultados.    
+* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)''')
+        
+        st.code('''from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)''')
+        
+        st.code('''from sklearn.linear_model import LogisticRegression
+                
+lg = LogisticRegression()
+lg.fit(X_train, y_train)
+''')
+        
+        from sklearn.model_selection import train_test_split 
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)
+        
+        from sklearn.linear_model import LogisticRegression
+        
+        lg = LogisticRegression()
+        lg.fit(X_train, y_train)
+        
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('''* **predict**:  función que se utiliza para obtener predicciones de un modelo entrenado.    
+Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.''')
+        
+        st.code('predictions = lg.predict(X_test)')
+        
+        predictions = lg.predict(X_test)
+
+        st.write('---')
+        st.write('##### Reporte de clasificación')
+        
+        st.code('''from sklearn.metrics import classification_report
+                
+target = ['Survived = 0','Survived = 1']
+st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))''')
+        
+        from sklearn.metrics import classification_report
+        
+        target = ['Survived = 0','Survived = 1']
+        st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))
+
+        st.write('---')
+        st.write('##### Matrix de confusión')
+
+        st.code('''from sklearn.metrics import confusion_matrix
+                
+confusion_matrix(y_test, predictions)''')
+        
+        from sklearn.metrics import confusion_matrix
+        with st.container(width=300):
+            st.write(confusion_matrix(y_test, predictions))
+
+       
+        
+        
+        
         
 def ml_regresion_lineal():
     
