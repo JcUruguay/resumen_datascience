@@ -3,12 +3,31 @@ from PIL import Image
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import seaborn as sns
 import plotly.express as px
 from sklearn import metrics
-import io
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_samples, silhouette_score, calinski_harabasz_score, davies_bouldin_score
+
+from sklearn.decomposition import PCA
+import sklearn.neighbors
+from sklearn.neighbors import kneighbors_graph
+from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
+
+from sklearn.cluster import DBSCAN
+
+import scipy.cluster.hierarchy as hc
+from sklearn.cluster import AgglomerativeClustering
+
+import warnings
+warnings.filterwarnings('ignore')
+import io
+
 
 def main():
     st.set_page_config(layout='wide')
@@ -27,7 +46,9 @@ def main():
     st.sidebar.write('---')
     
     # Lista de opciones del sidebar
-    opciones_2 = ['Seleccionar...', 'Modelado de Datos','Regresión Lineal','Regresión Logística', 'KNN, K vecinos más cercanos','Arbol de Decisión y Bosque Aleatorio']
+    opciones_2 = ['Seleccionar...', 'Introducción', 'Regresión Lineal','Regresión Logística','KNN, K vecinos más cercanos', 'Arbol de Decisión y Bosque Aleatorio',
+'Conjunto de Arboles de Desicion','Maquina de Soporte Vectorial', 
+'Analisis de Componentes Principales (PCA)','Sistemas de Recomendación','Procesamiento de Lenguaje Natural (NLP)', 'No Supervisado - Clustering','Bayes Ingenuo']
     
     opcion_seleccionada_2 = st.sidebar.selectbox(
         '**Machine Learning:**',
@@ -64,8 +85,10 @@ def main():
     if opcion_seleccionada_2 != 'Seleccionar...':
         st.title(opcion_seleccionada_2)
         
-        if opcion_seleccionada_2 == 'Modelado de Datos':
-            ml_modelado()        
+        if opcion_seleccionada_2 == 'Introducción':
+            ml_introduccion()        
+        elif opcion_seleccionada_2 == 'No Supervisado - Clustering':    
+            ml_aprendizaje_NoSupervisado()
         elif opcion_seleccionada_2 == 'Regresión Lineal': 
             ml_regresion_lineal()
         elif opcion_seleccionada_2 == 'Regresión Logística':
@@ -74,6 +97,18 @@ def main():
             ml_knn()
         elif opcion_seleccionada_2 == 'Arbol de Decisión y Bosque Aleatorio':
             ml_trees()
+        elif opcion_seleccionada_2 == 'Conjunto de Arboles de Desicion':
+            ml_ensambletrees()
+        elif opcion_seleccionada_2 == 'Maquina de Soporte Vectorial':
+            ml_SVM()
+        elif opcion_seleccionada_2 == 'Analisis de Componentes Principales (PCA)':
+            ml_PCA()
+        elif opcion_seleccionada_2 == 'Bayes Ingenuo':
+            ml_Bayes()
+        elif opcion_seleccionada_2 == 'Sistemas de Recomendación':
+            ml_SisRecomendacion()
+        elif opcion_seleccionada_2 == 'Procesamiento de Lenguaje Natural (NLP)':
+            ml_NLP()
             
     if opcion_seleccionada_3 != 'Seleccionar...':
         st.title(opcion_seleccionada_3)
@@ -82,189 +117,2695 @@ def main():
             git()
         elif opcion_seleccionada_3 == 'Docker':
             docker()
+        elif opcion_seleccionada_3 == 'AWS':
+            aws()
         
         
-def ml_modelado():
-    opciones_mlmodleado = ['tips']
+def ml_introduccion():
+    opciones_mlmodleado = ['Machine Learning', 'EDA']
     
     col1, col2 = st.columns([2,2])
     
     with col1:
-        opcion_seleccionada = st.selectbox('Seleccionar Data Frame: ', opciones_mlmodleado)
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlmodleado)
+        st.success(f'##### **{opcion_seleccionada}** ')
+    
+    
+    if opcion_seleccionada == 'EDA':
+        st.write('##### Definición')
+        st.write('''El Analisis Exploratorio de Datos en machine learning es un enfoque critico para analizar conjuntos de datos y resuminr sus caracteristicas principales,    
+utilizando metodos estadisticos y visualizacion de datos. Permite a los cientificos de datos entender la estructura de datos, detectar anomalias, probar suposiciones   
+y encontrar patrones ocultos antes del modelado formal.''')
+    
+        st.write('---')
+        st.write('##### Carga de datos en un dataset')
+        
+        st.write('''**read_csv()** : Es una funcion que se utiliza para importar archivos CSV a un DataFrame. Lee los datos, y separa los valores por comas por defecto.   
+
+**Parametros**  
+
+* sep: el caracter utilizado para separar los valores (delimitador). El predeterminado es la coma ','.    
+* header: la fila que se usará como encabezado, header=0 (primera fila) o header=None.    
+* names: una lista de nombres de columna para usar en caso de que el archivo no tenga encabezado. 
+* index_col: especifica la columna a usar como índice del DataFrame.  
+* na_values: se utiliza para especificar que valores deben interpretarse como valores faltantes (NaN) al cargarlo en un DataFrame.  
+Se pueden pasar una lista de cadenas (n/a, ---, ?, etc.) ademas de los valores predeterminados como '', 'NULL', 'NA', etc.                 
+                 
+                   
+''')
+        
+        st.code('''df_creditos = pd.read_csv('DataFrames/creditos.csv')''')
+        
+        df_creditos = pd.read_csv('DataFrames/creditos.csv')
+        
+
+        st.write('---')
+        st.write('''**shape** : se utiliza para conocer las dimensiones de un DataFrame o Serie, devolviendo una tupla con la estrucutra 
+(numero de filas, numero de columnas)''')
+
+        st.code('''df_creditos.shape''')
+        df_creditos.shape
+    
+        st.write('---')
+        st.write('''**columns** : se utiliza para visualizar o modificar los nombres de las columnas en un DataFrame, devolviendo un objeto de tipo indice (Index). 
+Es fundamental para la manipulacion de datos tabulares, permitiendo renombrar, seleccionar, añadir o eliminar columnas.''')
+
+        st.code('''df_creditos.columns''')
+        st.code(df_creditos.columns)
+
+        st.write('---')
+        st.write('''**head()** : se utiliza para visualizar rapidamente las primeras filas de un DataFrame o Series, siendo el valor 5 el valor predeterminado.''')
+
+        st.code('''df_creditos.head(10)''')
+        st.code(df_creditos.head(10), language='html')
+
+        st.write('---')
+        st.write('''**info()** : proporciona un resumen conciso y esencial de un DataFrame, mostrando el numero de filas (entradas), nombres de columnas, tipos de datos (dtypes),  
+valores no nulos y el uso total de memoria.''')
+
+        st.code('''df_creditos.info()''')
+
+        buffer = io.StringIO()   
+        df_creditos.info(buf=buffer)             
+        st.code(buffer.getvalue(), language='html')    
+        
+        
+        st.write('---')
+        st.write('''**describe()** : funcion esencial para el analisis exploratorio de datos, que genera un resumen estadistico descriptivo de las columnas numericas en un DataFrame.  
+Proporciona metricas clave como el conteo (count), media (mean), desviacion estandar (std), valores minimos/maximos y percentiles (25%, 50%, 75%)''')        
+        
+        st.code('''df_creditos.describe().T''')
+        st.code(df_creditos.describe().T, language='html')
+        
+        st.write('---')
+        st.write('##### Ver si existen valores nulos.')
+        
+        st.write('''**isnull()** : funcion que se utiliza para detectar valores faltantes (NaN, None, NaT) en un DataFrame o Series, devolviendo un objeto booleano del mismo tamaño    
+donde True indica un valor nulo y False uno valido.''')
+        
+        st.code('''df_creditos.isnull()''')
+        st.code(df_creditos.isnull(), language='html')
+        
+        st.write('''**isnull().any()** : se utiliza para detectar rapidamente si alguma columna de un DataFrame contiene valores nulos (Nan, None), devolviendo una Serie booleana (True/False) por columna.''')
+        st.code('''df_creditos.isnull().any()''')
+        st.code(df_creditos.isnull().any(), language='html')     
+     
+        st.write('''**isnull().any().any()** : comprueba si hay cualquier valor nulo en todo el DataFrame (devuelve un unico booleano)''')     
+        st.code('''df_creditos.isnull().any().any()''')
+        st.code(df_creditos.isnull().any().any(), language='html')        
+
+        st.write('''**isnull().sum()** : cuenta el numero total de nulos por columna.''')     
+        st.code('''df_creditos.isnull().sum()''')          
+        st.code(df_creditos.isnull().sum(), language='html')  
+        
+        st.write('---')
+        st.write('''**set_index()** : metodo que establece una o varias columnas existentes como el nuevo indice (etiqueta de fila) de un DataFrame,    
+reemplanzando el indice entero predeterminado.  
+
+inplace: por defecto devuelve una copia, para aplicar directamente sobre el DataFrame modificar inplace=True.   
+drop: por defecto, la columna utilizada se elimina de los datos, usar drop=False para mantenera.    
+Multiples indices: se pueden usar listas para indices jerarquicos (['col1', 'col2']).''')  
+
+        st.code('''df_creditos.set_index(\'ID\', inplace=True)''')
+        df_creditos.set_index('ID', inplace=True)
+        st.code(df_creditos.head(), language='html')
+
+        st.write('---')
+        st.write('##### Eliminar informacion duplicada.')
+
+        st.write('''**drop()** : metodo que elimina filas (axis=0), o columnas (axis=1) de un DataFrame. Devuelve una copia modificada por defecto, 
+aunque puede alterar el original con inplace=True''')
+        
+        st.code('''df_creditos.drop('provincia_codigo', axis=1, inplace=True)''')
+        df_creditos.drop('provincia_codigo', axis=1, inplace=True)
+        st.code(df_creditos.head(), language='html')
+
+        st.write('---')
+        st.write('##### Valores unicos.')
+
+        st.write('''**unique()** : permite saber cuales son valores unicos de una columna''')
+        st.code('''df_creditos['autonomo'].unique()''')
+        st.code(df_creditos['autonomo'].unique())
+        st.code('''df_creditos['Es_jubilado'].unique()''')
+        st.code(df_creditos['Es_jubilado'].unique())
+        st.code('''df_creditos['Es_jubilado'].unique()''')
+        st.code(df_creditos['Es_jubilado'].unique())
+        st.code('''df_creditos['relacion_dependencia'].unique()''')
+        st.code(df_creditos['relacion_dependencia'].unique(), language='html')
+
+
+        st.write('''**nunique()** : devuelve la cantidad de valores unicos''')
+        st.code('''df_creditos['autonomo'].nunique()''')
+        st.code(df_creditos['autonomo'].nunique())
+
+
+        st.write('---')
+        st.write('##### Correccion de Inconsistencias.')
+
+        st.write('''**map()** : permite substituir cada valor de una columna por otro valor basandose en un diccionario, una funcion u otra columna.''')
+
+        st.code('''data = {'F':False, 'V':True, '0':False}  
+                   
+df_creditos['autonomo'] = df_creditos['autonomo'].map(data)                     
+df_creditos['Es_jubilado'] = df_creditos['Es_jubilado'].map(data)   
+''')
+        
+        data = {'F':False, 'V':True, '0':False}
+        df_creditos['autonomo'] = df_creditos['autonomo'].map(data)
+        df_creditos['Es_jubilado'] = df_creditos['Es_jubilado'].map(data)
+
+        st.code(df_creditos.head(), language='html')
+
+        
+
+        st.write('---')
+        st.write('##### Reemplazar valores nulos.')
+
+        st.write('''**fillna()** : remplaza los valores NaN por otro valor.''')
+
+        st.code('''df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].fillna(0)''')
+        df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].fillna(0)
+        
+        st.code('''df_creditos['Cantidad_consultas_7_dias'] = df_creditos['Cantidad_consultas_7_dias'].fillna(0)''')
+        df_creditos['Cantidad_consultas_7_dias'] = df_creditos['Cantidad_consultas_7_dias'].fillna(0)
+        
+        
+        
+        st.write('Si no se establece una columna entonces reemplaza las de todas.')
+        st.code('''df_creditos.fillna(0, inplace=True)''')
+       # df_creditos.fillna(0, inplace=True)
+
+        st.write('---')
+        st.write('##### Rvision de valores.')
+
+        st.write('''**value_counts()** : obtiene la cantidad de una variable agrupada por categoría.''')
+        st.code('''df_creditos['autonomo'].value_counts()''')
+        st.code(df_creditos['autonomo'].value_counts(), language='html')        
+        
+        st.code('''df_creditos['Es_jubilado'].value_counts()''')
+        st.code(df_creditos['Es_jubilado'].value_counts(), language='html')
+
+        st.code('''df_creditos['relacion_dependencia'].value_counts()''')
+        st.code(df_creditos['relacion_dependencia'].value_counts(), language='html')
+
+
+        st.write('---')
+        st.write('''**replace()** : permite reemplazar los valores por otra etiqueta o crear una nueva columna en base a los valores de la otra columna.''')
+        st.code('''df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].replace({'0':0})''')
+    
+
+        df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].replace({'0':0})
+        st.code('''df_creditos['relacion_dependencia'].value_counts()''')
+        st.code(df_creditos['relacion_dependencia'].value_counts(), language='html')
+
+      
+        st.write('---')
+        st.write('''**aply()** : Es una herramienta de propósito general para aplicar una función a lo largo de un eje (filas o columnas) de un DataFrame o a cada elemento de una Serie.       
+Se utiliza para realizar transformaciones, cálculos y lógica condicional compleja, siendo una alternativa más eficiente y limpia que los bucles.        
+Para usarlo, se le pasa la función a aplicar, y el parámetro axis determina si se aplica a las columnas (0) o a las filas (1)''')     
+
+                
+        st.write('---')
+        st.write('##### Conversion de tipos de datos.')
+              
+        st.write('''**astype()** : convierte a otro tipo de dato (string, int64, float)''')         
+
+        st.code('''df_creditos['PRODUCTO'] = df_creditos['PRODUCTO'].astype('string')''')
+        df_creditos['PRODUCTO'] = df_creditos['PRODUCTO'].astype('string')
+
+        st.write('Conversion de mas de una columna')
+        
+        st.code('''columnas_cod = ['PROVINCIA','BCRA_Peor_Situacion','Nivel_Socioeconomico']
+df_creditos[columnas_cod] = df_creditos[columnas_cod].astype('string')''')
+        
+        columnas_cod = ['PROVINCIA','BCRA_Peor_Situacion','Nivel_Socioeconomico']
+        df_creditos[columnas_cod] = df_creditos[columnas_cod].astype('string')
+        
+        
+        st.write('**Convertir relacion de dependencia a bool (False, True)**')
+        st.code('''df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].astype(bool)''')
+        df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].astype(bool)
+        
+        
+        st.write('---')
+        st.write('##### Codificado get_dummies')
+        
+        st.write('''**get_dummies()** : se utiliza para convertir variables categóricas en variables ficticias o binarias (con valores de 0 o 1).       
+Este proceso, también conocido como codificación one-hot, es fundamental para preparar datos para algoritmos de aprendizaje automático que requieren entradas numéricas.        
+La función crea nuevas columnas para cada categoría única en la variable original, indicando la presencia (1) o ausencia (0) de esa categoría en cada fila      
+El parametro drop_first = True elimina la primera categoria para evitar multicolinealidad.''')
+        
+        st.code('''df_creditos = pd.get_dummies(df_creditos, dtype=int)''')
+        df_creditos = pd.get_dummies(df_creditos, dtype=int)     
+        
+        df_creditos.info()   
+                
+        st.write('---')
+        st.write('##### Escalamiento')                
+        st.write('''La mayoria de los algorimos de Machine Learning funcionan mucho mejor si las caracteristicas estan en la misma escala.      
+Sin embargo, algunos como los basados en arboles de decision que no lo necesitan.''')
+        
+        st.write('''**Normalizacion:*** Consiste en el re-escalado de las caracteristicas dentro de un rango [0...1], [min...max].      
+Se aplica la siguiente expresion: Xnorm = (X-Xmin)/(Xmax-Xmin)''')                
+
+        st.write('''**Estandarizacion:*** Requiere que se tome cada dato, se le reste el valor medio de esa caracteristica, y esa diferencia se divida por el desvio estandar.  
+La estandarizacion puede ser mas conveniente para modelos que usan algoritmos del descenso del gradiente, porque facilita la convergencia del mismo.''')
+                
+                
+                
+                
+                
+
+    if opcion_seleccionada == 'Machine Learning':
+        st.write('**Inteligencia Artificial**')
+        st.write('''Subdisciplina del campo de la informática, que busca la creación de máquinas que puedan imitar comportamientos inteligentes.    
+La inteligencia artificial puede ser Fuerte: sistemas que pueden realizar multitud de tareas, incluso con un alto nivel de complejidad.     
+Puede ser débil: sistemas qye pueden cumplir con un conjunto limitado de tareas.
+
+**Areas de aplicación:** Visión, Voz, Procesado de Lenguaje Natural (PLN), Sistemas Expertos, Robots, Machine Learning (Deep Learning)''')
+        st.write('---')
+        st.write('**Machine Learning**')
+        st.write('''Se refiere a un amplio conjunto de técnicas informáticas que nos permiten dar a las computadoras la capacidad de aprender sin ser explícitamente programadas.''')
+
+        st.write('**Conceptos fundamentales en el aprendizaje**')
+        st.write('**Paradigma de aprendizaje:** Información de la que dispone la red.')     
+        st.write('''**Aprendizaje supervisado**: Estos algoritmos aprenden a partir de casos previamentes etiquetados. Objetivo aprender a mapear las entradas en salidas,     
+midiendo el error de lo aprendido con el dato real. Pueden ser de Clasifiacion o Regresion.   
+**Aprendizaje No supervisado**: Estos algoritmos no cuentan con un conocimiento previo. Se enfrentan al caos de datos con el objetivo de encontrar patrones que permitan    
+organizarlos de alguna manera. Pueden ser de Clustering o Reduccion de dimensiones.      
+**Aprendizaje por Refuerzo:** Ei sistema aprende a partir de su propia experiencia, en base a un proceso de prueba, error y recompensas si toma decisiones correctas.''')
+        
+        st.write('---')
+        st.write('**Tipos de Problemas para cada Paradigma de Aprendizaje**')
+        st.write('Aprendizajae Supervisado: Clasificación y Regresión')
+        st.write('Aprendizaje No Supervisado: Análisis Clúster y Reducción de Dimensionalidad')
+        
+        st.write('---')
+        st.write('**Algoritmo de aprendizaje:** Procedimiento numérico de ajuste de los pesos.')
+
+        st.write('**Conceptos Básicos**')
+        st.write('''La informacion se organiza en observaciones con atributos. En algunos casos, estas observaciones tienen una variable target que queremos predecir.  
+Los modelos de Machine Learning solo son capaces de aprender de representaciones numericas.''')
+
+
+def ml_aprendizaje_NoSupervisado():
+    
+    
+    buffer = io.StringIO()   
+    st.write('#### Definición') 
+
+    st.write('''Es un tipo de aprendizaje automático que utiliza algoritmos para encontrar patrones en datos sin etiquetar, es decir, sin intrucciones o 'respuestas correctas' predifinidas.
+Su objetivo es descubrir la estructura oculta en los datos, lo que permite agrupar datos similares (clustering), reducir la complejidad de los datos (reducción de dimensionalidad) o identificar anomalías.''')
+
+    st.write('---')
+
+
+    opciones_NoSupervisado = ['Resumen','Kmeans (Mall Customers)','Kmeans (Universities)', 'Agr. Jerarquico', 'Agr. por Densidad (DBSCAN)']
+    
+    col1, col2 = st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_NoSupervisado)
         st.success(f'##### **{opcion_seleccionada}** ')
     
 
-    if opcion_seleccionada == 'tips':
-        st.write('##### Data Frame que muestra las Propinas de un Restaurante')
-        
-        #codigo
-        codigo = '''
-df = pd.read_csv('DataFrames/tips.csv')
-st.dataframe(df.head(10))'''
-        st.code(codigo)
-        
+    if opcion_seleccionada == 'Resumen':
+        st.write('#### Características principales')
+        st.write('''* **Datos sin etiquetar**: Los algoritmos trabajan con datos que no tienen una variable de salida o etiqueta asociada.    
+A diferencia del aprendizaje supervisado, no hay "respuestas correctas" proporcionadas durante el entrenamiento.''') 
+        st.write('''* **Descubrimiento de patrones**: Los modelos identifican automáticamente similitudes y diferencias dentro de los datos para encontrar patrones y estructuras subyacentes.''') 
+        st.write('''* **Autonomía**:  El algoritmo opera de forma independiente para descubrir la estructura de los datos sin necesidad de intervención humana o guía explícita sobre el resultado esperado.''') 
 
-        
-        # Carga de Datos
-        df = pd.read_csv('DataFrames/tips.csv')
-        
-        # Visualizacion de 10 primeros registros
-        st.write('##### Visualización de los primeros 10 registros')
-        st.dataframe(df.head(10))
-        
         st.write('---')
-        
-        st.write('##### Pie Chart y Bar Chart con Matplotlib')
-        
-        #codigo
-        codigo = '''
-data_types = df.dtypes      # Obtiene los tipos de datos del dataframe (int, float, object)
-cat_cols = tuple(data_types[data_types == 'object'].index)      # Devuelve tupla con las columnas de tipo object
-feature = st.selectbox('Seleccionar categoría', cat_cols, width=400)    # Seleccion de la columna
-value = df[feature].value_counts()      # DataFrame con la cantidad por tipo
-
-st.write('Pie Chart')
-fig,ax = plt.subplots()
-ax.pie(value,labels=value.index,autopct='%0.2f%%')
-st.pyplot(fig)
-
-st.write('Bar Chart')
-fig,ax = plt.subplots()
-ax.bar(value.index,value)       
-st.pyplot(fig)
-
-st.dataframe(value)'''
-        st.code(codigo)        
-        
-        
-        # Crear contenedor para seleccion de categoria
-        with st.container(border=True):
-            
-            data_types = df.dtypes
-            cat_cols = tuple(data_types[data_types == 'object'].index)
-            
-            feature = st.selectbox('Seleccionar categoría', cat_cols, width=400)
-
-            value = df[feature].value_counts()
-            col_1, col_2 = st.columns(2)
-            
-            
-            with col_1:
-                st.write('Pie Chart')
-                # pie chart
-                fig,ax = plt.subplots()
-                ax.pie(value,
-                    labels=value.index,
-                    autopct='%0.2f%%')
-                
-                st.pyplot(fig)
-            
-            with col_2:
-                # bar char
-                st.write('Bar Chart')
-                fig,ax = plt.subplots()
-                ax.bar(value.index,value)
-                
-                st.pyplot(fig)
-                 
-            with st.expander(f'Cantidad por {feature}', width=400):
-                    st.dataframe(value)        
-        
-        
-        st.write('---')
-        
-        st.write('##### Graficos Box, Violin, Kdeplot y Hisplot con Seaborn')
-        
-        #codigo
-        codigo = '''
-grafico = st.selectbox('Seleccionar tipo de gráfico', ('Box','Violin','Kdeplot','Histogram'), width=300)
-fig,ax = plt.subplots()
-if grafico == 'Box':
-    sns.boxplot(x='sex',y='total_bill', hue='sex', data=df)
-elif grafico == 'Violin':
-    sns.violinplot(x='sex', y='total_bill', hue='sex', data=df)
-elif grafico == 'Kdeplot':
-    sns.kdeplot(data=df, x='total_bill', hue='sex', fill=True)
-elif grafico == 'Histogram':
-    sns.histplot(x='total_bill', hue='sex',data=df)
+        st.write('#### Aplicaciones comunes')
+        st.write('''* **Agrupación de clientes**: Segmentar clientes en grupos basados en sus comportamientos de compra para personalizar ofertas, como se hace en el comercio electrónico.''')   
+        st.write('''* **Sistemas de recomendación**: Descubrir tendencias en datos históricos para sugerir productos o contenido complementario.''') 
+        st.write('''* **Detección de anomalías**: Identificar puntos de datos inusuales que podrían indicar errores, fallos de equipos o infracciones de seguridad.''') 
+        st.write('''* **Procesamiento de imágenes médicas**: Ayudar en tareas de radiología y patología para analizar y clasificar imágenes de forma más rápida y precisa.''') 
     
-st.pyplot(fig)'''
-        st.code(codigo)            
-        
-        
-        with st.container(border=True, width=1200):
-            st.write('Distribución de Total Gastado por sexo')            
+        st.write('---')    
+        st.write('#### Técnicas comunes')    
+        st.write('''* **Agrupación (clustering)**: Agrupar puntos de datos en clústeres basándose en su similitud. Ejemplos son los algoritmos K-Means.''')    
+        st.write('''* **Reducción de dimensionalidad**: Reducir el número de variables en un conjunto de datos mientras se conserva la información importante.  
+    Un ejemplo es el Análisis de Componentes Principales (PCA).''')    
+
+
+    if opcion_seleccionada == 'Agr. por Densidad (DBSCAN)':
+
+        st.write('##### Data Frame con dato de clientes de una tienda')         
     
-            # box, violin, kdeplot, histogram
-            grafico = st.selectbox('Seleccionar tipo de gráfico', ('Box','Violin','Kdeplot','Histogram'), width=300)
-            
-            fig,ax = plt.subplots()
-            if grafico == 'Box':
-                sns.boxplot(x='sex',y='total_bill', hue='sex', data=df)
-            elif grafico == 'Violin':
-                sns.violinplot(x='sex', y='total_bill', hue='sex', data=df)
-            elif grafico == 'Kdeplot':
-                sns.kdeplot(data=df, x='total_bill', hue='sex', fill=True)
-            elif grafico == 'Histogram':
-                sns.histplot(x='total_bill', hue='sex',data=df)
-            
-            st.pyplot(fig)
-                
-                
+        st.code('''from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import MinMaxScaler''')
+        
+        from sklearn.cluster import DBSCAN
+        from sklearn.preprocessing import MinMaxScaler
+        
+
+        st.code('''df_arboles = pd.read_csv('DataFrames/arbolado-en-espacios-verdes.csv)
+st.dataframe(df_arboles.head(10)) ''')
+        
+        df_arboles = pd.read_csv('DataFrames/arbolado-en-espacios-verdes.csv')
+        st.dataframe(df_arboles.head(10))
+        
+         
+        st.code('''# info
+df_arboles.info()''') 
+        
+        df_arboles.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')          
+
+        st.write('---')
+        st.write('**Cantidad de especies diferentes**')
+
+        st.code('df_arboles[\'id_especie\'].nunique()')
+        
+        especies = df_arboles['id_especie'].nunique()
+        st.code(especies, language='html')
+
+        st.write('**Columnas que interesan**')
+        
+        st.code('df_data = df_arboles[[\'diametro\',\'altura_tot\',\'nombre_com\']]')
+
+        df_data = df_arboles[['diametro','altura_tot','nombre_com']]
+        
+        st.write('**Modificar nombre de altura_tot -> altura**')
+        
+        st.code('df_data.rename(columns={\'altura_tot\':\'altura\'}, inplace=True)')
+        df_data.rename(columns={'altura_tot':'altura'}, inplace=True)
+
+        st.dataframe(df_data.head(10))
+
+        st.write('**Filtrado por especies**')
+
+        st.code('''especies = (df_data['nombre_com'] == 'Jacarandá') | (df_data['nombre_com'] == 'Palo borracho rosado') | (df_data['nombre_com'] == 'Eucalipto') 
+| (df_data['nombre_com'] == 'Ceibo') 
+df_data_especies = df_data[especies]''')     
+        
+        st.code('''# Otra forma de filtro
+especies = df_data['nombre_com'].isin(['Jacarandá','Palo borracho rosado','Eucalipto','Ceibo'])''')
+        
+        especies = df_data['nombre_com'].isin(['Jacarandá','Palo borracho rosado','Eucalipto','Ceibo'])             
+#       especies = (df_data['nombre_com'] == 'Jacarandá') | (df_data['nombre_com'] == 'Palo borracho rosado') | (df_data['nombre_com'] == 'Eucalipto') | (df_data['nombre_com'] == 'Ceibo') 
+        
+        df_data_especies = df_data[especies]
+        st.dataframe(df_data_especies.head(10))
+
+        st.write('**Seleccion de una especie**: Eucalipto')
+
+        st.write('Filtrar aquellos arboles con diametro > 10cm par sacar valores erroneos.')
+        st.code('''eucaliptus = (df_data_especies['nombre_com'] == 'Eucalipto') & (df_data_especies['diametro'] > 10)
+df_eucalipto = df_data_especies[eucaliptus]
+df_eucalipto.reset_index(inplace=True)      # resetear indice
+df_eucalipto.drop(['index','nombre_com'], axis=1, inplace=True)  # eliminar indice y nombre''')
+        
+        eucaliptus = (df_data_especies['nombre_com'] == 'Eucalipto') & (df_data_especies['diametro'] > 10)
+
+        df_eucalipto = df_data_especies[eucaliptus]
+        df_eucalipto.reset_index(inplace=True)      # resetear indice
+        df_eucalipto.drop(['index','nombre_com'], axis=1, inplace=True)  # eliminar indice y nombre
+         
+        st.dataframe(df_eucalipto.head(10))
+
         st.write('---')
         
-        st.write('##### Grafico Scatterplot con Seaborn')
+        st.code('''fig,ax = plt.subplots()
+ax.plot(df_eucalipto['diametro'],df_eucalipto['altura'], color='blue', linestyle='none', marker='o', markersize =3, alpha=.3)                    
+plt.title('Grafico de Eucaliptus (diametro vs altura)', size=10)
+plt.xlabel('Diametro (cm)', size=8)
+plt.ylabel('Altura (m)', size=8)                    
+                    
+st.pyplot(fig)''')
+            
         
-        #codigo
-        codigo = '''
-fig,ax = plt.subplots() 
-hue_type = st.selectbox('Seleccionar categoría', cat_cols, width=300)
-sns.scatterplot(x='total_bill',y='tip',hue=hue_type,data=df)   
- 
-st.pyplot(fig)
-'''
-        st.code(codigo)                  
-                
-                
-        with st.container(border=True, width=1200):
-            st.write('Grafico Scatter Total Gastado vs Propina')
-            
+        
+        with st.container(width=800):
+
             fig,ax = plt.subplots()
-            hue_type = st.selectbox('Seleccionar categoría', cat_cols, width=300)
-            
-            sns.scatterplot(x='total_bill',y='tip',hue=hue_type,data=df)
+            ax.plot(df_eucalipto['diametro'],df_eucalipto['altura'], color='blue', linestyle='none', marker='o', markersize =3, alpha=.3)
+
+
+            plt.title('Grafico de Eucaliptus (diametro vs altura)', size=10)
+            plt.xlabel('Diametro (cm)', size=8)
+            plt.ylabel('Altura (m)', size=8)
+
             st.pyplot(fig)
 
+        st.write('---')
+        st.write('##### Normalización de los datos')
+        
+        st.write('''* **MinMaxScaler**: es una tecnica de preprocesamiento que transforma las caracteristicas escalonandolas a un rango fijo, 
+    generalmente entre 0 y 1, ajustando los valores proporcionalmente para que el minimo se convierta en 0 y el maximo en 1, manteniendo la forma original de la distribucion de los datos.''')
+        
+        st.code('''scaler = MinMaxScaler()
+df_scaled = scaler.fit_transform(df_eucalipto)                
+
+df_eucalipto_escaled = pd.DataFrame(df_scaled, columns=df_eucalipto.columns)''')
+        
+        scaler = MinMaxScaler()
+        df_scaled = scaler.fit_transform(df_eucalipto)
+        
+        df_eucalipto_escaled = pd.DataFrame(df_scaled, columns=df_eucalipto.columns)
+        st.write(df_eucalipto_escaled.head(10))
+
+        with st.container(width=800):
+
+            fig,ax = plt.subplots()
+            ax.plot(df_eucalipto_escaled['diametro'],df_eucalipto_escaled['altura'], color='blue', linestyle='none', marker='o', markersize =3, alpha=.3)
+
+
+            plt.title('Grafico de Eucaliptus (escalado)', size=10)
+            plt.xlabel('Diametro', size=8)
+            plt.ylabel('Altura', size=8)
+
+            st.pyplot(fig)
+
+        st.write('---')
+        st.write('**Parametrizacion de DBSCAN usaando el método de la rodilla**')
+        
+        st.code('''estimator = PCA(n_components=2)
+X_pca = estimator.fit_transform(df_eucalipto_escaled)                
+dist = metrics.DistanceMetric.get_metric('euclidean')                
+matsim = dist.pairwise(X_pca)   
+minPts = 5   
+A = kneighbors_graph(X_pca, minPts, include_self=False)   
+Ar = A.toarray()   
+seq = [] 
+  
+for i,s in enumerate(X_pca):
+    for j in range(len(X_pca)):
+        if Ar[i][j] != 0:
+            seq.append(matsim[i][j])   
+   
+seq.sort() 
+ 
+fig,ax = plt.subplots()   
+ax.plot(seq)
+st.pyplot(fig)''')
+        
+        
+        estimator = PCA(n_components=2)
+        X_pca = estimator.fit_transform(df_eucalipto_escaled)
+        dist = metrics.DistanceMetric.get_metric('euclidean')
+        matsim = dist.pairwise(X_pca)
+        minPts = 5
+        A = kneighbors_graph(X_pca, minPts, include_self=False)
+        Ar = A.toarray()
+        seq = []
+        for i,s in enumerate(X_pca):
+            for j in range(len(X_pca)):
+                if Ar[i][j] != 0:
+                    seq.append(matsim[i][j])
+
+        seq.sort()
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+            ax.plot(seq)
+            
+            st.pyplot(fig)
+
+        st.write('---')
+        st.write('##### Ejecución DBSCAN')
+        
+        st.code('''dbscan = DBSCAN(eps=0.032, min_samples=5, metric='euclidean').fit(df_eucalipto_escaled)
+clusters = dbscan.fit_predict(df_eucalipto_escaled)''')
+        
+        dbscan = DBSCAN(eps=0.032, min_samples=10, metric='euclidean').fit(df_eucalipto_escaled)
+        clusters = dbscan.fit_predict(df_eucalipto_escaled)
+        #df_values = df_eucalipto.values
+        
+        st.code('''fig,ax = plt.subplots()
+plt.scatter(df_eucalipto['diametro'], df_eucalipto['altura'],c=clusters,cmap='viridis')
+plt.xlabel('Diametro (cm)') 
+plt.ylabel('Altura (m)')   
+
+st.pyplot(fig)''')
+        
+        # Graficacion de clusters
+        with st.container(width=800):            
+            fig,ax = plt.subplots()
+            plt.scatter(df_eucalipto['diametro'], df_eucalipto['altura'],c=clusters,cmap='viridis')
+            #plt.scatter(df_values[:,0], df_values[:,1],c=clusters,cmap='viridis')
+            plt.xlabel('Diametro (cm)')
+            plt.ylabel('Altura (m)')
+
+            st.pyplot(fig)
+            
+        st.write('---')
+        st.write('Clusters')
+        st.code('np.unique(clusters)')
+        st.code(np.unique(clusters))    
+
+        st.code('''df_clusters = pd.DataFrame()
+df_clusters['altura'] = df_eucalipto['altura'].values                
+df_clusters['diametro'] = df_eucalipto['diametro'].values 
+df_clusters['label'] = clusters''')
+        
+        df_clusters = pd.DataFrame()
+        df_clusters['altura'] = df_eucalipto['altura'].values
+        df_clusters['diametro'] = df_eucalipto['diametro'].values
+        df_clusters['label'] = clusters
+        
+      
+        
+        st.write('**Cantidad por grupo**')
+        
+        st.code('''df_cantidad_grupo = pd.DataFrame()
+df_cantidad_grupo['cantidad'] = df_clusters.groupby('label').size()''')
+        
+        df_cantidad_grupo = pd.DataFrame()
+        df_cantidad_grupo['cantidad'] = df_clusters.groupby('label').size()
+        
+        st.dataframe(df_cantidad_grupo, width=200)        
+
+        st.write('Eliminar puntos de ruido (-1)')
+        st.code('''filtro = df_clusters['label'] > -1
+df_clusters = df_clusters[filtro]''')
+        
+        filtro = df_clusters['label'] > -1
+        df_clusters = df_clusters[filtro]
+
+        st.write('**Grafico del DataFrame limpio**')
+        
+        st.code('''fig,ax = plt.subplots()
+ax.scatter(x=df_clusters['diametro'], y=df_clusters['altura'], color='#0004ff')  
+plt.xlabel('Diametro (cm)')
+plt.ylabel('Altura (m)')
+plt.title('Arboles sin outliers')              
+st.pyplot(fig)''')
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+            ax.scatter(x=df_clusters['diametro'], y=df_clusters['altura'], color="#0004ff")
+
+            plt.xlabel('Diametro (cm)')
+            plt.ylabel('Altura (m)')
+            plt.title('Arboles sin outliers')
+            st.pyplot(fig)
+
+
+
+    if opcion_seleccionada == 'Agr. Jerarquico':
+    
+        st.write('##### Data Frame con dato de clientes de una tienda')         
+    
+        st.code('''import scipy.cluster.hierarchy as hc
+from sklearn.cluster import AgglomerativeClustering ''')
+        
+        
+        st.code('''df_mall = pd.read_csv('DataFrames/Mall_customers.csv', index_col='CustomerID')
+st.dataframe(df_mall.head(10)) ''')
+        
+        df_mall = pd.read_csv('DataFrames/Mall_customers.csv', index_col='CustomerID')
+        st.dataframe(df_mall.head(10))
+         
+        st.code('''# info
+df_mall.info()''') 
+        
+        df_mall.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')          
+
+        st.write('---')
+        st.write('##### Eliminar columna género')
+        st.write('Se elimina la columna género ya que es irrelevante.')
+        
+        st.code('df_mall.drop(\'Gender\', axis=1, inplace=True)')
+        df_mall.drop('Gender', axis=1, inplace=True)
+
+
+        st.write('---')
+        st.write('##### Generación del Dendograma')
+
+        st.code('''dend = hc.dendrogram(hc.linkage(df_mall, method='ward'))
+
+fig,ax = plt.subplots()
+
+plt.title('Dendograma')
+plt.xlabel('Clientes')
+plt.ylabel('Distancia euclidiana')
+plt.savefig('dendograma.png', dpi=1200)
+        
+st.pyplot(fig)''')
+        
+        dend = hc.dendrogram(hc.linkage(df_mall, method='ward'))
+
+       # with st.container(width=600):
+        #    fig,ax = plt.subplots()
+
+         #   plt.title('Dendograma')
+          #  plt.xlabel('Clientes')
+           # plt.ylabel('Distancia euclidiana')
+           # plt.savefig('dendograma.png', dpi=1200)
+            
+           # st.pyplot(fig)
+
+        imagen = Image.open('Imagenes/dendrograma1.png')
+        st.image(imagen, width=800)
+
+        st.code('''clust = AgglomerativeClustering(n_clusters=6, metric='euclidean', linkage='ward')
+plo = clust.fit_predict(df_mall)''')
+        
+        clust = AgglomerativeClustering(n_clusters=6, metric='euclidean', linkage='ward')
+        plo = clust.fit_predict(df_mall)
+
+        st.write('Generar el Dendrograma para observar donde corta según n_clusters=6')
+
+        st.code('''Z = hc.linkage(df_mall, method='ward')
+dend = hc.dendrogram(Z)   
+             
+fig,ax = plt.subplots()
+plt.title('Dendograma')
+plt.xlabel('Clientes')
+plt.ylabel('Distancia euclidiana')           
+''')
+
+
+        Z = hc.linkage(df_mall, method='ward')
+        dend = hc.dendrogram(Z)
+        
+        fig,ax = plt.subplots()
+        plt.title('Dendograma')
+        plt.xlabel('Clientes')
+        plt.ylabel('Distancia euclidiana')
+
+        st.write('Calcular altura para 6 clusters')
+        
+        st.code('''n_cluster = 6
+altura_corte = Z[-(n_cluster),2]    # altura exacta
+plt.axhline(y=altura_corte, color='r', linestyle='--', label=f'corte: {altura_corte:.2f}')
+plt.legend()
+
+st.pyplot(fig)''')
+        
+        n_cluster = 6
+        altura_corte = Z[-(n_cluster),2]    # altura exacta
+        plt.axhline(y=altura_corte, color='r', linestyle='--', label=f'corte: {altura_corte:.2f}')
+        plt.legend()
+
+       # st.pyplot(fig)
+        imagen = Image.open('Imagenes/dendograma2.png')
+        st.image(imagen, width=800)
+
+        st.write('---')
+        st.write('**Clientes en cada cluster**')
+        
+     
+        st.code('''unique_elements, counts = np.unique(plo, return_counts=True)
+resultado = zip(unique_elements, counts)                
+
+for key, value in resultado:    
+    st.write(f'{key} : {value}')            
+''')
+     
+        unique_elements, counts = np.unique(plo, return_counts=True)
+        resultado = zip(unique_elements, counts)
+            
+        for key, value in resultado:
+            st.write(f'{key} : {value}')
+
+
+        st.write('##### Grafico Plotly para la clasificacion (3d)')
+        
+        st.code('import plotly.express as px')
+        
+        import plotly.express as px
+
+        st.code('''fig = px.scatter_3d(data_frame=df_mall, x="Age", y="Annual Income (k$)", z= 'Spending Score (1-100)', width=1000, height=800, color=preds) # clusters
+ig.add_trace(px.scatter_3d(data_frame=centros, x="Age", y="Annual Income (k$)", z= 'Spending Score (1-100)').update_traces(                
+    marker=dict(size=4, symbol='x', color='black')).data[0]) # centroides   
+    
+st.plotly_chart(fig)''')
+        
+        fig = px.scatter_3d(data_frame=df_mall, x="Age", y="Annual Income (k$)", z= 'Spending Score (1-100)', width=1000, height=800, color=plo) # clusters
+       # fig.add_trace(px.scatter_3d(data_frame=centros, x="Age", y="Annual Income (k$)", z= 'Spending Score (1-100)').update_traces(
+        #    marker=dict(size=4, symbol='x', color='black')).data[0]) # centroides
+        
+        st.plotly_chart(fig)
+
+
+    if opcion_seleccionada == 'Kmeans (Universities)':
+        
+        st.write('##### Data Frame con datos de Universidades') 
+        st.code('''from sklearn.cluster import KMeans''')
+
+        st.code('''df_college = pd.read_csv('DataFrames/College_Data', index_col=0)
+df_college.head(10)            
+                ''')
+
+        df_college = pd.read_csv('DataFrames/College_Data', index_col=0)
+        st.dataframe(df_college.head(10))
+
+
+        st.code('''# info
+df_college.info()''') 
+        
+        df_college.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')  
 
         st.write('---')
         
-        st.write('##### Gráfico Histograma con Plotly ')
+
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            st.write('##### Scatterplot (Room.Board vs Grad.Rate)')
+            fig = sns.lmplot(
+                data=df_college, 
+                x='Room.Board',
+                y='Grad.Rate',
+                hue='Private',
+                fit_reg=False,
+            )
+
+            st.pyplot(fig) 
         
+
+        with col_2:
+            st.write('##### Scatterplot (Outstate vs F.Undergrad)')
+            fig = sns.lmplot(
+                data=df_college, 
+                x='Outstate',
+                y='F.Undergrad',
+                hue='Private',
+                fit_reg=False,
+            )
+
+            st.pyplot(fig)  
+
+        st.write('---')
+        st.write('##### Histogram Outstate')
         
-        #codigo
-        codigo = '''
-fig,ax = plt.subplots() 
-hue_type = st.selectbox('Seleccionar categoría', cat_cols, width=300)
-sns.scatterplot(x='total_bill',y='tip',hue=hue_type,data=df)   
- 
-st.pyplot(fig)
-'''
-        st.code(codigo)                  
-                        
+        with st.container(width=800):
         
+            fig,ax = plt.subplots()
+            sns.histplot(
+                data=df_college,
+                x='Outstate', 
+                kde=False, 
+                hue='Private',
+                alpha=0.5,
+                bins=20
+            )
+
+            st.pyplot(fig) 
+
+
+        st.write('---')
+        st.write('##### Histogram Grad.Rate')
         
-        with st.container(border=True, width=1200):
-            st.write('Grafico Histograma Total Gastado')
+        with st.container(width=800):
+        
+            fig,ax = plt.subplots()
+            sns.histplot(
+                data=df_college,
+                x='Grad.Rate', 
+                kde=False, 
+                hue='Private',
+                alpha=0.5,
+                bins=20
+            )
+
+            st.pyplot(fig) 
+
+
+        st.write('---')
+        st.write('**Crear Clusters de K Means**')
+        
+        st.code('''from sklearn.cluster import KMeans''')
+        
+        st.write('**Crear instancia de K Means con 2 clusters**')
+        st.code('kmeans = KMeans(n_clusters=2)')
+        kmeans = KMeans(n_clusters=2)
+        
+        st.write('**Entrenamiento del modelo**')
+        st.code('''df_college_fit = df_college.drop('Private',axis=1)
+kmeans.fit(df_college_fit)''')
+        
+        df_college_fit = df_college.drop('Private',axis=1)
+        kmeans.fit(df_college_fit)
+        
+        st.code(kmeans.cluster_centers_, language='html')  
+        st.write('**Ubicación de los centroides**')    
+        centroides = kmeans.cluster_centers_
+
+
+
+    if opcion_seleccionada == 'Kmeans (Mall Customers)':
+    
+        st.write('##### Data Frame con dato de clientes de una tienda')         
+        st.code('''from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_samples, silhouette_score, calinski_harabasz_score, davies_bouldin_score ''')
+        
+        st.code('''df_mall = pd.read_csv('DataFrames/Mall_customers.csv', index_col='CustomerID')
+st.dataframe(df_mall.head(10)) ''')
+        
+        df_mall = pd.read_csv('DataFrames/Mall_customers.csv', index_col='CustomerID')
+        st.dataframe(df_mall.head(10))
+         
+        st.code('''# info
+df_mall.info()''') 
+        
+        df_mall.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')          
+
+        st.write('---')
+        st.write('##### Eliminar columna género')
+        st.write('Se elimina la columna género ya que es irrelevante.')
+        
+        st.code('df_mall.drop(\'Gender\', axis=1, inplace=True)')
+        df_mall.drop('Gender', axis=1, inplace=True)
+
+
+        st.write('---')
+        st.write('##### Histograma') 
+        
+        col1,col2,col3 = st.columns(3)
+        
+        with col1:
+            fig,ax = plt.subplots()   
+            ax.hist(x=df_mall['Age'], bins=15, edgecolor='#000000', color='#8b92cc', alpha=.8)
+            ax.set_title('Histograma (Age)')
+
+            st.pyplot(fig)
+        with col2:
+            fig,ax = plt.subplots()   
+            ax.hist(x=df_mall['Annual Income (k$)'], bins=15, edgecolor='#000000', color='#8b92cc', alpha=.8)
+            ax.set_title('Histograma (Annual Income k$)')
+
+            st.pyplot(fig)
+        with col3:
+            fig,ax = plt.subplots()   
+            ax.hist(x=df_mall['Spending Score (1-100)'], bins=15, edgecolor='#000000', color='#8b92cc', alpha=.8)
+            ax.set_title('Spending Score (1-100)')
+
+            st.pyplot(fig)
+
+        st.write('---')
+        st.write('##### Parámetros skmeans')
+        st.write('* **n_clusters**: El número de clústers a formar, así como el número de centroides a generar (por defecto 8).') 
+        st.write('''* **init**: k-means++ selecciona los centroides iniciales del conglomerado mediante un muestreo basado en una distribución de probabilidad empírica
+de la contribución de los puntos a la inercia general.      
+random elige n_clusters observaciones (filas) al azar a partir de los datos para los centroides iniciales.
+Si se pasa una matriz, debe tener forma (n_clusters, n_features) y proporcionar los centros iniciales.''')  
+
+        st.write('''* **n_init**: número de veces que se ejecuta el algoritmo k-means con diferentes valores de semilla de centroide.       
+El resultado final es el mejor resultado de n_init ejecuciones consecutivas en términos de inercia (por defecto auto).''')
+        
+        st.write('* **max_iter**: número máximo de iteraciones del algoritmo k-means para una sola ejecución (por defecto 300).')
+        st.write('* **tol**: tolerancia relativa con respecto a la norma de Froebenius de la diferencia de los centros de los grupos de dos iteraciones consecutivas para declarar la convergencia.(por defecto 1e-4)')
+        st.write('''* **algotithm**: algoritmo k-means a utilizar. El algoritmo clásico es lloyd, puede usarse también elkan.''')
+
+
+        st.write('---')
+        st.write('##### Elección k usando el método de silueta (el máximo)')
+
+        st.code('''wcss = []
+calinski = []
+davies = []                
+
+for n_cluster in range(2,11):
+    km = KMeans(n_clusters=n_cluster, init='k-means++', random_state=16)
+    preds = km.fit_predict(df_mall)
+    sil_coeff = silhouette_score(df_mall, preds, metric='euclidean')
+    st.write(f'Para n_clusters={n_cluster}, el coeficiente de Silhouette es {sil_coeff}')
+    wcss.append(km.inertia_)   # inertia_ -> distancia intra clusters
+    calinski.append(calinski_harabasz_score(df_mall, preds))
+    davies.append(davies_bouldin_score(df_mall, preds))
+    sample_silhouette_values = silhouette_samples(df_mall, preds)
+
+    fig = plt.figure()
+    y_lower = 10
+        for i in range(n_cluster):
+            ith_cluster_silhouette_values = sample_silhouette_values[preds == i]
+            ith_cluster_silhouette_values.sort()
+            size_cluster_i = ith_cluster_silhouette_values.shape[0]
+            y_upper = y_lower + size_cluster_i
+                    
+            color = cm.nipy_spectral(float(i)/n_cluster)
+            plt.fill_betweenx(
+                 np.arange(y_lower, y_upper), 0, ith_cluster_silhouette_values, facecolor=color, edgecolor=color, alpha=.7
+            )
             
-            # histogram (total bill)
-            fig = px.histogram(df, x='total_bill', width=800)
-            st.plotly_chart(fig)
+            plt.text(-0.05, y_lower+0.5*size_cluster_i, str(i))
+            y_lower = y_upper + 10
+                    
+        plt.title(f'Grafico de silueta para los clusters, k = {n_cluster}')
+        plt.xlabel('Valores de coeficientes de Silueta')
+        plt.ylabel('Etiqueta cluster')
 
-            # histogram (total bill y color por sexo)
-            fig = px.histogram(df, x='total_bill', color='sex', width=800)
-            st.plotly_chart(fig)  
+        plt.axvline(x=sil_coeff, color='red', linestyle='--')
+                
+        plt.yticks([])
+        plt.xticks([-0.1,0.2,0.4,0.6,0.8,1])
+
+st.pyplot(fig)
+''')
+        
+        
+        
+        wcss = []
+        calinski = []
+        davies = []
+        
+        st.write('##### Grafico del metodo de la siuleta')
+        
+        with st.container(width=800):
+        
+            for n_cluster in range(2,11):
+                km = KMeans(n_clusters=n_cluster, init='k-means++', random_state=16)
+                preds = km.fit_predict(df_mall)
+                sil_coeff = silhouette_score(df_mall, preds, metric='euclidean')
+                st.write(f'Para n_clusters={n_cluster}, el coeficiente de Silhouette es {sil_coeff}')
+                wcss.append(km.inertia_)   # inertia_ -> distancia intra clusters
+                calinski.append(calinski_harabasz_score(df_mall, preds))
+                davies.append(davies_bouldin_score(df_mall, preds))
+                sample_silhouette_values = silhouette_samples(df_mall, preds)
+
+                fig = plt.figure()
+                y_lower = 10
+                for i in range(n_cluster):
+                    ith_cluster_silhouette_values = sample_silhouette_values[preds == i]
+                    ith_cluster_silhouette_values.sort()
+                    size_cluster_i = ith_cluster_silhouette_values.shape[0]
+                    y_upper = y_lower + size_cluster_i
+                    
+                    color = cm.nipy_spectral(float(i)/n_cluster)
+                    plt.fill_betweenx(
+                        np.arange(y_lower, y_upper), 0, ith_cluster_silhouette_values, facecolor=color, edgecolor=color, alpha=.7
+                    )
+            
+                    plt.text(-0.05, y_lower+0.5*size_cluster_i, str(i))
+                    y_lower = y_upper + 10
+                    
+                plt.title(f'Grafico de silueta para los clusters, k = {n_cluster}')
+                plt.xlabel('Valores de coeficientes de Silueta')
+                plt.ylabel('Etiqueta cluster')
+
+                plt.axvline(x=sil_coeff, color='red', linestyle='--')
+                
+                plt.yticks([])
+                plt.xticks([-0.1,0.2,0.4,0.6,0.8,1])
+
+                st.pyplot(fig)
 
 
+        
+        st.write('---')
+        st.write('##### Grafico del metodo del codo')
+        
+        st.code('''fig,ax = plt.subplots()
+ax.plot(range(2,11),wcss,label='X Square', color='blue', linewidth=2)
+
+plt.title('Grafico Metodo del codo')
+plt.xlabel("Numero de clusters")
+plt.ylabel("WCC")
+
+st.pyplot(fig)               
+                
+''')
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+            ax.plot(range(2,11),wcss,label='X Square', color='blue', linewidth=2)
+
+            plt.title('Grafico Metodo del codo')
+            plt.xlabel("Numero de clusters")
+            plt.ylabel("WCC")
+
+            st.pyplot(fig)
+        
+        st.write('---')
+        st.write('##### Grafico de Calinski-Harabasz')
+        
+        st.code('''fig,ax = plt.subplots()
+ax.plot(range(2,11),calinski,label='X Square', color='red', linewidth=2)                
+                
+plt.title('Grafico Calinski-Harabasz')    
+plt.xlabel("Numero de clusters")
+plt.ylabel("C-H score")   
+
+st.pyplot(fig)        
+''')
+        
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+            ax.plot(range(2,11),calinski,label='X Square', color='red', linewidth=2)
+
+            plt.title('Grafico Calinski-Harabasz')
+            plt.xlabel("Numero de clusters")
+            plt.ylabel("C-H score")
+
+            st.pyplot(fig)
+
+
+        st.write('---')
+        st.write('##### Grafico de Davies-Boulder')
+        
+        st.code('''fig,ax = plt.subplots()
+ax.plot(range(2,11),davies,label='X Square', color='green', linewidth=2)                
+                
+plt.title('Grafico Davies-Boulder')    
+plt.xlabel("Numero de clusters")
+plt.ylabel("D-B score")   
+
+st.pyplot(fig)        
+''')
+        
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+            ax.plot(range(2,11),davies,label='X Square', color='green', linewidth=2)
+
+            plt.title('Grafico Davies-Boulder')
+            plt.xlabel("Numero de clusters")
+            plt.ylabel("D-B score")
+
+            st.pyplot(fig)
+
+
+        st.write('---')
+        st.write('##### Planteo del modelo con 6 clusters y se clasifica')
+        
+        st.code('''km = KMeans(n_clusters=6, init='k-means++', n_init=100, max_iter=1000)
+preds = km.fit_predict(df_mall)''')
+        
+        km = KMeans(n_clusters=6, init='k-means++', n_init=100, max_iter=1000)
+        preds = km.fit_predict(df_mall)
+        
+        st.code('print(preds)')
+        st.code(preds, language='html')
+        
+        st.write('**Posición de los centroides**')
+        st.code('km.cluster_centers')
+        st.code(km.cluster_centers_, language='html')
+        
+        st.code('pd.DataFrame(km.cluster_centers_, columns=[\'Age\',\'Annual Income (k$)\',\'Spending Score (1-1000)])')
+        centros = pd.DataFrame(km.cluster_centers_, columns=['Age','Annual Income (k$)','Spending Score (1-100)'])
+        centros
+
+        st.write('##### Grafico Plotly para la clasificacion (3d)')
+        
+        st.code('import plotly.express as px')
+        
+        import plotly.express as px
+
+        st.code('''fig = px.scatter_3d(data_frame=df_mall, x="Age", y="Annual Income (k$)", z= 'Spending Score (1-100)', width=1000, height=800, color=preds) # clusters
+ig.add_trace(px.scatter_3d(data_frame=centros, x="Age", y="Annual Income (k$)", z= 'Spending Score (1-100)').update_traces(                
+    marker=dict(size=4, symbol='x', color='black')).data[0]) # centroides   
+    
+st.plotly_chart(fig)''')
+        
+        fig = px.scatter_3d(data_frame=df_mall, x="Age", y="Annual Income (k$)", z= 'Spending Score (1-100)', width=1000, height=800, color=preds) # clusters
+        fig.add_trace(px.scatter_3d(data_frame=centros, x="Age", y="Annual Income (k$)", z= 'Spending Score (1-100)').update_traces(
+            marker=dict(size=4, symbol='x', color='black')).data[0]) # centroides
+        
+        st.plotly_chart(fig)
+        
+        st.write('---')
+        st.write('**Agregar las etiquetas de cada cluster al dataset**')
+        
+        st.code('''df_mall['preds'] = preds
+st.dataframe(df_mall.head(10))''')
+        
+        df_mall['preds'] = preds
+        st.dataframe(df_mall.head(10))
+        
+        st.write('---')
+        st.write('**Clientes en cada cluster**')
+        
+        with st.container(width=200):
+            st.write(df_mall['preds'].value_counts())
+    
+    
+  
+def ml_NLP():  
+    buffer = io.StringIO()   
+ 
+    st.write('#### Definición')
+    st.write('''Los sistemas de recomendación son algoritmos que intentan 'predecir' los siguientes items (productos, canciones, etc.) que quarrá adquirir un usuario en particular.    
+Los sistemas de recomendacion intentan personalizar al máximo lo que ofrecerán a cada usuario.''')    
+    
+    st.write('---')     
+    
+    
+def ml_SisRecomendacion():    
+    buffer = io.StringIO()      
+   
+    st.write('#### Definición')
+    st.write('''Los sistemas de recomendación son algoritmos que intentan 'predecir' los siguientes items (productos, canciones, etc.) que quarrá adquirir un usuario en particular.    
+Los sistemas de recomendacion intentan personalizar al máximo lo que ofrecerán a cada usuario.''')    
+    
+    st.write('---')        
+   
+    opciones_rs = ['Movies']
+
+    col1, col2= st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_rs)
+        st.success(f'##### **{opcion_seleccionada}** ')
+
+      
+    if opcion_seleccionada == 'Movies':
+        st.write('##### Data Frame con los datos de Peliculas') 
+         
+
+        st.code('''column_names = ['user_id','item_id','rating','timestamp']
+df_movies = pd.read_csv('DataFrames/u.data', sep='t', names=column_names)                
+df_movies.head(10)''')
+        
+        column_names = ['user_id','item_id','rating','timestamp']
+        
+        df_movies = pd.read_csv('DataFrames/u.data', sep='\t', names=column_names)
+        st.dataframe(df_movies.head(10))
+
+        
+        st.code('''# info
+df_movies.info()''') 
+        
+        df_movies.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')   
+        
+        st.write('---')
+        st.write('**Titulos**')
+        
+        st.code('''movie_titles = pd.read_csv('DataFrames/Movie_Id_Titles')
+movie_titles.head(10)''')
+        
+        movie_titles = pd.read_csv('DataFrames/Movie_Id_Titles')
+        st.dataframe(movie_titles.head(10))  
+         
+        
+        # Fusionar ambos dataframes
+        st.code('''# Fusionar dataframes
+df_movies_fus = pd.merge(df_movies, movie_titles)                
+df_movies_fus.head(10)''')
+        
+        df_movies_fus = pd.merge(df_movies, movie_titles, on='item_id')
+        st.dataframe(df_movies_fus.head(10)) 
+         
+        st.write('---')
+        
+        # Agrupar por titulo y rating
+        st.code('''# Peliculas ordenadas por rating
+df_ratings = pd.DataFrame(df_movies_fus.groupby('title')['rating'].mean()) 
+df_ratings_ord = df_movies_fus.groupby('title')['rating'].mean().sort_values(ascending=False)        
+df_ratings_ord.head(10)''')
+        
+        df_ratings = pd.DataFrame(df_movies_fus.groupby('title')['rating'].mean())
+        
+        df_ratings_ord = df_movies_fus.groupby('title')['rating'].mean().sort_values(ascending=False)
+        
+        with st.container(width=500):
+            st.dataframe(df_ratings_ord.head(10)) 
+         
+  
+        st.code('''# Peliculas con mayor audiencia
+df_agrupado = df_movies_fus.groupby('title')['item_id'].count().sort_values(ascending=False)                
+df_agrupado.head(10)''')
+        
+        df_agrupado = df_movies_fus.groupby('title')['item_id'].count().sort_values(ascending=False)
+        
+        with st.container(width=500):
+            st.dataframe(df_agrupado.head(10))   
+    
+    
+        st.write('---')
+
+        st.code('''df_ratings['num of ratings'] = pd.DataFrame(df_movies_fus.groupby('title')['item_id'].count())
+df_ratings.head(10)''')
+        
+        df_ratings['num of ratings'] = pd.DataFrame(df_movies_fus.groupby('title')['item_id'].count())
+        st.write(df_ratings.head(10))
+        st.write('---')
+        
+        st.write('**Histograma rating**')
+
+        st.code('''sns.set_style('white')
+                
+fig,ax = plt.subplots()                
+    data=df_ratings,
+    x='rating', 
+    kde=True, 
+    color='#e9b33b', 
+    edgecolor='#E8BE58',
+    bins=70,
+    alpha=0.5
+)
+
+plt.title('Histograma rating')  
+st.pyplot(fig)              
+''')
+    
+
+        sns.set_style('white')
+        
+        with st.container(width=800):
+        
+            fig,ax = plt.subplots()
+            sns.histplot(
+                data=df_ratings,
+                x='rating', 
+                kde=True, 
+                color='#e9b33b', 
+                edgecolor='#E8BE58',
+                bins=70,
+                alpha=0.5
+            )
+            plt.title('Histograma rating') 
+
+            st.pyplot(fig)
+
+        st.write('---')
+        st.write('**Jointplot rating vs num of ratings**') 
+        
+        st.code('''sns.set_style('white')
+graf = sns.jointplot(data=df_ratings, x='rating',y='num of ratings', kind='reg')
+st.pyplot(graf)''')
+        
+        sns.set_style('white')
+        
+        with st.container(width=800):
+            graf = sns.jointplot(data=df_ratings, x='rating',y='num of ratings', kind='reg')
+            st.pyplot(graf)
+ 
+ 
+        st.write('---')
+        
+        st.code('''moviemat = df_movies_fus.pivot_table(index='user_id', columns='title',values='rating')
+moviemat.head(10)''')
+        
+        moviemat = df_movies_fus.pivot_table(index='user_id', columns='title',values='rating')
+        st.dataframe(moviemat.head(10))
+    
+ 
+ 
+ 
+ 
+ 
+ 
+   
+def ml_Bayes(): 
+    buffer = io.StringIO()      
+   
+    st.write('#### Definición')
+    st.write('''Es un algoritmo de clasificación probabilístico simple pero potente en aprendizaje automático que usa el Teorema de Bayes con una suposición "ingenua": que todas las características son independientes entre sí
+dada la clase. A pesar de este supuesto irreal, funciona muy bien en la práctica, especialmente en clasificación de texto y análisis de sentimientos,             
+calculando eficientemente probabilidades condicionales para predecir la clase de un nuevo dato.''')
+
+
+    st.write('---')        
+   
+    opciones_bayes = ['Mensajes SMS','Vinos','Noticias']
+
+    col1, col2= st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_bayes)
+        st.success(f'##### **{opcion_seleccionada}** ')
+
+
+
+    if opcion_seleccionada == 'Noticias':
+        st.write('##### Data Frame con los datos Noticias')  
+        st.write('El algoritmo trata de clasificar a una noticia.')
+
+        from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+        from sklearn.cluster import KMeans
+        from sklearn.model_selection import train_test_split
+        from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+        from sklearn.naive_bayes import GaussianNB as GaussianNB_sk
+        from sklearn.naive_bayes import BernoulliNB as BernoulliNB_sk
+        from sklearn.naive_bayes import CategoricalNB as CategorialNB_sk
+        from sklearn.naive_bayes import MultinomialNB as MultinomialNB_sk
+        from sklearn.naive_bayes import ComplementNB as ComplementNB_sk
+        
+        
+        st.code('''# load dataset
+df_news = pd.read_csv('DataFrames/uci-news-aggregator.csv')  
+df_news.head(10)''')
+        
+        @st.cache_data
+        def cargar_data_news():
+            df_news = pd.read_csv('DataFrames/uci-news-aggregator.csv')
+            
+            return df_news
+
+
+        df_news = cargar_data_news()
+        st.dataframe(df_news.head(10))
+        
+
+ 
+        st.code('''# info
+df_news.info()''') 
+        
+        df_news.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')  
+ 
+        st.write('---')
+        st.write('**Recategorizar valores de Categoria a numerico**')
+        
+        st.code('''# business, technology, entertainement, medicin
+data = {'b':1,'t':2,'e':3,'m':4}    
+df_news['CATEGORY'] = df_news['CATEGORY'].map(data)
+df_news.head(10)                ''')
+        
+        
+        # business, technology, entertainement, medicin
+        data = {'b':1,'t':2,'e':3,'m':4}
+        
+        df_news['CATEGORY'] = df_news['CATEGORY'].map(data)
+        st.dataframe(df_news.head(10))        
+        
+        # Distribuciones de las clases
+        st.code('''# Distribuciones de las clases
+valores = df_news['CATEGORY'].value_counts()''')
+        valores = df_news['CATEGORY'].value_counts()
+        st.code(f'{valores}', language='html')
+
+        st.write('---')
+        
+        st.write('##### Separación de los datos del modelo')
+
+        st.code('''X = df_news['TITLE']
+y = df_news['CATEGORY'] 
+le = LabelEncoder() 
+y = le.fit_transform(Y)              
+
+X_train_text, X_test_text, y_train, y_test = train_test_split(X, y, random_state=1, stratify=y)''')
+
+        X = df_news['TITLE']
+        Y = df_news['CATEGORY']
+        le = LabelEncoder()
+        y = le.fit_transform(Y)
+        
+
+        X_train_text, X_test_text, y_train, y_test = train_test_split(X, y, random_state=1, stratify=y)
+
+        st.write('---')
+        
+        
+        st.code('''vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1))
+X_train = vec.fit_transform(X_train_text)                
+X_test = vec.transform(X_test_text)   
+
+X_train.nnz / (X_train.shape[0] * X_train.shape[1])   
+X_test.nnz / (X_test.shape[0] * X_test.shape[1])          
+type(X_train)                ''')
+        
+        
+        vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1))
+        X_train = vec.fit_transform(X_train_text)
+        X_test = vec.transform(X_test_text)
+        
+        st.code(X_train.nnz / (X_train.shape[0] * X_train.shape[1]), language='html')
+        st.code(X_test.nnz / (X_test.shape[0] * X_test.shape[1]), language='html')
+        st.write(type(X_train))
+      
+      
+        st.write('---')
+        
+        st.write('##### Gaussian NB')
+
+        st.code('''vec1 = TfidfVectorizer(stop_words='english', ngram_range=(1,3), min_df=5)
+X_train1 = vec1.fit_transform(X_train_text)
+X_test1= vec1.transform(X_test_text)
+
+X_train1.shape''')
+
+        vec1 = TfidfVectorizer(stop_words='english', ngram_range=(1,3), min_df=5)
+        X_train1 = vec1.fit_transform(X_train_text)
+        X_test1= vec1.transform(X_test_text)
+        
+        st.code(f'{X_train1.shape}', language='html')
+        
+        
+        st.code('''def dataset_transversal(X, Y, partial_function):
+    chunk_size = 5000                
+    classes = np.unique(Y)  
+    lower = 0
+    
+    for upper in iter(range(chunk_size, X.shape[0], chunk_size)):         
+        partial_function(X[lower:upper], Y[lower:upper], classes)
+        lower = upper
+        
+    partial_function(X[upper:], Y[upper:], classes)
+    
+    
+gnb = GaussianNB_sk()  
+dataset_transversal(X_train1, y_train, lambda x,y,c:gnb.partial_fit(x.toarray(),y,c))
+dataset_transversal(X_test1, y_test, lambda x,y,c:print(gnb.score(x.toarray(),y)))  
+                ''')
+    
+    
+
+    
+        
+        
+        def dataset_transversal(X, Y, partial_function):
+            chunk_size = 5000
+            classes = np.unique(Y)
+            lower = 0
+            for upper in iter(range(chunk_size, X.shape[0], chunk_size)):
+                partial_function(X[lower:upper], Y[lower:upper], classes)
+                lower = upper
+                
+            partial_function(X[upper:], Y[upper:], classes)
+            
+            
+        gnb = GaussianNB_sk()
+        #dataset_transversal(X_train1, y_train, lambda x,y,c:gnb.partial_fit(x.toarray(),y,c))
+        #dataset_transversal(X_test1, y_test, lambda x,y,c:print(gnb.score(x.toarray(),y)))
+      
+      
+        st.write('---')
+        
+        st.write('##### Bernoulli + CountVectorizer')
+        
+        st.code('''vec2 = CountVectorizer(stop_words='english', binary=True, ngram_range=(1,3)) 
+X_train2 = vec1.fit_transform(X_train_text)
+X_test2= vec1.transform(X_test_text)                    
+                
+bnb = BernoulliNB_sk()
+bnb.fit(X_train2, y_train)
+Score para BN Bernouli: {bnb.score(X_test2, y_test)}''')
+        
+        
+        vec2 = CountVectorizer(stop_words='english', binary=True, ngram_range=(1,3)) 
+        
+        X_train2 = vec2.fit_transform(X_train_text)
+        X_test2= vec2.transform(X_test_text)            
+      
+        bnb = BernoulliNB_sk()
+        bnb.fit(X_train2, y_train)
+        st.write(f'Score para BN Bernouli: {bnb.score(X_test2, y_test)}')
+      
+      
+        st.write('---')
+        
+        st.write('##### TF-IDF + Multinommial')
+        
+        st.code('''vec3 = TfidfVectorizer(stop_words='english', ngram_range=(1,3))
+X_train3 = vec3.fit_transform(X_train_text)
+X_test3 = vec3.transform(X_test_text)              
+                
+mnb = MultinomialNB_sk()
+mnb.fit(X_train3, y_train)  
+Score para BN Multinomial: {mnb.score(X_test3, y_test)}''')        
+        
+        
+        vec3 = TfidfVectorizer(stop_words='english', ngram_range=(1,3))
+        X_train3 = vec3.fit_transform(X_train_text)
+        X_test3 = vec3.transform(X_test_text)
+        
+        mnb = MultinomialNB_sk()
+        mnb.fit(X_train3, y_train)        
+        st.write(f'Score para BN Multinomial: {mnb.score(X_test3, y_test)}')      
+      
+        st.write('---')
+        
+        st.write('##### CountVectorizer + Complement')
+        
+        st.code('''vec4 = CountVectorizer(stop_words='english', ngram_range=(1,3))
+X_train4 = vec4.fit_transform(X_train_text)               
+X_test4 = vec4.transform(X_test_text)  
+
+cnb = ComplementNB_sk()  
+cnb.fit(X_train4, y_train)           
+Score para BN Complement: {cnb.score(X_test4, y_test)}''')
+        
+        vec4 = CountVectorizer(stop_words='english', ngram_range=(1,3))
+        X_train4 = vec4.fit_transform(X_train_text)
+        X_test4 = vec4.transform(X_test_text)
+        
+        cnb = ComplementNB_sk()
+        cnb.fit(X_train4, y_train)        
+        st.write(f'Score para BN Complement: {cnb.score(X_test4, y_test)}')    
+        
+        
+        st.write('---')
+        
+        st.write('##### Preprocesamiento')        
+        
+        st.code('''tfidVec = TfidfVectorizer(stop_words='english', min_df=10)
+X_train5 = tfidVec.fit_transform(X_train_text)     
+
+mnb2 = MultinomialNB_sk.fit(X_train5, y_train)''')
+        
+        tfidVec = TfidfVectorizer(stop_words='english', min_df=10)
+        X_train5 = tfidVec.fit_transform(X_train_text)
+        
+        mnb2 = MultinomialNB_sk().fit(X_train5, y_train)
+        
+        
+        st.code('''km = KMeans(n_clusters=1000, random_state=1)
+feature_to_cluster = km.fit_predict(mnb2.feature_log_prob_.T)''')
+        
+        
+        km = KMeans(n_clusters=1000, random_state=1)
+        feature_to_cluster = km.fit_predict(mnb2.feature_log_prob_.T)
+        
+        st.code('type(feature_to_cluster)  # nparray')
+        st.write(type(feature_to_cluster))              # nparray
+        
+        st.code('type(mnb2.feature_log_prob_.T) # nparray')
+        st.write(type(mnb2.feature_log_prob_.T))        # nparray
+        
+        st.code('(mnb2.feature_log_prob_.T).shape # (14967,4) ')
+        st.code((mnb2.feature_log_prob_.T).shape)      # (14967,4) 
+        
+        st.code('(feature_to_cluster).shape # (14967,)')
+        st.code((feature_to_cluster).shape)            # (14967,)
+        
+        st.code('feature_to_cluster # indica el cluster al que pertenece cada elemento')
+        st.code(feature_to_cluster)                    # indica el cluster al que pertenece cada elemento
+        
+        st.code('feats2cluster = OneHotEncoder().fit_transform(feature_to_cluster.reshape(-1,1))')
+        
+        feats2cluster = OneHotEncoder().fit_transform(feature_to_cluster.reshape(-1,1))
+        
+        st.code('type(feats2cluster))')
+        st.write(type(feats2cluster))
+        
+        st.code('feats2cluster.shape # (14967, 1000)')
+        st.code(feats2cluster.shape)       # (14967, 1000)
+      
+        st.code('feats2cluster = feats2cluster.toarray()')
+        feats2cluster = feats2cluster.toarray()
+        
+        st.code('feats2cluster.shape # (14967, 1000)')
+        st.code(feats2cluster.shape)    # (14967, 1000)
+        
+        st.code('feats2cluster')
+        st.code(feats2cluster)
+        
+        st.code('lista_clus = pd.Series(feats2cluster.sum(axis=0))')
+        lista_clus = pd.Series(feats2cluster.sum(axis=0))
+
+        st.write('---')
+      
+        st.code('''fig,ax = plt.subplots()   
+ax.hist(x=feature_to_cluster, bins='auto', edgecolor='#000000', color='#8b92cc', alpha=.8)
+ax.set_title('Cantidad de palabras en cada cluster')
+ax.set_xlabel('Nro de cluster')
+ax.set_ylabel('Cantidad de palabras')
+                
+st.pyplot(fig)''')
+      
+        with st.container(width=800):
+            fig,ax = plt.subplots()   
+            ax.hist(x=feature_to_cluster, bins='auto', edgecolor='#000000', color='#8b92cc', alpha=.8)
+            ax.set_title('Cantidad de palabras en cada cluster')
+            ax.set_xlabel('Nro de cluster')
+            ax.set_ylabel('Cantidad de palabras')
+
+            st.pyplot(fig)
+        
+        st.write('---')    
+
+        st.code('''fig,ax = plt.subplots() 
+ax.scatter(x=lista_clus, y=[i+1 for i in range(0,1000)], color='#ff8c00')
+ax.set_title('Cantidad de palabras en cada cluster')
+ax.set_xlabel('Cantidad de palabras')
+ax.set_ylabel('Nro de cluster')                
+                
+st.pyplot(fig)''')
+
+
+        with st.container(width=800):
+            fig,ax = plt.subplots()   
+            ax.scatter(x=lista_clus, y=[i+1 for i in range(0,1000)], color='#ff8c00')
+            ax.set_title('Cantidad de palabras en cada cluster')
+            ax.set_xlabel('Cantidad de palabras')
+            ax.set_ylabel('Nro de cluster')
+
+            st.pyplot(fig)
+        
+        st.write('---')           
+
+        st.code('len(tfidVec.vocabulary_) # 14967')
+        st.code(len(tfidVec.vocabulary_))   # 14967
+        
+        st.code('tfidVec.vocabulary_')
+        st.code(tfidVec.vocabulary_)
+        
+        st.code('tfidvec_pd = pd.DataFrame(tfidVec.vocabulary_.keys(), index=(tfidVec.vocabulary_).values(), columns=[\'words\'])')
+        tfidvec_pd = pd.DataFrame(tfidVec.vocabulary_.keys(), index=(tfidVec.vocabulary_).values(), columns=['words'])
+        
+        st.code('tfidvec_pd.shape')
+        st.code(tfidvec_pd.shape)
+        
+        st.code('tfidvec_pd.head()')
+        st.code(tfidvec_pd.head())
+        
+
+        st.code('''vocab = tfidVec.vocabulary_
+countvec = CountVectorizer(stop_words='english')                
+countvec.vocabulary_ = vocab                
+
+X_train6 = countvec.transform(X_train_text)
+X_test6 = countvec.transform(X_test_text)''')
+      
+        vocab = tfidVec.vocabulary_
+        countvec = CountVectorizer(stop_words='english')
+        countvec.vocabulary_ = vocab
+        
+        X_train6 = countvec.transform(X_train_text)
+        X_test6 = countvec.transform(X_test_text)
+      
+
+        st.code('type(X_train6.shape)')
+        st.code(type(X_train6.shape))
+        
+        st.code('feats2cluster.shape')
+        st.code(feats2cluster.shape)
+                
+        st.code('''X_train_cluster = (X_train6 @ feats2cluster)
+X_test_cluster = (X_test6 @ feats2cluster)''')        
+                
+        X_train_cluster = (X_train6 @ feats2cluster)
+        X_test_cluster = (X_test6 @ feats2cluster)
+      
+        st.code('type(X_train_cluster)')
+        st.code(type(X_train_cluster))
+        
+        st.code('X_train_cluster.shape')
+        st.code(X_train_cluster.shape)
+        
+        st.code('X_train_cluster')
+        st.code(X_train_cluster)
+      
+
+        st.code('''X_train_cluster[X_train_cluster > 2] = 2
+X_test_cluster[X_test_cluster > 2] = 2 ''')
+        X_train_cluster[X_train_cluster > 2] = 2
+        X_test_cluster[X_test_cluster > 2] = 2 
+        
+        
+        
+        st.code('''cnb = CategorialNB_sk().fit(X_train_cluster, y_train)
+st.code(f'Score de Categorical NB {cnb.score(X_test_cluster, y_test)}')''')
+        cnb = CategorialNB_sk().fit(X_train_cluster, y_train)
+        st.code(f'Score de Categorical NB {cnb.score(X_test_cluster, y_test)}')
+        
+        
+        
+        
+      
+      
+    if opcion_seleccionada == 'Vinos':
+        st.write('##### Data Frame con los datos de vino de 3 viñedos diferentes')  
+        st.write('El algoritmo trata de determinar de que viñedo es un vino.')
+      
+        st.code('''from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import classification_report''')
+        
+        
+        from sklearn.preprocessing import StandardScaler
+        from sklearn import datasets
+        from sklearn.model_selection import train_test_split
+        from sklearn.naive_bayes import GaussianNB
+        from sklearn.metrics import confusion_matrix
+        from sklearn.metrics import ConfusionMatrixDisplay
+        from sklearn.metrics import classification_report
+      
+      
+        st.code('''# load dataset
+dataset = datasets.load_wine()   
+dataset''')
+        # load dataset
+        dataset = datasets.load_wine()
+        st.write(dataset)
+         
+        # names of the features
+        st.write(f'**Inputs**: {dataset.feature_names}')
+        st.write(f'**Outputs**: {dataset.target_names}')
+        st.write(f'**Target**: {dataset.target}')
+
+        st.write('---')
+        st.write('###### Separación de los datos del modelo')
+
+        st.code('''X = dataset.data
+y = dataset.target   
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, random_state=1115, stratify=y)''')
+        
+        
+        X = dataset.data
+        y = dataset.target
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, random_state=1115, stratify=y)
+    
+
+        st.code('''df_vinos = pd.DataFrame(dataset.data, columns=dataset.feature_names)
+st.dataframe(df_vinos(10))''')
+        
+        df_vinos = pd.DataFrame(dataset.data, columns=dataset.feature_names)
+        st.dataframe(df_vinos.head(10))
+
+        st.write('---')
+  
+        st.write('##### Escalamiento de Datos')
+        st.write(''' * **StandardScaler**: es una herrmaienta de preprocesamiento de datos que se utiliza para estandarizar funciones eliminando la media y escalando a la varianza media.  
+Muchos algoritmos de ML funcionan mejor o convergen más rápido cuando las funciones están en una escala similar y centradas alrededor de cero.              
+StandardScaler aborda esto transformando los datos de modo que cada característica tenga una media de 0 y una desviación estándar de 1.         
+* **fit(data)** : se utiliza para calcular la media y la desviación estándar de una característica determinada que se utilizará posteriormente para escalar.          
+* **transform(data)**: se utiliza para realizar el escalamiento utilizando la media y la desviación estándar calculadas utilizando el método .fit()''')
+      
+        st.code('''scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)                
+X_test = scaler.transform(X_test)''')
+      
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+      
+        st.write('---')
+        st.write('##### Entrenamiento del modelo') 
+               
+        st.code('''# Crear Clasificador Gaussiano
+classifier = GaussianNB()                
+classifier.fit(X_train, y_train)
+
+# Prediccion                
+y_pred = classifier.predict(X_test)''')       
+               
+        # Crear Clasificador Gaussiano
+        classifier = GaussianNB()
+        classifier.fit(X_train, y_train)
+        
+        # Prediccion
+        y_pred = classifier.predict(X_test)
+        
+        # Accuracy
+        st.code(f'Accuracy: {metrics.accuracy_score(y_test, y_pred)}')
+
+        st.write('---')
+        # Matriz de confusion
+        st.write('##### Matriz de Confusion')
+        with st.container(width=300):
+            st.code('confusion_matrix(y_test, y_pred)')
+            st.write(confusion_matrix(y_test, y_pred))
+      
+      
+        st.write('---')
+        # Reporte de Clasificacion
+        st.write('##### Reporte de Clasificacion')      
+
+        st.code('classification_report(y_test, y_pred, output_dict=True)')
+        st.dataframe(classification_report(y_test, y_pred, output_dict=True))
+      
+      
+      
+    if opcion_seleccionada == 'Mensajes SMS':
+        st.write('##### Data Frame con los datos de Mensajes SMS') 
+         
+        st.write('El algoritmo trata de determinar si un mensaje es Spam o no.')
+        
+        
+        from zipfile import ZipFile
+        
+      #  url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/00228/smsspamcollection.zip'
+       # filename = url.split('/')[-1]
+       # fil = ZipFile(filename, 'r').namelist()[0]
+      #  df_sms = pd.read_table(fil, header=0, names=['type','message'])
+        
+       # st.dataframe(df_sms.head(20))
+        
+        st.code('''filename = 'DataFrames\SMSSpamCollection'
+df_sms = pd.read_table(filename, header=0, names=['type','message'])          
+df_sms.head(10)''')
+        
+        
+        filename = 'DataFrames\SMSSpamCollection'
+        df_sms = pd.read_table(filename, header=0, names=['type','message'])
+        
+        st.dataframe(df_sms.head(10))
+        
+        st.code('''# info
+df_college.info()''') 
+        
+        df_sms.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')  
+
+        st.write('---')        
+        
+        st.code('''import nltk
+nltk.download('punkt_tab')                
+nltk.download('stopwords')   
+
+from nltk.stem.porter import PorterStemmer    
+from nltk.corpus import stopwords  
+stop = list(stopwords.words('english'))''')
+        
+        import nltk
+        nltk.download('punkt_tab')
+        nltk.download('stopwords')
+        
+       # from nltk.stem.porter import *
+        from nltk.stem.porter import PorterStemmer
+        from nltk.corpus import stopwords
+        stop = list(stopwords.words('english'))
+        
+        # Agregar mas stopwords
+        st.code('''# Agregar mas palabras a la lista stop
+mas_palabras = ['.','*',',','?']
+stop += mas_palabras ''')
+        
+        
+        mas_palabras = ['.','*',',','?']
+        stop += mas_palabras 
+    
+        
+        
+        st.code('''# Tokenize
+df_sms['tokens'] = df_sms.apply(lambda x:nltk.word_tokenize(x['message']), axis=1)                
+df_sms.head(10)''')        
+        
+        # Tokenize
+        df_sms['tokens'] = df_sms.apply(lambda x:nltk.word_tokenize(x['message']), axis=1)
+        st.dataframe(df_sms.head(10))
+        
+        st.write('---')
+        
+        st.code('''# Remover stop words
+df_sms['tokens'] = df_sms['tokens'].apply(lambda x: [item for item in x if item not in stop])               
+df_sms.head(10)''')
+        
+        # Reomver stop words
+        df_sms['tokens'] = df_sms['tokens'].apply(lambda x: [item for item in x if item not in stop])
+        st.dataframe(df_sms.head(10))
+        
+        st.write('---')
+        
+        st.code('''# Recortar terminaciones
+stemmer = PorterStemmer()   
+df_sms['tokens'] = df_sms['tokens'].apply(lambda x: [stemmer.stem(item) for item in x])            
+df_sms.head(10)                ''')
+        
+        # Recortar terminaciones
+        stemmer = PorterStemmer()
+        df_sms['tokens'] = df_sms['tokens'].apply(lambda x: [stemmer.stem(item) for item in x])
+        st.dataframe(df_sms.head(10))
+        
+        st.write('---')
+        
+        
+        st.code('''from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Unificar de nuevo los strings
+df_sms['tokens'] = df_sms['tokens'].apply(lambda x: ' '.join(x))
+
+# Realizar split
+X = df_sms['tokens']
+y = df_sms['type']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
+
+# Crear vectorizador
+vectorizer = CountVectorizer(strip_accents='ascii', lowercase=True)
+''')
+        
+        
+        
+        from sklearn.model_selection import train_test_split
+        from sklearn.feature_extraction.text import CountVectorizer
+        
+        # Unificar de nuevo los strings
+        df_sms['tokens'] = df_sms['tokens'].apply(lambda x: ' '.join(x))
+        
+        # Realizar split
+        X = df_sms['tokens']
+        y = df_sms['type']
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, stratify=df_sms['type'])
+        
+        # Crear vectorizador
+        vectorizer = CountVectorizer(strip_accents='ascii', lowercase=True)
+     
+        # Entrenamiento y tranforacion
+        
+        st.code('''# Entrenamiento y transformacion
+X_train_transformed = vectorizer.fit_transform(X_train)
+X_test_transformed = vectorizer.transform(X_test)''')
+        
+        X_train_transformed = vectorizer.fit_transform(X_train)
+        X_test_transformed = vectorizer.transform(X_test)
+        
+        st.write('---')
+        st.write('**Entrenamiento del modelo**')
+        
+        st.code('''from sklearn.naive_bayes import MultinomialNB
+                
+naive_bayes = MultinomialNB()                
+naive_bayes_fit = naive_bayes.fit(X_train_transformed, y_train)''')
+        
+        st.write('---')
+        # Construccion del modelo
+        from sklearn.naive_bayes import MultinomialNB
+        
+        # Entrenamiento del modelo
+        naive_bayes = MultinomialNB()
+        naive_bayes_fit = naive_bayes.fit(X_train_transformed, y_train)
+        
+ 
+        
+        st.write('**Realizar predicciones**')
+        
+        st.code('''train_predict = naive_bayes_fit.predict(X_train_transformed)
+test_predict = naive_bayes_fit.predict(X_test_transformed)''')
+        
+        train_predict = naive_bayes_fit.predict(X_train_transformed)
+        test_predict = naive_bayes_fit.predict(X_test_transformed)
+        
+        st.write('---')
+        
+        st.write('**Matriz de Confusión**')
+        
+        st.code('''from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, balanced_accuracy_score
+                
+def get_scores(y_real, predict):                
+    ba_train = balanced_accuracy_score(y_real, predict)                
+    cm_train = confusion_matrix(y_real, predict, normalize='all') 
+    ConfusionMatrixDisplay(cm_train, display_labels=naive_bayes_fit.classes_).plot()               
+    return ba_train, cm_train
+    
+def print_scores(scores):    
+    return f'Balanced Accuracy: {scores[0]} Confusion Matriz: {scores[1]}''')
+        
+        
+        
+        
+        from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, balanced_accuracy_score
+        
+
+        def get_scores(y_real, predict):
+            ba_train = balanced_accuracy_score(y_real, predict)
+            cm_train = confusion_matrix(y_real, predict, normalize='all')
+            ConfusionMatrixDisplay(cm_train, display_labels=naive_bayes_fit.classes_).plot()
+            
+            return ba_train, cm_train
+        
+        def print_scores(scores):
+            return f'Balanced Accuracy: {scores[0]}\nConfusion Matriz:\n {scores[1]}'
+        
+        
+        st.code('''train_scores = get_scores(y_train, train_predict)
+test_scores = get_scores(y_test, test_predict)''')
+        
+        train_scores = get_scores(y_train, train_predict)
+        test_scores = get_scores(y_test, test_predict)
+        
+        st.code('''st.code(print_scores(train_scores), language='html')
+st.code(print_scores(test_scores), language='html')''')
+        
+        
+        st.write('###### Train Score')
+        st.code(print_scores(train_scores), language='html')
+        st.write('###### Test Scores')
+        st.code(print_scores(test_scores), language='html')
+        
+        
+        
+def ml_PCA():     
+    buffer = io.StringIO()   
+
+    st.write('#### Definición')
+    st.write('''Una máquina de vectores de soporte (SVM) es una algoritmo de aprendizaje supervisado para clasificación y regresión, que funciona encontrando el **hiperplano óptimo**      
+que separa las clases de datos con el máximo margen posible, es decir, la mayor distancia entre el hiperplano y los puntos más cercanos de cada clase (los vectores de soporte).        
+Es muy eficaz en espacios de alta dimensionalidad y utiliza 'trucos de kernel' para manejar datos no linealmente separables, transformándolos a un espacio superior donde sí lo son.''')
+
+    st.write('---')          
+        
+        
+    opciones_mlpca = ['Cancer']
+
+    col1, col2= st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlpca)
+        st.success(f'##### **{opcion_seleccionada}** ')
+
+      
+    if opcion_seleccionada == 'Cancer':
+        st.write('##### Data Frame con los datos de Cancer')  
+        st.code('''# Carga de csv con los datos de Cancer para deterinar si es maligno o benigno
+from sklearn.datasets import load_breast_cancer
+cancer = load_breast_cancer()''')  
+        
+        from sklearn.datasets import load_breast_cancer
+        cancer = load_breast_cancer()
+        
+        st.code('cancer.keys()')
+        st.code(cancer.keys(), language='html')
+        
+        st.code('df_cancer = pd.DataFrame(cancer[\'data\'], columns=cancer[\'feature_names\'])')
+        
+        df_cancer = pd.DataFrame(cancer['data'], columns=cancer['feature_names'])    
+        st.write(df_cancer.head(10))    
+
+        st.write('**Cancer Target**')
+        st.code('''cancer['target']
+cancer['target_names']''')
+
+        st.code(cancer['target'], language='html')
+        st.code(cancer['target_names'], language='html')       
+        
+        st.write('''Mediante PCA se buscan los dos componentes principales y visualizar los datos en este nuevo espacio dimensional.''')
+        st.write('---')
+        
+        st.write('##### Escalamiento de datos')
+        
+        st.write('''* **StandardScaler**: es una herrmaienta de preprocesamiento de datos que se utiliza para estandarizar funciones eliminando la media y escalando a la varianza media.     
+Muchos algoritmos de ML funcionan mejor o convergen más rápido cuando las funciones están en una escala similar y centradas alrededor de cero.       
+StandardScaler aborda esto transformando los datos de modo que cada característica tenga una media de 0 y una desviación estándar de 1.
+* **fit(data)**: se utiliza para calcular la media y la desviación estándar de una característica determinada que se utilizará posteriormente para escalar.
+* **transform(data)**: se utiliza para realizar el escalamiento utilizando la media y la desviación estándar calculadas utilizando el método .fit()
+''')
+        
+        st.code('''from sklearn.preprocessing import StandardScaler
+                
+scaler = StandardScaler()    
+scaler.fit(df_cancer)
+scaled_data = scaler.transform(df_cancer)
+''')
+        
+        
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        
+        scaler.fit(df_cancer)
+        scaled_data = scaler.transform(df_cancer)
+        
+        st.write('---')
+        
+        st.code('''from sklearn.decomposition import PCA 
+                
+pca = PCA(n_components=2)                
+pca.fit(scaled_data
+x_pca = pca.transform(scaled_data)
+x_pca.shape ''')
+        
+        # PCA
+        from sklearn.decomposition import PCA 
+        pca = PCA(n_components=2)
+        pca.fit(scaled_data)
+        x_pca = pca.transform(scaled_data)
+        
+        st.code(x_pca.shape, language='html')
+        
+        st.code('''fig,ax = plt.subplots()  
+    ax.scatter(x=x_pca[:,0], y=x_pca[:,1], c=cancer['target'], cmap='plasma')
+    ax.set_title('Diagrama de Dispersión')
+    ax.set_xlabel('Primer componente principal')
+    ax.set_ylabel('Segundo componente principal') 
+    
+    st.pyplot(fig)''')
+       
+
+        with st.container(width=800):
+            fig,ax = plt.subplots()   
+            ax.scatter(x=x_pca[:,0], y=x_pca[:,1], c=cancer['target'], cmap='plasma')
+            ax.set_title('Diagrama de Dispersión')
+            ax.set_xlabel('Primer componente principal')
+            ax.set_ylabel('Segundo componente principal')
+
+            st.pyplot(fig) 
+
+        
+        
+                
+def ml_SVM():
+    buffer = io.StringIO()   
+
+    st.write('#### Definición')
+    st.write('''Una máquina de vectores de soporte (SVM) es una algoritmo de aprendizaje supervisado para clasificación y regresión, que funciona encontrando el **hiperplano óptimo**      
+que separa las clases de datos con el máximo margen posible, es decir, la mayor distancia entre el hiperplano y los puntos más cercanos de cada clase (los vectores de soporte).        
+Es muy eficaz en espacios de alta dimensionalidad y utiliza 'trucos de kernel' para manejar datos no linealmente separables, transformándolos a un espacio superior donde sí lo son.''')
+
+    st.write('---')    
+    
+    opciones_mlSVM = ['Breast_cancer', 'iris']
+
+    col1, col2 = st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar:', opciones_mlSVM)
+        st.success(f'#### **{opcion_seleccionada}**')
+            
+        @st.cache_data
+        def load_svm_cancer():
+            
+            st.code('''from sklearn.datasets import load_breast_cancer  
+cancer = load_breast_cancer()
+
+df_cancer = pd.DataFrame(cancer['data'], columns=cancer['feature_names'])                     
+df_target = pd.DataFrame(cancer['target'])''')
+            from sklearn.datasets import load_breast_cancer        
+            cancer = load_breast_cancer()        
+
+            df_cancer = pd.DataFrame(cancer['data'], columns=cancer['feature_names'])
+            df_target = pd.DataFrame(cancer['target'])
+            
+            return df_cancer, df_target
+        
+        @st.cache_data
+        def load_svm_iris():
+            df_iris = pd.read_csv('DataFrames/iris.csv', index_col='Id')
+            
+            return df_iris
+                
+                
+    if opcion_seleccionada == 'iris':
+        st.write(st.write('##### Data Frame con los datos de flores')  )            
+        st.write('Se intenta predecir la especie')     
+                
+        df_iris = load_svm_iris()
+        st.dataframe(df_iris.head(10))
+         
+        st.code('''# info
+df_iris.info()''') 
+        
+        df_iris.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')          
+
+        st.write('---')
+        st.write('##### Pairplot de las Species')
+
+        st.code('''graf = sns.pairplot(
+    data = df_iris,
+    hue= 'Species',
+    corner= True,
+    palette='rocket_r)''')
+    
+        graf = sns.pairplot(
+        data = df_iris,
+        hue= 'Species',
+        corner= True,
+        palette='rocket_r')
+
+        st.pyplot(graf)
+
+
+        st.write('---')
+        st.write('##### Seperación de los datos del modelo')           
+                
+        st.code('''X = df_iris.drop('Species', axis=1)
+y = df_iris['Species']''')        
+        X = df_iris.drop('Species', axis=1)
+        y = df_iris['Species']
+        
+    
+        st.write('---')
+        st.write('##### Entrenamiento del modelo')  
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.)
+* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)''')
+
+        st.code('''from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=101)''')
+    
+        from sklearn.model_selection import train_test_split 
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=101)      
+    
+                
+        st.code('''from sklearn.svm import SVC
+model = SVC()
+model.fit(X_train, y_train)                
+''')
+        
+        from sklearn.svm import SVC
+        model = SVC()
+        model.fit(X_train, y_train)
+        
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('* **predict**: función que se utiliza para obtener predicciones de un modelo entrenado. Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.')
+
+        st.code('predictions = model.predict(X_test)')
+        
+        predictions = model.predict(X_test)
+        
+        st.write('---')
+        st.write('##### Reporte de clasificación')
+        
+        st.code('''from sklearn.metrics import classification_report 
+st.dataframe(classification_report(y_test, predictions, output_dict=True))''')                
+                
+        from sklearn.metrics import classification_report     
+        st.dataframe(classification_report(y_test, predictions, output_dict=True))
+        
+        st.write('---')
+        st.write('##### Matrix de Confusión')
+        
+        
+        st.code('''from sklearn.metrics import confusion_matrix
+confusion_matrix(y_test, predictions)''')
+        
+        with st.container(width=300):
+            from sklearn.metrics import confusion_matrix
+            st.dataframe(confusion_matrix(y_test, predictions)) 
+ 
+ 
+ 
+ 
+ 
+                
+                
+    if opcion_seleccionada == 'Breast_cancer':
+        st.write('##### Data Frame con los datos de tumores')  
+        st.write('Se intenta predecir si el tumor es beningo o maligno')
+        
+        df_cancer, df_target = load_svm_cancer()
+        st.dataframe(df_cancer.head(10))
+
+
+        st.code('''# info
+df_cancer.info()''') 
+        
+        df_cancer.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')          
+
+        st.write('---')
+        st.write('##### Seperación de los datos del modelo')  
+        
+        st.code('''X = df_cancer
+y = df_target                
+''')
+        X = df_cancer
+        y = df_target
+    
+        st.write('---')
+        st.write('##### Entrenamiento del modelo')  
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.)
+* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)''')
+
+        st.code('''from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=101)''')
+    
+        from sklearn.model_selection import train_test_split 
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=101)    
+
+        st.code('''from sklearn.svm import SVC
+model = SVC()
+model.fit(X_train, y_train)                
+''')
+        
+        from sklearn.svm import SVC
+        model = SVC()
+        model.fit(X_train, y_train)
+        
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('* **predict**: función que se utiliza para obtener predicciones de un modelo entrenado. Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.')
+
+        st.code('predictions = model.predict(X_test)')
+        
+        predictions = model.predict(X_test)
+        
+        st.write('---')
+        st.write('##### Reporte de clasificación')
+        
+        st.code('''from sklearn.metrics import classification_report 
+st.dataframe(classification_report(y_test, predictions, output_dict=True))''')
+        
+        from sklearn.metrics import classification_report     
+        st.dataframe(classification_report(y_test, predictions, output_dict=True))
+        
+        st.write('---')
+        st.write('##### Matrix de Confusión')
+        
+        
+        st.code('''from sklearn.metrics import confusion_matrix
+confusion_matrix(y_test, predictions)''')
+        
+        with st.container(width=300):
+            from sklearn.metrics import confusion_matrix
+            st.dataframe(confusion_matrix(y_test, predictions))
+        
+        
+        #from sklearn import GridSearchCV
+        #param_grid = {'C':[0.1,1,10,100,1000],'gamma':[1,0.1,0.01,0.001,0.0001]}
+        
+        #grid = GridSearchCV(SVC(), param_grid, verbose=3)
+        #grid.fit(X_train, y_train)
+        
+        
+        
+        
+        
+def ml_ensambletrees():
+    buffer = io.StringIO()   
+
+    st.write('#### Definición')
+    st.write('''Un modelo de conjunto de árboles de decisión es una técnica de aprendizaje automático que combina múltiples ábroles de decisión para generar mejores predicciones o clasificaciones.    
+Cada árbol de decisión del conjunto funciona como un simple sistema de reglas de ¨si-entonces¨.
+Toma los datos de entrada y los divide en grupos más pequeños según diferentes características.     
+Cada división crea ramas, y al final de estas ramas se encuentran las predicciones o clasificaciones.''')
+    st.write('---')    
+    
+    opciones_mltrees = ['Car', 'Iris']           
+        
+    col1, col2= st.columns([2,2])
+    
+    with col1:
+        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mltrees)
+        st.success(f'##### **{opcion_seleccionada}** ')
+
+        @st.cache_data
+        def load_data_car():
+            df_Car = pd.read_csv('DataFrames/car_data', names=['buying','maint','doors','persons','lug_boot','safety','acceptability'])
+            
+            return df_Car        
+
+        @st.cache_data
+        def load_data_iris():
+            df_iris = pd.read_csv('DataFrames/Iris.csv',index_col='Id')
+            
+            return df_iris  
+
+
+    if opcion_seleccionada == 'Iris':
+        st.write('##### Data Frame con datos de Iris')     
+        
+        st.code('''df_iris = pd.read_csv('DataFrames/Iris.csv',index_col='Id')
+df_Iris.head(15)''')
+        
+        df_Iris = load_data_iris()
+        st.dataframe(df_Iris.head(15))        
+
+        st.code('''# info
+df_Iris.info()''') 
+            
+        df_Iris.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')  
+
+        st.write('---')        
+        
+        st.code('''X = df_Iris[['PetalLengthCm','PetalWidthCm']]  
+y = df_Iris['Species']''')
+        
+        # Comversion species a numerico
+        st.write('---')
+        st.write('Conversion de campo Species a numerica')
+
+        st.code('''data = {
+'Iris-setosa':0,                
+'Iris-versicolor':1,   
+'Iris-virginica':2             
+}
+
+df_Iris['Species'] = df_Iris['Species'].map(data)
+
+X = df_Iris[['PetalLengthCm','PetalWidthCm']]
+y = df_Iris['Species']''')
+
+        data = {
+            'Iris-setosa':0,
+            'Iris-versicolor':1,
+            'Iris-virginica':2
+        }
+        
+        df_Iris['Species'] = df_Iris['Species'].map(data) 
+        
+        X = df_Iris[['PetalLengthCm','PetalWidthCm']]
+        y = df_Iris['Species']
+        
+        st.write('---')
+        
+        st.code('''from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier                
+from sklearn.naive_bayes import GaussianNB                
+from sklearn.ensemble import RandomForestClassifier    
+from sklearn.model_selection import GridSearchCV            
+from mlxtend.classifier import StackingClassifier''')
+        
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.neighbors import KNeighborsClassifier
+        from sklearn.naive_bayes import GaussianNB
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.model_selection import GridSearchCV
+        from mlxtend.classifier import StackingClassifier
+        
+        # Inicializacion de modelos
+        
+        st.code('''# Inicializacion de modelos  
+clf1 = KNeighborsClassifier(n_neighbors=1)
+clf2 = RandomForestClassifier(random_state=1)               
+clf3 = GaussianNB()                
+lr = LogisticRegression()
+sclf = StackingClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr)   
+
+params = {'kneighborsclassifier__n_neighbors': [1,5], 'randomforestclassifier__n_estimators': [10,50], 'meta_classifier__C': [0.1,10.0]}   
+
+grid = GridSearchCV(estimator=sclf, param_grid=params, cv=5, refit=True)
+grid.fit(X,y)
+cv_keys = ('mean_test_score', 'std_test_score', 'params')
+
+for r, _ in enumerate(grid.cv_results_['mean_test_score']):
+    st.write(f'%0.3f +/- %0.2f %r'
+        % (grid.cv_results_[cv_keys[0]][r],
+        grid.cv_results_[cv_keys[1]][r]/2.0,
+        grid.cv_results_[cv_keys[2]][r]))
+''') 
+        
+        clf1 = KNeighborsClassifier(n_neighbors=1)
+        clf2 = RandomForestClassifier(random_state=1)
+        clf3 = GaussianNB()
+        lr = LogisticRegression()
+        sclf = StackingClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr)
+
+        params = {'kneighborsclassifier__n_neighbors': [1,5], 'randomforestclassifier__n_estimators': [10,50], 'meta_classifier__C': [0.1,10.0]}
+        
+        grid = GridSearchCV(estimator=sclf, param_grid=params, cv=5, refit=True)    
+    
+        grid.fit(X,y)
+        
+        cv_keys = ('mean_test_score', 'std_test_score', 'params')
+        
+        for r, _ in enumerate(grid.cv_results_['mean_test_score']):
+            st.write(f'%0.3f +/- %0.2f %r'
+                    % (grid.cv_results_[cv_keys[0]][r],
+                       grid.cv_results_[cv_keys[1]][r]/2.0,
+                       grid.cv_results_[cv_keys[2]][r]))
+        
+        st.write('---')
+        st.write('Best parameters: %s' % grid.best_params_)
+        st.write('Accuracy: %.2f' % grid.best_score_)
+        
+        
+        
+        
+    if opcion_seleccionada == 'Car':
+        st.write('##### Data Frame con datos de Autos')     
+        
+        st.code('''df_Car = pd.read_csv('DataFrames/car_data', names=['buying','maint','doors','persons','lug_boot','safety','acceptability'])
+df_Car.head(15)''')
+        
+        df_Car = load_data_car()
+        st.dataframe(df_Car.head(15))
+
+
+        st.code('''# info
+df_Car.info()''') 
+            
+        df_Car.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')  
+
+        st.write('---')
+        
+        st.write('**Utilizacion de LabelEnconder para convertir la columna categorica Acceptability en numerica, y get_dummies para convertir las demas columnas a numericas.**') 
+        
+        st.code('''from sklearn.preprocessing import LabelEncoder
+                
+le = LabelEncoder()
+le.fit(df_Car['acceptability']) ''')
+        
+        from sklearn.preprocessing import LabelEncoder
+        
+        le = LabelEncoder()
+        le.fit(df_Car['acceptability'])        
+        
+        st.code(le.classes_, language='html')
+        
+        st.code('''y = le.transform(df_Car['acceptability'])
+X = pd.get_dummies(df_Car.drop('acceptability', axis=1), dtype=int, drop_first=True) ''')  
+        
+        
+        y = le.transform(df_Car['acceptability'])
+        X = pd.get_dummies(df_Car.drop('acceptability', axis=1), dtype=int, drop_first=True)
+        
+        st.dataframe(X.head())
+
+        st.write('---')
+        st.write('**Separacion de los datos del modelo**')
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=41, stratify=y)
+        
+        st.write('Para que los resultados sean consistentes hay que exponer los modelos exactamente al mismo esquema de validazion cruzada.')
+        
+        
+        st.code('''from sklearn.model_selection import cross_val_score, StratifiedKFold
+
+cv = StratifiedKFold(n_splits=3, random_state=41, shuffle=True)                
+
+def evaluar_rendimiento(modelo, nombre, X_train, y_train, cv):
+    s = cross_val_score(modelo, X_train, y_train, cv=cv, n_jobs=1)
+    st.write(f'Rendimiento de {nombre}: {s.mean().round(3):0.3} {s.std().round(3)}')''')
+        
+        from sklearn.model_selection import cross_val_score, StratifiedKFold
+        
+        cv = StratifiedKFold(n_splits=3, random_state=41, shuffle=True)
+        
+        def evaluar_rendimiento(modelo, nombre, X_train, y_train, cv):
+            s = cross_val_score(modelo, X_train, y_train, cv=cv, n_jobs=1)
+            st.write(f'Rendimiento de {nombre}: {s.mean().round(3):0.3} +/- {s.std().round(3):0.3}')
+        
+        
+        st.code('''from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
+
+ab = AdaBoostClassifier(estimator=DecisionTreeClassifier(max_depth=1, random_state=1), n_estimators=100)
+gb = GradientBoostingClassifier()
+
+evaluar_rendimiento(ab, 'AdaBoostClassifier', X_train, y_train, cv)
+evaluar_rendimiento(gb, 'GradientBoostingClassifier', X_train, y_train, cv)''')
+        
+        from sklearn.tree import DecisionTreeClassifier
+        from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
+        
+        ab = AdaBoostClassifier(estimator=DecisionTreeClassifier(max_depth=1, random_state=1), n_estimators=100)
+        gb = GradientBoostingClassifier()
+        evaluar_rendimiento(ab, 'AdaBoostClassifier', X_train, y_train, cv)
+        evaluar_rendimiento(gb, 'GradientBoostingClassifier', X_train, y_train, cv)
+        
+        st.write('---')
+        st.write('El AdaBoost performa peor que el GradientBoost. Se modifican parametros para hacerlo funcionar mejor.')
+        
+        st.code('''from sklearn.model_selection import GridSearchCV
+
+params_ab = {'n_estimators': [100,500], 'learning_rate': [0.01, 0.1, 1.0], 'estimator__max_depth': [1,2,3]}                 
+grid_ab = GridSearchCV(AdaBoostClassifier(estimator=DecisionTreeClassifier()), param_grid=params_ab, cv=cv, verbose=1, n_jobs=1)
+grid_ab.fit(X_train, y_train)
+mejor = grid_ab.best_estimator_
+grid_ab.best_params_''')
+        
+        from sklearn.model_selection import GridSearchCV
+        
+        params_ab = {'n_estimators': [100,500], 'learning_rate': [0.01, 0.1, 1.0], 'estimator__max_depth': [1,2,3]}
+        
+        grid_ab = GridSearchCV(AdaBoostClassifier(estimator=DecisionTreeClassifier()), param_grid=params_ab, cv=cv, verbose=1, n_jobs=1)
+        grid_ab.fit(X_train, y_train)
+        mejor = grid_ab.best_estimator_
+
+        grid_ab.best_params_
+        
+        st.code('''evaluar_rendimiento(mejor, 'AdaBoostClassifier + G5', X_train, y_train, cv)''')
+        
+        evaluar_rendimiento(mejor, 'AdaBoostClassifier + GS', X_train, y_train, cv)
+        
+        st.write('---')
+        st.write('Se modifican parametros para GradientBoost.')
+        
+        st.code('''params_gb = {'n_estimators': [100,500], 'learning_rate': [0.001, 0.01, 0.1, 1], 'max_depth': [1,2,3,4]}
+grid_gb = GridSearchCV(gb, param_grid=params_gb, cv=cv, verbose=1, n_jobs=3)
+grid_gb.fit(X_train, y_train)
+mejor_gb = grid_gb.best_estimator_''')
+        
+        params_gb = {'n_estimators': [100,500], 'learning_rate': [0.001, 0.01, 0.1, 1.0], 'max_depth': [1,2,3,4]}
+        grid_gb = GridSearchCV(gb, param_grid=params_gb, cv=cv, verbose=1, n_jobs=3)
+        grid_gb.fit(X_train, y_train)
+        mejor_gb = grid_gb.best_estimator_
+        
+        st.code('''evaluar_rendimiento(mejor_gb, 'GradientBoostingClassifier + GS', X_train, y_train, cv)''')
+        
+        evaluar_rendimiento(mejor_gb, 'GradientBoostingClassifier + GS', X_train, y_train, cv)
+        
+        st.write('---')
+        st.write('**Valor de AUC y grafico de ROC**')
+        
+        st.code('''from sklearn.metrics import roc_auc_score
+                
+gb_auc = roc_auc_score(y_test, grid_gb.predict_proba(X_test), multi_class='ovr')                
+st.write(f'El valor del AUC es: {gb_auc}')''')
+        
+        
+        st.code('''from sklearn.metrics import roc_auc_score
+                
+gb_auc = roc_auc_score(y_test, grid_gb.predict_proba(X_test), multi_class='ovr')                
+st.write(f'El valor del AUC es: {gb_auc}')                
+import scikitplot     
+from scikitplot.metrics import plot_roc      
+
+fig,ax = plt.subplots() 
+plot_roc(y_test, grid_gb.predict_proba(X_test))                
+
+st.pyplot(fig)''')
+        
+        from sklearn.metrics import roc_auc_score
+        
+        gb_auc = roc_auc_score(y_test, grid_gb.predict_proba(X_test), multi_class='ovr')
+        st.write(f'El valor del AUC es: {gb_auc}')
+        
+        
+        import scikitplot
+        from scikitplot.metrics import plot_roc 
+        
+        with st.container(width=600):
+            fig,ax = plt.subplots()  
+            plot_roc(y_test, grid_gb.predict_proba(X_test))
+            
+            st.pyplot(fig)
+        
+        st.code('''model = grid_gb.best_estimator_
+model''')
+    
+        model = grid_gb.best_estimator_
+        st.write(model)
+        
+        st.code('''importances = model.feature_importances_
+importances * 100''')
+        
+        importances = model.feature_importances_
+        st.code(importances * 100)
+        
+        st.code('''indices = np.argsort(importances)[::-1]
+names = X.columns[indices]      
+
+fig,ax = plt.subplots()   
+ax.bar(range(X.shape[1]), importances[indices])
+ax.set_title('Feature Importance')
+ax.set_xticks(range((X.shape[1]), names, rotation=90))
+
+st.pyplot(fig)''')
+        
+        
+        # Crear variable que tenga los indices indicando los valores de mayor a menor
+        indices = np.argsort(importances)[::-1]
+        # con dicha variable realizamos fancy indexing de manera de ordenar los labels del eje x.
+        names = X.columns[indices]
+        
+        fig,ax = plt.subplots()   
+        ax.bar(range(X.shape[1]), importances[indices])
+        ax.set_title('Feature Importance')
+        ax.set_xticks(range((X.shape[1]), names, rotation=90))
+
+        st.pyplot(fig)
+        
+        
+        
+        
+        
+        
+        
+        
+        
 def ml_trees():
     buffer = io.StringIO()   
 
@@ -274,7 +2815,7 @@ mientras que un bosque aleatorio (Random forest) es un modelo de conjunto que ut
 El bosque aleatorio combina las predicciones de varios árboles entrenados con diferentes subconjuntos de datos y característicasm lo que hace menos propenso al sobreajuste (overfitting) que un solo árbol.''')
     st.write('---')    
     
-    opciones_mltrees = ['Kyphosis', 'Prestamos']
+    opciones_mltrees = ['Kyphosis', 'Prestamos', 'Pinguinos', 'Titanic']
 
     col1, col2= st.columns([2,2])
     
@@ -293,8 +2834,873 @@ El bosque aleatorio combina las predicciones de varios árboles entrenados con d
             df_prestamos = pd.read_csv('DataFrames/loan_data.csv')
             
             return df_prestamos
+    
+        @st.cache_data
+        def load_data_pinguinos():
+            df_pinguinos = pd.read_csv('DataFrames/penguins.csv')
+            
+            return df_pinguinos    
+    
+        @st.cache_data
+        def load_data_titanic():
+            df_titanic = pd.read_csv('DataFrames/titanic_train.csv')
+
+            return df_titanic
+    
+    
+    
+    
+    
+    if opcion_seleccionada == 'Titanic':
+        st.write('##### Data Frame con datos del naufragio del Titanic')  
+    
+        st.code('''from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.tree import plot_tree
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay''')
+        
+        
+        from sklearn.tree import DecisionTreeClassifier
+        from sklearn.model_selection import train_test_split
+        from sklearn.tree import plot_tree
+        from sklearn.metrics import confusion_matrix
+        from sklearn.metrics import ConfusionMatrixDisplay    
+    
+    
+        st.code('''df_titanic = pd.read_csv('DataFrames/titanic_train.csv')
+df_titanic.head(10)''')
+
+    
+        df_titanic = load_data_titanic()
+        st.dataframe(df_titanic.head(10))    
+
+
+        st.code('''# info
+df_titanic.info()''') 
+        
+        df_titanic.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')  
+
+
+        st.write('---')
+        st.write('**Agrega columna para hombres adultos**')
+        
+        st.code('''def categorizar(fila):
+    if fila['Sex'] == 'male' and fila['Age'] > 17:                
+        return 1                
+    else:
+        return 0           
+                
+df_titanic['adult_male'] = df_titanic.apply(categorizar, axis=1)''')
+        
+        def categorizar(fila):
+            if fila['Sex'] == 'male' and fila['Age'] > 17:
+                return 1
+            else:
+                return 0
+        
+        
+        df_titanic['adult_male'] = df_titanic.apply(categorizar, axis=1)
+        
+    
+        st.write('---')
+        st.write('**Agregar promedio de edad en valores faltantes**')
+        
+        st.code('''filtro = df_titanic['Sex'] == 'female'
+promedio_fem = df_titanic[filtro]['Age'].median()                
+filtro = df_titanic['Sex'] == 'male'                
+promedio_male = df_titanic[filtro]['Age'].median()                 ''')
+       
+        
+        filtro = df_titanic['Sex'] == 'female'
+        promedio_fem = df_titanic[filtro]['Age'].median()
+        filtro = df_titanic['Sex'] == 'male'
+        promedio_male = df_titanic[filtro]['Age'].median()    
+    
+
+        st.write(f'Promedio de edad female: {promedio_fem}')
+        st.write(f'Promedio de edad male: {promedio_male}')
+
+        st.code('''def promedio_edad(fila):
+    if pd.isna(fila['Age']):                
+        if fila['Sex'] == 'male':
+            return promedio_male
+        else:
+            return promedio_fem    
+    else:    
+        return fila['Age']''')
+
+        def promedio_edad(fila):
+            if pd.isna(fila['Age']):
+                if fila['Sex'] == 'male':
+                    return promedio_male
+                else:
+                    return promedio_fem
+            else:
+                return fila['Age']
+        
+
+        st.code('''df_titanic['Age'] = df_titanic.apply(promedio_edad, axis=1)
+df_titanic.head(10)''')
+        
+        df_titanic['Age'] = df_titanic.apply(promedio_edad, axis=1)
+
+        st.write('---')
+        st.write('**Setear PassengerId como indice**')
+
+        st.code('df_titanic.set_index(\'PassengerId\', inplace=True)') 
+        df_titanic.set_index('PassengerId', inplace=True)
+    
+    
+        st.write('---')
+        st.write('**Eliminar columna Cabin, Name y Ticket**')
+        
+        st.code('df_titanic.drop([\'Cabin\',\'Name\',\'Ticket\'], axis=1, inplace=True)')
+        df_titanic.drop(['Cabin','Name','Ticket'], axis=1, inplace=True)
+
+        st.write('---')
+        st.write('**Convertir Sex a valor numerico**')
+        
+        st.code('''data = {\'male\':0,\'female\':1}
+df_titanic[\'Sex\'] = df_titanic[\'Sex\'].map(data)''')
+
+        
+        data = {'male':0,'female':1}
+        df_titanic['Sex'] = df_titanic['Sex'].map(data)
+        
+        
+        st.write('---')
+        st.write('**Convertir Embarked a valor numerico**')
+        
+        st.code('''data = {'S':0, 'C':1, 'Q':2}
+df_titanic['Embarked'] = df_titanic['Embarked'].map(data)''')
+        
+        data = {'S':0, 'C':1, 'Q':2}
+        df_titanic['Embarked'] = df_titanic['Embarked'].map(data)
+        
+        
+        st.dataframe(df_titanic.head(10))
+
+        st.write('---')
+       
+        col1, col2= st.columns([2,2])
+    
+        with col1:
+            st.write('**Catplot de sobrevivientes**')
+            
+            st.code('''graf = sns.catplot(
+    data = df_titanic,
+    x='Survived',
+    kind='count',
+    palette='inferno'                    
+)
+st.pyplot(graf)''')
+            
+            with st.container(width=600):
+                graf = sns.catplot(
+                    data = df_titanic,
+                    x='Survived',
+                    kind='count',
+                    palette='inferno'
+                )
+
+                st.pyplot(graf)    
+            
+        with col2:
+            st.write('**Countplot de sobrevivientes por clase**')
+            
+            st.code('''fig,ax = plt.subplots()
+    sns.countplot(
+    data = df_titanic,
+    x='Pclass',
+    hue='Survived', 
+    palette='Set1'                  
+)
+st.pyplot(graf)''')            
+            
+            with st.container(width=600):
+                fig,ax = plt.subplots()
+                sns.countplot(
+                    data = df_titanic,
+                    x='Pclass',
+                    hue='Survived',
+                    palette='Set1'
+                )
+
+                st.pyplot(fig)      
+    
+    
+        st.write('---')
+       
+        col1, col2= st.columns([2,2])
+    
+        with col1:
+            st.write('**Countplat de sobrevivientes por sexo**')
+            
+            st.code('''fig,ax = plt.subplots()
+    sns.countplot(
+    data = df_titanic,
+    x='Sex',
+    hue='Survived', 
+    palette='Set1'                  
+)
+st.pyplot(graf)''') 
+            
+            with st.container(width=600):
+                fig,ax = plt.subplots()
+                sns.countplot(
+                    data = df_titanic,
+                    x='Sex',
+                    hue='Survived',
+                    palette='Set1'
+                )
+
+                st.pyplot(fig) 
+
+
+        st.write('---')
+        st.write('**Separación de datos del Modelo**')
+
+        st.code('''X = df_titanic.drop('Survived', axis=1)
+y = df_titanic['Survided']          
+          
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.25, random_state=16, stratify=y)''')
+
+        X = df_titanic.drop('Survived', axis=1)
+        y = df_titanic['Survived']
+            
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.25, random_state=16, stratify=y)
+
+
+        st.write('---')
+        st.write('**Entrenamiento del modelo**')
+        
+        st.code('''arbol = DecisionTreeClassifier(criterion='entropy', random_state=16)
+arbol.fit(X_train, y_train)''')
+        
+        arbol = DecisionTreeClassifier(criterion='entropy', random_state=16)
+        arbol.fit(X_train, y_train)
+
+
+        st.write('---')
+        st.write('**Ver que variables pesaron mas en las decisiones del arbol**')
+        
+        fi = arbol.feature_importances_
+        st.code(fi)
+        
+        st.code('''fi = arbol.feature_importances_
+                
+fig,ax = plt.subplots()                
+sns.barplot(
+    x=fi, 
+    y=X_train.columns,
+    palette='Spectral'    
+)
+st.pyplot(fig)''')
+        
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+            sns.barplot(
+                x=fi, 
+                y=X_train.columns,
+                palette='Spectral'
+            )
+            st.pyplot(fig)
+
+        
+        st.write('---')
+        st.write('**Grafico del Arbol**')
+        
+        st.code('''list_features = list(X.columns)
+fig,ax = plt.subplots()  
+plot_tree(arbol, filled=True, rounded=True, feature_names=list_features, max_depth=3)   
+              
+st.pyplot(fig)                  ''')
+        
+        list_features = list(X.columns)
+        fig,ax = plt.subplots()
+        plot_tree(arbol, filled=True, rounded=True, feature_names=list_features, max_depth=3)    
+        st.pyplot(fig)  
+                    
+        
+        st.write('---')
+        st.write('**Predicciones**')
+        
+        st.code('''y_pred = arbol.predict(X_test)  
+                   
+Score train: {arbol.score(X_train, y_train)}
+Score test: {arbol.score(X_test, y_test)}''')
+        
+        y_pred = arbol.predict(X_test)       
+        st.write(f'Score train: {arbol.score(X_train, y_train)}')
+        st.write(f'Score test: {arbol.score(X_test, y_test)}')
+
+        st.write('Se ve que el arbol está sobreajustado.')
+
+        st.write('---')
+        st.write('**Matriz de Confusion**')
+
+        st.code('confusion_matrix(y_test, y_pred))')
+        
+        with st.container(width=250):      
+            st.write(confusion_matrix(y_test, y_pred))
+
+
+
+        st.write('---')
+        st.write('**Correccion del sobreajuste**')
+
+        st.write(f'Maxima profundidad del arbol: {arbol.get_depth()}')
+        st.write(f'cantidad de hojas: {arbol.get_n_leaves()}')
+        
+        st.write('---')
+        st.write('**Modificar profundidad del arbol**')
+        
+        
+        st.code('''depth = [i+1 for i in range(20)]
+scor_train = []      
+scor_test = []
       
-      
+for dep in depth:      
+    tree = DecisionTreeClassifier(criterion='entropy', max_depth=dep, random_state=16) 
+    tree.fit(X_train, y_train) 
+    pred = tree.predict(X_test) 
+    
+    scor_train.append(tree.score(X_train, y_train))   
+    scor_test.append(tree.score(X_test, y_test))
+    
+    fig,ax = plt.subplots()
+    ax.scatter(x=depth, y=scor_train, marker='o', color='blue')   # grafica los datos 
+    ax.scatter(x=depth, y=scor_test, marker='x', color='red')
+    
+    ax.set_title('Score arbol vs Profundidad')
+    ax.set_xlabel('Profundidad arbol')
+    ax.set_ylabel('Score')
+    
+st.pyplot(fig)''')
+        
+        
+        depth = [i+1 for i in range(20)]
+        scor_train = []
+        scor_test = []
+        
+        for dep in depth:
+            tree = DecisionTreeClassifier(criterion='entropy', max_depth=dep, random_state=16)
+            tree.fit(X_train, y_train)
+            pred = tree.predict(X_test)
+            
+            scor_train.append(tree.score(X_train, y_train))
+            scor_test.append(tree.score(X_test, y_test))
+        
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()   
+            ax.scatter(x=depth, y=scor_train, marker='o', color='blue')   # grafica los datos
+            ax.scatter(x=depth, y=scor_test, marker='x', color='red')
+          
+            ax.set_title('Score arbol vs Profundidad')
+            ax.set_xlabel('Profundidad arbol')
+            ax.set_ylabel('Score')
+
+            st.pyplot(fig)
+        
+        
+        st.write('---')
+        st.write('**Modificar cantidad de muestras maxima en cada hoja**')        
+        
+        
+        st.code('''samplex = [i+1 for i in range(20)]
+scor_train1 = []                
+scor_test1 = []                
+                
+for sam in samplex:
+    tree = DecisionTreeClassifier(criterion='entropy', min_samples_leaf=sam, random_state=16)
+    tree.fit(X_train, y_train)
+    pred = tree.predict(X_test) 
+    
+    scor_train1.append(tree.score(X_train, y_train))
+    scor_test1.append(tree.score(X_test, y_test))
+    
+    fig,ax = plt.subplots()   
+    ax.scatter(x=samplex, y=scor_train1, marker='o', color='blue')   # grafica los datos
+    ax.scatter(x=samplex, y=scor_test1, marker='x', color='red')
+    
+    ax.set_title('Score arbol vs Muestras en hoja')  
+    ax.set_xlabel('Muestras en hoja')         
+    ax.set_ylabel('Score') 
+
+    st.pyplot(fig)''')
+        
+        
+        samplex = [i+1 for i in range(20)]
+        scor_train1 = []
+        scor_test1 = []
+        
+        for sam in samplex:
+            tree = DecisionTreeClassifier(criterion='entropy', min_samples_leaf=sam, random_state=16)
+            tree.fit(X_train, y_train)
+            pred = tree.predict(X_test) 
+            
+            scor_train1.append(tree.score(X_train, y_train))
+            scor_test1.append(tree.score(X_test, y_test))       
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()   
+            ax.scatter(x=samplex, y=scor_train1, marker='o', color='blue')   # grafica los datos
+            ax.scatter(x=samplex, y=scor_test1, marker='x', color='red')
+          
+            ax.set_title('Score arbol vs Muestras en hoja')
+            ax.set_xlabel('Muestras en hoja')
+            ax.set_ylabel('Score')
+
+            st.pyplot(fig)
+                
+        
+        st.write('---')
+        st.write('**Impureza de las hojas**')
+        
+        st.code('''clas = DecisionTreeClassifier(criterion='entropy', random_state=16)
+path = clas.cost_complexity_pruning_path(X_train, y_train)                 
+ccp_alphas, impurities = path.ccp_alphas, path.impurities
+
+fig, ax = plt.subplots()
+ax.plot(ccp_alphas[:-1], impurities[:-1], marker='o', drawstyle='steps-post')
+ax.set_xlabel('Effective alpha')
+ax.set_ylabel('Total impurity of leaves')
+ax.set_title('Total Impurity vs Effective alpha for training set')     
+
+st.pyplot(fig)''')
+        
+        clas = DecisionTreeClassifier(criterion='entropy', random_state=16)
+        path = clas.cost_complexity_pruning_path(X_train, y_train) 
+        ccp_alphas, impurities = path.ccp_alphas, path.impurities
+        
+        with st.container(width=800):
+            fig, ax = plt.subplots()
+            ax.plot(ccp_alphas[:-1], impurities[:-1], marker='o', drawstyle='steps-post')
+            ax.set_xlabel('Effective alpha')
+            ax.set_ylabel('Total impurity of leaves')
+            ax.set_title('Total Impurity vs Effective alpha for training set')          
+            
+            st.pyplot(fig)
+            
+        
+        st.code('''clfs = []
+for ccp_alpha in ccp_alphas:                
+    clf = DecisionTreeClassifier(random_state=16, ccp_alpha=ccp_alpha)
+    clf.fit(X_train, y_train)
+    clfs.append(clf)        
+    
+st.write(f'Number of nodes in the last tree is {clfs[-1].tree_.node_count} with ccp_alpha {ccp_alphas[-1]}')''')
+        
+        clfs = []
+        for ccp_alpha in ccp_alphas:
+            clf = DecisionTreeClassifier(random_state=16, ccp_alpha=ccp_alpha)
+            clf.fit(X_train, y_train)
+            clfs.append(clf)
+            
+        st.write(f'Number of nodes in the last tree is {clfs[-1].tree_.node_count} with ccp_alpha {ccp_alphas[-1]}')
+        
+        
+        st.code('''clfs = clfs[:-1]
+ccp_alphas = ccp_alphas[:-1]                
+
+node_counts = [clf.tree_.node_count for clf in clfs]                
+depth = [clf.tree_.max_depth for clf in clfs]  
+
+fig, ax = plt.plots(2,1)
+ax[0].plot(ccp_alphas, node_counts, marker='o', drawstyle='steps-post')
+ax[0].set_xlabel('alpha')
+ax[0].set_ylabel('number of nodes')
+ax[0].set_title('Number of nodes vs Alpha')
+ax[1].plot(ccp_alphas, depth, marker='o', drawstyle='steps-post')
+ax[1].set_xlabel('alpha')
+ax[1].set_ylabel('number of tree')
+ax[1].set_title('Depth vs Alpha')
+
+st.pyplot(fig)''')
+        
+        clfs = clfs[:-1]
+        ccp_alphas = ccp_alphas[:-1]
+
+        node_counts = [clf.tree_.node_count for clf in clfs]
+        depth = [clf.tree_.max_depth for clf in clfs]        
+
+        with st.container(width=800):
+            fig, ax = plt.subplots(2,1)
+            ax[0].plot(ccp_alphas, node_counts, marker='o', drawstyle='steps-post')
+            ax[0].set_xlabel('alpha')
+            ax[0].set_ylabel('number of nodes')
+            ax[0].set_title('Number of nodes vs Alpha')
+            ax[1].plot(ccp_alphas, depth, marker='o', drawstyle='steps-post')
+            ax[1].set_xlabel('alpha')
+            ax[1].set_ylabel('number of tree')
+            ax[1].set_title('Depth vs Alpha')
+
+            st.pyplot(fig)
+
+        
+        st.code('''train_scores = [clf.score(X_train, y_train) for clf in clfs]
+test_scores = [clf.score(X_test, y_test) for clf in clfs]                
+
+fig, ax = plt.subplots()
+ax.set_xlabel('alpha')
+ax.set_ylabel('accuracy')
+ax.set_title('Accuracy vs alpha for training and testing scores')
+ax.plot(ccp_alphas, train_scores, marker='o', label='train', drawstyle='steps-post')
+ax.plot(ccp_alphas, test_scores, marker='o', label='test', drawstyle='steps-post')
+    
+st.pyplot(fig)''')
+        
+        train_scores = [clf.score(X_train, y_train) for clf in clfs]
+        test_scores = [clf.score(X_test, y_test) for clf in clfs]
+        
+        with st.container(width=800):
+            fig, ax = plt.subplots()
+            ax.set_xlabel('alpha')
+            ax.set_ylabel('accuracy')
+            ax.set_title('Accuracy vs alpha for training and testing scores')
+            ax.plot(ccp_alphas, train_scores, marker='o', label='train', drawstyle='steps-post')
+            ax.plot(ccp_alphas, test_scores, marker='o', label='test', drawstyle='steps-post')
+        
+            st.pyplot(fig)
+    
+
+        st.code('''alfas = ccp_alphas
+scor = np.array(test_scores)
+tscor = np.array(train_scores)
+dif = tscor-scor
+alfa_score = pd.DataFrame({'alpha':alfas, 'score':scor, 'dif':dif})
+indice = alfa_score['dif'].idxmin()
+alfa_best = alfa_score['alpha'].iloc[indice]
+        
+st.write(f'Mejor alfa {alfa_best}')    
+st.dataframe(alfa_score, width=400)''')
+        
+        
+        alfas = ccp_alphas
+        scor = np.array(test_scores)
+        tscor = np.array(train_scores)
+        dif = tscor-scor
+        alfa_score = pd.DataFrame({'alpha':alfas, 'score':scor, 'dif':dif})
+        indice = alfa_score['dif'].idxmin()
+        alfa_best = alfa_score['alpha'].iloc[indice]
+        
+        st.write(f'Mejor alfa {alfa_best}')    
+        st.dataframe(alfa_score, width=400)
+    
+    
+        st.write('---')
+        st.write('**Arbol con el mejor alfa, profundidad y muestras por hoja**')
+        
+        st.code('''arbol_alfa = DecisionTreeClassifier(criterion='entropy', random_state=16, ccp_alpha=alfa_best)
+                
+arbol_alfa.fit(X_train, y_train)
+y_pred_alfa = arbol_alfa.predict(X_test)
+        
+st.write(f'Score train: {arbol_alfa.score(X_train, y_train)}')
+st.write(f'Score test: {arbol_alfa.score(X_train, y_train)}')
+              
+confusion_matrix(y_test, y_pred_alfa)''') 
+        
+        arbol_alfa = DecisionTreeClassifier(criterion='entropy', random_state=16, ccp_alpha=alfa_best)
+        arbol_alfa.fit(X_train, y_train)
+        y_pred_alfa = arbol_alfa.predict(X_test)
+        
+        st.write(f'Score train: {arbol_alfa.score(X_train, y_train)}')
+        st.write(f'Score test: {arbol_alfa.score(X_test, y_test)}')
+    
+        with st.container(width=250):            
+            st.write(confusion_matrix(y_test, y_pred_alfa))
+    
+    
+    
+    
+    if opcion_seleccionada == 'Pinguinos':
+        st.write('##### Data Frame con los datos de Pinguinos')  
+        st.write('Se intenta predecir la subespecie de los pinguinos')
+        
+        st.code('''from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import make_pipeline
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.tree import plot_tree
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay''')        
+        
+        
+        
+        st.code('''# Carga de csv con los datos de Pinguinos
+df_pinguinos = pd.read_csv('DataFrames/df_pinguinos.csv')     
+df_pinguinos.head(10)       # head''')  
+
+
+        
+        
+        from sklearn.pipeline import make_pipeline
+        from sklearn.tree import DecisionTreeClassifier
+        from sklearn.tree import DecisionTreeRegressor
+        from sklearn.preprocessing import LabelEncoder
+        from sklearn.model_selection import train_test_split
+        from sklearn.tree import plot_tree
+        from sklearn.metrics import confusion_matrix
+        from sklearn.metrics import ConfusionMatrixDisplay
+        import warnings
+
+        warnings.filterwarnings('ignore')
+
+        df_pinguinos = load_data_pinguinos()
+        st.dataframe(df_pinguinos.head(10))    
+    
+        st.code('''# info
+df_pinguinos.info()''') 
+        
+        df_pinguinos.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')          
+    
+    
+        st.write('---')
+        st.write('**Eliminación de datos faltantes**')
+
+        st.code('df_pinguinos.dropna(subset=[\'sex\'], inplace=True)')
+        df_pinguinos.dropna(subset=['sex'], inplace=True)
+ 
+        st.code(df_pinguinos.shape)
+
+        st.write('---')
+        st.write('**Valores unicos**')       
+
+        st.code('''especies = df_pinguinos.value_counts('species')  # Especies
+especies''')
+        
+        especies = df_pinguinos.value_counts('species')
+        st.code(especies)
+
+        st.code('''sexo = df_pinguinos.value_counts('sex')      # Sexo
+sexo''')
+
+        sexo = df_pinguinos.value_counts('sex')
+        st.code(sexo)
+
+
+        st.code('''islas = df_pinguinos.value_counts('island')      # Islas
+islas''')
+
+        islas = df_pinguinos.value_counts('island')
+        st.code(islas)
+
+
+        st.write('---')
+        st.write('**Conversion de variables categorias en numericas**')
+        
+        st.code('''data = {
+    'Adelie':1,
+    'Gentoo':2,
+    'Chinstrap':3
+} ''')
+        
+        data = {
+            'Adelie':1,
+            'Gentoo':2,
+            'Chinstrap':3
+        } 
+        
+        st.code('df_pinguinos[\'species\'] = df_pinguinos[\'species\'].map(data)')
+        
+        df_pinguinos['species'] = df_pinguinos['species'].map(data)
+
+
+        st.code('''data = {
+    'male':1,
+    'female':2,
+} ''')
+        
+        data = {
+            'male':1,
+            'female':2,
+        } 
+        
+        st.code('df_pinguinos[\'sex\'] = df_pinguinos[\'sex\'].map(data)')
+        
+        df_pinguinos['sex'] = df_pinguinos['sex'].map(data)
+
+        st.code('''data = {
+    'Biscoe':1,
+    'Dream':2,
+    'Torgersen':3
+} ''')
+        
+        data = {
+            'Biscoe':1,
+            'Dream':2,
+            'Torgersen':3
+        } 
+        
+        st.code('df_pinguinos[\'island\'] = df_pinguinos[\'island\'].map(data)')
+        
+        df_pinguinos['island'] = df_pinguinos['island'].map(data)
+    
+        st.dataframe(df_pinguinos.head(15))
+
+        st.write('---')
+        st.write('**Separacion de los datos del modelo**')
+        
+        st.code('''X = df_pinguinos.drop('species', axis=True)
+y = df_pinguinos['species']''')
+         
+        X = df_pinguinos.drop('species', axis=True)        
+        y = df_pinguinos['species']
+        
+        st.code('X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.25, random_state=26, stratify=y)')
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.25, random_state=26, stratify=y)
+    
+    
+        st.write('---')
+        st.write('###### Arbol como Regresor')
+        st.write('Existe una relacion entre el peso y el largo de la aleta del pinguino.')
+        
+        st.code('''xr = X_train['body_mass_g'].values.reshape(-1,1)
+yr = X_train['flipper_length_mm'].values.reshape(-1,1)''')
+        
+        xr = X_train['body_mass_g'].values.reshape(-1,1)
+        yr = X_train['flipper_length_mm'].values.reshape(-1,1)
+    
+    
+        st.write('---')
+        st.write('**Entrenamiento**')
+
+        st.code('''arbol = DecisionTreeRegressor(criterion='squared_error', random_state=16)   # Instancia del modelo
+arbol.fit(xr, yr)   # Entrenamiento ''')
+        
+        arbol = DecisionTreeRegressor(criterion='squared_error', random_state=16)
+        arbol.fit(xr, yr)         # Entrenamiento
+
+        st.write('---')
+        st.write('**Prediccion**')
+
+        st.code('''test_xr = X_test['body_mass_g'].values.reshape(-1,1)
+test_yr = X_test['flipper_length_mm'].values.reshape(-1,1)                
+y_pred = arbol.predict(test_xr)''')
+
+        test_xr = X_test['body_mass_g'].values.reshape(-1,1)
+        test_yr = X_test['flipper_length_mm'].values.reshape(-1,1)
+        y_pred = arbol.predict(test_xr)
+
+        st.write('---')
+        st.write('**Rango y grafico**')
+        
+        st.code('''x_vect = np.arange(2750,6350,0.01)   # vector numpy
+x_graf = x_vect.reshape((len(x_vect),1))        # dataframe de 1 columna''')
+        
+        x_vect = np.arange(2750,6350,0.01)   # vector numpy
+        x_graf = x_vect.reshape((len(x_vect),1))        # dataframe de 1 columna
+        
+        # Grafico
+        st.code('''fig,ax = plt.subplots() 
+ax.scatter(x=test_xr, y=test_yr, color='#ff8c00')   # grafica los datos
+ax.plot(x_graf, arbol.predict(x_graf), color='lime')  # id predicion
+ax.scatter(test_xr, y_pred, color='red', marker='*')
+ax.set_title('Regresion Arbol')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+                
+st.pyplot(fig)''')
+        
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()   
+            ax.scatter(x=test_xr, y=test_yr, color='#ff8c00')   # grafica los datos
+            ax.plot(x_graf, arbol.predict(x_graf), color='lime')  # id predicion
+            ax.scatter(test_xr, y_pred, color='red', marker='*')
+          
+            ax.set_title('Regresion Arbol')
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+
+            st.pyplot(fig)
+
+
+        st.write('---')
+        st.write('###### Arbol como Regre Clasificador')
+
+        st.code('arbolClas = DecisionTreeClassifier(random_state=36)')
+        arbolClas = DecisionTreeClassifier(random_state=36)
+
+        st.write('**Entrenamiento**')
+
+        st.code('arbolClas.fit(X_train, y_train)')
+        arbolClas.fit(X_train, y_train)
+
+        st.code('''with st.container(width=800):
+graf = sns.barplot(                
+x = arbolClas.feature_importances_,  
+y = X_train.columns,  
+palette = 'iridis'            
+)
+
+st.pyplot(graf)''')
+        
+        with st.container(width=800):
+            fig,ax = plt.subplots()
+            sns.barplot(
+            x = arbolClas.feature_importances_,
+            y = X_train.columns,
+            palette = 'viridis')
+            
+            st.pyplot(fig)
+        
+        st.write('---')
+        
+        st.code('''lista_car = list(x.columns)
+fig,ax = plt.subplots()
+plot_tree(arbolClas, filled=True, ronded=True, feature_names=lista_car)
+
+st.pyplot(fig)''')
+        
+        lista_car = list(X.columns)
+        fig,ax = plt.subplots()
+        plot_tree(arbolClas, filled=True, rounded=True, feature_names=lista_car)
+        
+        st.pyplot(fig)
+         
+        st.write('---')
+        st.write('**Preccion**')
+        
+        st.code('y_pred = arbolClas.predict(X_test)')
+        y_pred = arbolClas.predict(X_test)
+        
+        st.code('''st.write(f'Score train: {arbolClas.score(X_train, y_train)}')
+st.write(f'Score test: {arbolClas.score(X_test, y_test)}')''')
+        
+        st.write(f'Score train: {arbolClas.score(X_train, y_train)}')
+        st.write(f'Score test: {arbolClas.score(X_test, y_test)}')
+        
+        st.write('---')
+        st.write('**Matriz de Confusion**')
+        
+        st.code('''from sklearn.metrics import confusion_matrix
+with st.container(width=250): 
+    st.write(confusion_matrix(y_test, y_pred))''')
+
+
+        from sklearn.metrics import confusion_matrix
+        with st.container(width=250):      
+            st.write(confusion_matrix(y_test, y_pred))
+
+
+
+
+
+
+
+
+
+    
       
     if opcion_seleccionada == 'Prestamos':
         st.write('##### Data Frame con los datos de Prestatarios')  
@@ -392,48 +3798,114 @@ st.pyplot(graf)
 
 
         st.write('---')
-        st.write('##### Reemplazo de variables categóricas')
+        st.write('##### Conversión de variables categóricas')
+        st.write('''**get_dummies**: Función para la preparación de datos que convierte variables categóricas (texto) en un formato numérico binario (0 y 1) mediante la codificación One-Hot,  
+    creando una nueva columna por cada categoríca única y asignando 1 si la categoría existe en esa fila y 0 si no.''')
         
-        st.code('''data = {
-    'debt_consolidation':1,
-    'credit_card':2,
-    'all_other':3,
-    'home_improvement':4,
-    'small_business':5,
-    'major_purchase':6,
-    'educational':7
-}                              
+        st.write('* columns: para especificar que columnas del dataframe se quieren transformar.')
+        st.write('* drop_first: si es True, elimina la primera columna generada para cada variable original, ayudando a evitar la multicolinealidad en modelos estadisticos.' )
+        
+        st.code('''cat_feats = ['purpose']
+final_data = pd.get_dummies(data=df_prestamos, columns=cat_feats, drop_first=True)    
+final_data.head(10)            
 ''')
         
-        data = {
-            'debt_consolidation':1,
-            'credit_card':2,
-            'all_other':3,
-            'home_improvement':4,
-            'small_business':5,
-            'major_purchase':6,
-            'educational':7
-        }
-
-        st.code('''df_prestamos['purpose'] = df_prestamos['purpose'].map(data) 
-df_prestamos.head(10)''')
+        cat_feats = ['purpose']
         
-        df_prestamos['purpose'] = df_prestamos['purpose'].map(data)    
-        st.dataframe(df_prestamos.head(10))
+        final_data = pd.get_dummies(data=df_prestamos, columns=cat_feats, drop_first=True)
+        st.dataframe(final_data.head(10))
 
 
+        st.write('---')
+
+        st.write('##### Separación de datos del modelo')
+        st.code('''X = final_data.drop('not.fully.paid', axis=1)
+y = final_data['not.fully.paid']''')
+
+        X = final_data.drop('not.fully.paid', axis=1)
+        y = final_data['not.fully.paid']
+
+        st.write('---')
+        st.write('##### Entrenamiento del modelo (Decision Tree)')
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.
+Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test. El parámetro random_state permite conseguir cierta repetición de los resultados.''')
+        st.write('* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)')
+        
+        st.code('''from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=101)''')
+        
 
 
+        from sklearn.model_selection import train_test_split 
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=101)
 
+        st.code('''from sklearn.tree import DecisionTreeClassifier
+                
+dtree = DecisionTreeClassifier()
+dtree.fit(X_train, y_train)''')
 
+        from sklearn.tree import DecisionTreeClassifier
+                
+        dtree = DecisionTreeClassifier()
+        dtree.fit(X_train, y_train)
 
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('* **predict**: función que se utiliza para obtener predicciones de un modelo entrenado. Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.')
+        
+        st.code('predictions = dtree.predict(X_test)')
+        
+        predictions = dtree.predict(X_test)
 
+        st.write('---')
+        st.write('##### Reporte de clasificación')
 
+        st.code('''from sklearn.metrics import classification_report 
+classification_report(y_test, predictions, output_dict=True)''')
+    
+        from sklearn.metrics import classification_report      
+        st.dataframe(classification_report(y_test, predictions, output_dict=True))
 
+        st.write('---')
+        st.write('##### Matrix de Confusión')
 
+        st.code('''from sklearn.metrics import confusion_matrix  
+confusion_matrix(y_test, predictions)''')
 
+        from sklearn.metrics import confusion_matrix
+        with st.container(width=200):      
+            st.write(confusion_matrix(y_test, predictions))
 
+        st.write('---')
+        st.write('##### Entrenamiento del modelo (Random Forest)')
+        
+        st.code('''from sklearn.ensemble import RandomForestClassifier
 
+rfc = RandomForestClassifier(n_estimators=300)
+rfc.fit(X_train, y_train)''')
+        
+
+        from sklearn.ensemble import RandomForestClassifier
+                
+        rfc = RandomForestClassifier(n_estimators=300)
+        rfc.fit(X_train, y_train)
+
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+
+        st.code('predictions = rfc.predict(X_test)')
+        predictions = rfc.predict(X_test)
+
+        st.write('---')
+        st.write('##### Reporte de clasificación')      
+        
+        st.code('classification_report(y_test, predictions, output_dict=True)')
+        st.dataframe(classification_report(y_test, predictions, output_dict=True))  
+
+        st.write('##### Matrix de Confusión')   
+        
+        with st.container(width=200):      
+            st.write(confusion_matrix(y_test, predictions))
 
     if opcion_seleccionada == 'Kyphosis':
         st.write('##### Data Frame con los datos de Cirugias de columna.')
@@ -561,7 +4033,7 @@ El algoritmo funciona encontrando los "k" puntos de datos más próximos a un nu
 o el promedio de sus valores (para regresión).''')
     st.write('---')    
     
-    opciones_mlknn = ['Classified Data', '']
+    opciones_mlknn = ['Classified Data','Iris','Ejemplo Regresion Aleatorio']
 
     col1, col2= st.columns([2,2])
     
@@ -575,6 +4047,320 @@ o el promedio de sus valores (para regresión).''')
             df_classified = pd.read_csv('DataFrames/Classified Data', index_col=0)
             
             return df_classified
+
+
+    if opcion_seleccionada == 'Ejemplo Regresion Aleatorio':
+        st.write('##### Generación de un arreglo con datos aleatorios.')
+
+        st.code('''import numpy as np
+from sklearn import neighbors''')
+        
+        import numpy as np
+        from sklearn import neighbors
+        
+        st.code('''np.random.seed(0)
+X = np.sort(5 * np.random.rand(40,1), axis=0)''')
+        
+        np.random.seed(0)
+        X = np.sort(5 * np.random.rand(40,1), axis=0)
+        
+        st.code(X, language='html')
+        
+        st.code('y = np.sin(X).ravel()')
+        y = np.sin(X).ravel()
+        
+        st.code(y, language='html')
+
+        #Agregar ruido al target
+        st.write('Agregar ruido al target')
+        st.code('y[::5] += 1 * (0.5 - np.random.rand(8))')
+        y[::5] += 1 * (0.5 - np.random.rand(8))
+        
+        st.code(y, language='html')
+
+        st.write('---')
+        
+        
+        st.code('''n_neighbors = 5
+T = np.linspace(0,5,500)[:, np.newaxis]''')
+        
+        n_neighbors = 5
+        T = np.linspace(0,5,500)[:, np.newaxis]
+        
+        #for i, weights in enumerate(['uniform','distance']):
+        
+        st.code('''knn = neighbors.KNeighborsRegressor(n_neighbors, weights='uniform')
+y_ = knn.fit(X,y).predict(T)''')
+        
+        knn = neighbors.KNeighborsRegressor(n_neighbors, weights='uniform')
+        y_ = knn.fit(X,y).predict(T)
+            
+            
+        st.code('''fig,ax = plt.subplots()
+    plt.scatter(X,y,color='darkorange', label='data')
+    plt.plot(T,y_,color='navy',label='prediction')
+    plt.axis('tight')
+    plt.legend()
+    plt.title(f'KNeighborsRegressor (K = {n_neighbors}, weights=uniform)')
+                    
+    plt.tight_layout()
+
+    st.pyplot(fig)''')    
+            
+        with st.container(width=1300):    
+            
+            fig,ax = plt.subplots()
+            plt.scatter(X,y,color='darkorange', label='data')
+            plt.plot(T,y_,color='navy',label='prediction')
+            plt.axis('tight')
+            plt.legend()
+            plt.title(f'KNeighborsRegressor (K = {n_neighbors}, weights=uniform)')
+                
+            plt.tight_layout()
+            st.pyplot(fig)
+
+
+        st.code('''knn = neighbors.KNeighborsRegressor(n_neighbors, weights='distance')
+y_ = knn.fit(X,y).predict(T)''')
+        
+        
+        knn = neighbors.KNeighborsRegressor(n_neighbors, weights='distance')
+        y_ = knn.fit(X,y).predict(T)
+            
+        st.code('''fig,ax = plt.subplots()
+    plt.scatter(X,y,color='darkorange', label='data')
+    plt.plot(T,y_,color='navy',label='prediction')
+    plt.axis('tight')
+    plt.legend()
+    plt.title(f'KNeighborsRegressor (K = {n_neighbors}, weights=distance)')
+                    
+    plt.tight_layout()
+
+    st.pyplot(fig)''')                
+            
+            
+        with st.container(width=1300):    
+            
+            fig,ax = plt.subplots()
+            plt.scatter(X,y,color='darkorange', label='data')
+            plt.plot(T,y_,color='navy',label='prediction')
+            plt.axis('tight')
+            plt.legend()
+            plt.title(f'KNeighborsRegressor (K = {n_neighbors}, weights=distance)')
+                
+            plt.tight_layout()
+            st.pyplot(fig)
+
+
+
+
+
+    if opcion_seleccionada == 'Iris':
+        st.write('##### Data Frame con los datos de Flores.')
+
+        st.code('df_iris = pd.read_csv\'DataFrames/Iris.csv\',index_col=\'Id\')')
+        df_iris = pd.read_csv('DataFrames/Iris.csv',index_col='Id')
+        
+        st.dataframe(df_iris.head(10))
+        
+        st.code('''# info
+df_iris.info()''') 
+        
+        df_iris.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')    
+
+        
+        st.write('---')
+        st.write('**Conversion de la categoria Species en numeros**')
+        
+        st.code('df_iris[\'Species\').unique()')
+        with st.container(width=200):
+            
+            st.write(df_iris['Species'].unique())
+        
+        
+        st.code('''data = {
+    'Iris-setosa':0,
+    'Iris-versicolor':1,
+    'Iris-virginica':2
+}
+        
+df_iris['Species'] = df_iris['Species'].map(data)''')
+        
+        data = {
+            'Iris-setosa':0,
+            'Iris-versicolor':1,
+            'Iris-virginica':2
+        }
+        
+        df_iris['Species'] = df_iris['Species'].map(data)
+        
+        st.dataframe(df_iris.head(10))
+        
+        st.write('---')
+        st.write('##### Seperación de los datos del modelo')
+        
+        st.write('''* **train_test_split**: función que permite hacer una división de un conjunto de datos en dos bloques de entrenamiento (train) y prueba (test) de un modelo.    
+Mediante el parámetro test_size, se pasa el % de los datos correspondientes a test.''')
+        
+        st.code('''X = df_iris.drop('Species',axis=1)  
+y = df_iris['Species']''')
+        
+        X = df_iris.drop('Species',axis=1)        # Eliminar columna Species
+        y = df_iris['Species']
+
+        st.code('''from sklearn.model_selection import train_test_split 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1, stratify=y)''')
+
+        from sklearn.model_selection import train_test_split 
+        X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=.3, random_state=1, stratify=y)
+
+
+        st.write('---')
+        st.write('##### Escalamiento de datos')    
+
+        st.write('''* **StandardScaler**: es una herrmaienta de preprocesamiento de datos que se utiliza para estandarizar funciones eliminando la media y escalando a la varianza media.     
+Muchos algoritmos de ML funcionan mejor o convergen más rápido cuando las funciones están en una escala similar y centradas alrededor de cero.       
+StandardScaler aborda esto transformando los datos de modo que cada característica tenga una media de 0 y una desviación estándar de 1.
+* **fit(data)**: se utiliza para calcular la media y la desviación estándar de una característica determinada que se utilizará posteriormente para escalar.
+* **transform(data)**: se utiliza para realizar el escalamiento utilizando la media y la desviación estándar calculadas utilizando el método .fit()
+''')
+        
+        st.code('''from sklearn.preprocessing import StandardScaler
+                
+scaler.fit(X_train)
+X_train_std = scaler.transform(X_train)
+X_test_std = scaler.transform(X_test)
+''')
+        
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+           
+        scaler.fit(X_train)
+        X_train_std = scaler.transform(X_train)
+        X_test_std = scaler.transform(X_test)
+
+
+        st.write('---')
+        st.write('##### Entrenamiento del modelo')
+
+        st.write('''* **fit**: función que permite entrenar un modelo para que aprenda a predecir etiquetas (y) a partir de características (X)''')
+        
+        st.code('''from sklearn.neighbors import KNeighborsClassifier
+
+knn = KNeighborsClassifier(n_neighbors=1, p=2, metric='minkowski',weights='uniform')
+knn.fit(X_train, y_train)
+''')
+        
+        from sklearn.neighbors import KNeighborsClassifier
+    
+        knn = KNeighborsClassifier(n_neighbors=1, p=2, metric='minkowski',weights='uniform')
+        knn.fit(X_train_std, y_train)
+
+        
+        st.write('---')
+        st.write('##### Predicciones del conjunto de test')
+        st.write('''* **predict**: función que se utiliza para obtener predicciones de un modelo entrenado.
+Toma datos nuevos e invisibles como entrada y genera las predicciones del modelo para esos datos.''')
+        
+        st.code('predictions = knn.predict(X_test_std)')
+        
+        
+        predictions = knn.predict(X_test_std)
+
+        st.write('---')
+        st.write('##### Reporte de clasificación')
+        
+        st.code('''from sklearn.metrics import classification_report
+                
+st.dataframe(classification_report(y_test, predictions output_dict=True))''')
+            
+        from sklearn.metrics import classification_report
+        st.dataframe(classification_report(y_test, predictions, output_dict=True))
+
+
+        st.write('---')
+        st.write('##### Matrix de Confusión')    
+
+        st.code('''from sklearn.metrics import confusion_matrix
+                
+confusion_matrix(y_test, predictions)''')
+        
+        from sklearn.metrics import confusion_matrix
+        with st.container(width=300):
+            st.write(confusion_matrix(y_test, predictions))
+
+        st.write('---')
+        st.write('##### Tasa de Error') 
+        
+        st.code('''error_rate = []
+for i in range(1,40):
+    knn = KNeighborsClassifier(n_neighbors=i)
+    knn.fit(X_train_std, y_train)
+            
+    pred_i = knn.predict(X_test_std)
+    error_rate.append(np.mean(pred_i != y_test))                     # Tasa de error promedio
+    
+    
+fig, ax = plt.subplots()
+ax.plot(range(1,40), error_rate, color='blue', linestyle='dashed', marker='o',markerfacecolor='red', markersize=10)
+            
+plt.title('Error Rate vs K Value')
+plt.xlabel('K')
+plt.ylabel("Error Rate")
+            
+st.pyplot(fig)    
+''')
+    
+        error_rate = []
+        for i in range(1,40):
+            knn = KNeighborsClassifier(n_neighbors=i)
+            knn.fit(X_train_std, y_train)
+            
+            pred_i = knn.predict(X_test_std)
+            error_rate.append(np.mean(pred_i != y_test))                     # Tasa de error promedio
+         
+        with st.container(border=True, width=1000):        
+            fig, ax = plt.subplots()
+            ax.plot(range(1,40), error_rate, color='blue', linestyle='dashed', marker='o',markerfacecolor='red', markersize=10)
+            
+            plt.title('Error Rate vs K Value')
+            plt.xlabel('K')
+            plt.ylabel("Error Rate")
+            
+            st.pyplot(fig)
+
+        st.write('---')
+        st.write('**Entrenamiento del modelo con k=4**')   
+        
+        st.code('''knn = KNeighborsClassifier(n_neighbors=4, p=2, metric='minkowski',weights='uniform')
+knn.fit(X_train_std, y_train)
+predictions = knn.predict(X_test_std)
+        
+st.dataframe(classification_report(y_test, predictions, output_dict=True))
+
+confusion_matrix(y_test, predictions)''')
+        
+        
+        knn = KNeighborsClassifier(n_neighbors=4, p=2, metric='minkowski',weights='uniform')
+        knn.fit(X_train_std, y_train)
+        predictions = knn.predict(X_test_std)
+
+        
+        st.write('**Reporte de Clasificacion**')
+        st.dataframe(classification_report(y_test, predictions, output_dict=True))
+        
+        st.write('**Matriz de Confusion**')
+        with st.container(width=300):
+            st.write(confusion_matrix(y_test, predictions))     
+
+
+
+
+
+
+
+
 
     if opcion_seleccionada == 'Classified Data':
         st.write('##### Data Frame con los datos Clasificados de Personal.')
@@ -605,19 +4391,24 @@ StandardScaler aborda esto transformando los datos de modo que cada característ
         st.code('''from sklearn.preprocessing import StandardScaler
 
 scaler = StandardScaler()
-scaler.fit(df_classified.drop('TARGET CLASS', axis=1))
-scaled_features = scaler.transform(df_classified.drop('TARGET CLASS', axis=1))     
+df_classified_data = df_classified.drop('TARGET CLASS', axis=1)   # Se elimina la columna TARGET CLASS
+scaler.fit(df_classified_data)
+scaled_features = scaler.transform(df_classified_data)     
            
-df_feat = pd.DataFrame(scaled_features, columns=df_classified.columns[:-1])   # Todas las columnas menos la ultima TARGET CLASS
+df_feat = pd.DataFrame(scaled_features, columns=df_classified_data.columns)     # Data Frame con los datos escalados.
 st.dataframe(df_feat.head(10))''')
         
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
-        scaler.fit(df_classified.drop('TARGET CLASS', axis=1))
         
-        scaled_features = scaler.transform(df_classified.drop('TARGET CLASS', axis=1))
+        # Eliminar ultima columna
+        df_classified_data = df_classified.drop('TARGET CLASS', axis=1)    
         
-        df_feat = pd.DataFrame(scaled_features, columns=df_classified.columns[:-1])   # Todas las columnas menos la ultima TARGET CLASS
+        scaler.fit(df_classified_data)
+        scaled_features = scaler.transform(df_classified_data)
+        
+        df_feat = pd.DataFrame(scaled_features, columns=df_classified_data.columns)
+    
         
         st.dataframe(df_feat.head(10))
 
@@ -726,25 +4517,25 @@ st.pyplot(fig)
             
             st.pyplot(fig)
         
-    st.write('---')
-    st.write('**Entrenamiento del modelo con k=17**')   
-    
-    st.code('''knn = KNeighborsClassifier(n_neighbors=17)
-knn.fit(X_train, y_train)
-predictions = knn.predict(X_test)
-    
-st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))
-
-confusion_matrix(y_test, predictions) 
-''')
-    
-    knn = KNeighborsClassifier(n_neighbors=17)
+        st.write('---')
+        st.write('**Entrenamiento del modelo con k=17**')   
+        
+        st.code('''knn = KNeighborsClassifier(n_neighbors=17)
     knn.fit(X_train, y_train)
     predictions = knn.predict(X_test)
-    
+        
     st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))
-    with st.container(width=300):
-        st.write(confusion_matrix(y_test, predictions))       
+
+    confusion_matrix(y_test, predictions) 
+    ''')
+        
+        knn = KNeighborsClassifier(n_neighbors=17)
+        knn.fit(X_train, y_train)
+        predictions = knn.predict(X_test)
+    
+        st.dataframe(classification_report(y_test, predictions, target_names=target, output_dict=True))
+        with st.container(width=300):
+            st.write(confusion_matrix(y_test, predictions))       
         
         
 def ml_regresion_logistica():
@@ -1593,22 +5384,7 @@ st.pyplot(graf.figure)
         
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         
             
 def python():
@@ -1626,7 +5402,9 @@ def python():
     
     # ------------------------------------------- PRINT() -------------------------------------------------------
     if opcion_seleccionada == 'print':
-        st.write('Función que se utiliza para mostrar mensajes en pantalla.')
+        st.write('**Definición**: Función que se utiliza para mostrar mensajes en pantalla.')
+    
+        
         imagen = Image.open('Imagenes/print_1.png')
         st.image(imagen, width=1466)
         
@@ -2026,6 +5804,8 @@ def numpy():
     if opcion_seleccionada == 'Filtrado de Datos':         
         imagen = Image.open('Imagenes/numpy_17.png')
         st.image(imagen, width=1477)
+        
+
 
     if opcion_seleccionada == 'Valores Faltantes':         
         imagen = Image.open('Imagenes/numpy_18.png')
@@ -2041,8 +5821,17 @@ def numpy():
         
         
 def pandas():
-    opciones_pd = ['Series','Data Frames','Exploración de Datos','Conversión de Tipos','Limpieza y Manipulación de Datos','Fusionar, Combinar y Concatenar Data Frames',
+    
+    
+    
+    buffer = io.StringIO()
+    
+    opciones_pd = ['Series','Data Frames','Conversión de Tipos','Fusionar, Combinar y Concatenar Data Frames',
                     'Respaldos','Reporte ydata-profiling']
+    
+    
+    df_ventas = pd.read_csv('DataFrames/Resumen_ventas.csv', index_col=0)
+    
     
     col1, col2 = st.columns([2,2])
     
@@ -2080,6 +5869,7 @@ def pandas():
         imagen = Image.open('Imagenes/pandas_8.png')
         st.image(imagen, width=1479) 
 
+
     if opcion_seleccionada == 'Data Frames':         
         st.write('''Un DataFrame es una estructura de datos bidimensional con etiquetas que se asemeja a una hoja de cálculo o una tabla
     de base de datos.   
@@ -2106,8 +5896,19 @@ def pandas():
         Se pueden pasar una lista de cadenas (n/a, ---, ?, etc.) ademas de los valores predeterminados como '', 'NULL', 'NA', etc.
         ''')
         
-        imagen = Image.open('Imagenes/pandas_11.png')
-        st.image(imagen, width=1478) 
+        
+        st.write('##### Cargar datos desde un archivos csv')
+        st.code('pd.read_csv(\'DataFrames/tips.csv\')')
+        
+        df_tips = pd.read_csv('DataFrames/tips.csv')
+        st.dataframe(df_tips.head())
+        
+        st.write('**Renombrar columnas**')
+        df_tips.columns = ['Total Factura','Propina','Sexo','Fumador','Dia','Horario','Nro Clientes']
+        
+        st.code('df_tips.columns = [\'Total Factura\',\'Propina\',\'Sexo\',\'Fumador\',\'Dia\',\'Horario\',\'Nro Clientes\']')
+        st.dataframe(df_tips.head())
+        
         imagen = Image.open('Imagenes/pandas_12.png')
         st.image(imagen, width=1477) 
         imagen = Image.open('Imagenes/pandas_13.png')
@@ -2143,91 +5944,164 @@ def pandas():
         st.image(imagen, width=1481)   
 
 
-    if opcion_seleccionada == 'Exploración de Datos':         
-        imagen = Image.open('Imagenes/pandas_15.png')
-        st.image(imagen, width=1479) 
-        imagen = Image.open('Imagenes/pandas_16.png')
-        st.image(imagen, width=1478)     
-        imagen = Image.open('Imagenes/pandas_17.png')
-        st.image(imagen, width=1476)      
-        imagen = Image.open('Imagenes/pandas_24.png')        
-        st.image(imagen, width=1479)         
+        st.write('---')
+        st.code('''df = pd.read_csv('Archivos/Resumen_ventas.csv', index_col=0)
+df.head()''')
+        st.dataframe(df_ventas.head())
+
+        st.write('---') 
+        st.write('**value_counts()**: obtiene la cantidad de una variable agrupada por categoría')              
+        st.code('df[\'Producto\'].value_counts()')
+        st.code(df_ventas['Producto'].value_counts(), language='html')
+
         st.write('---')
 
         st.write('##### Renombrar columnas')     
-        imagen = Image.open('Imagenes/pandas_22.png')
-        st.image(imagen, width=1476)   
-        st.write('---')
+        st.code('''data = {
+    'Total Venta':'Total de Ventas',
+    'Meses':'Nro Mes'            
+} 
+  
+df.rename(columns=data, inplace=True)
+st.dataframe(df.head())              
+''')
+        data = {
+            'Total Venta':'Total de Ventas',
+            'Meses':'Nro Mes'
+        }
         
-        st.write('##### Valores unicos')     
-        imagen = Image.open('Imagenes/pandas_23.png')
-        st.image(imagen, width=1478)   
+        df_ventas.rename(columns=data, inplace=True)
+        st.dataframe(df_ventas.head())
+        
         st.write('---')
+        st.write('##### Reemplazar valores') 
+        
+        st.write('**replace()**: permite reemplazar los valores por otra etiqueta o crear una nueva columna en base a los valores de la otra columna.')
+        st.code('''data = {
+    1:'Enero',
+    2:'Febrero',
+    3:'Marzo',
+    4:'Abril',
+    5:'Mayo',
+    6:'Junio',
+    7:'Julio',
+    8:'Agosto',
+    9:'Setiembre',
+    10:'Octubre',
+    11:'Noviembre',
+    12:'Diciembre'                
+}
 
-        st.write('##### Reemplazar valores')     
-        imagen = Image.open('Imagenes/pandas_25.png')
-        st.image(imagen, width=1477)   
+df['Mes_Texto'] = df['Nro Mes'].replace(data)
+df.head()''')
+        
+        data = {
+            1:'Enero',
+            2:'Febrero',
+            3:'Marzo',
+            4:'Abril',
+            5:'Mayo',
+            6:'Junio',
+            7:'Julio',
+            8:'Agosto',
+            9:'Setiembre',
+            10:'Octubre',
+            11:'Noviembre',
+            12:'Diciembre'
+        }
+        
+        df_ventas['Mes_Texto'] = df_ventas['Nro Mes'].replace(data)
+        st.dataframe(df_ventas.head())
+        
+        st.write('**regex**=True: especifica que el patron se esta reeemplazando es una expresion regular.')
+
         
         imagen = Image.open('Imagenes/pandas_39.png')
         st.image(imagen, width=1479)          
         
         imagen = Image.open('Imagenes/pandas_26.png')
-        st.image(imagen, width=1477)   
-        imagen = Image.open('Imagenes/pandas_28.png')
-        st.image(imagen, width=1478)           
+        st.image(imagen, width=1477) 
         
         st.write('---')
+        st.write('**map()**: permite substituir cada valor de una columna por otro valor basandose en un diccionario, una funcion u otra columna.')
+        st.code('''df['Long_Prod'] = df['Producto'].map(lambda x:len(x))
+df.head()''')
         
+        df_ventas['Long_Prod'] = df_ventas['Producto'].map(lambda x:len(x))
+        st.dataframe(df_ventas.head())  
+          
+        st.write('---')
+        
+        st.write('''**apply()**: Es una herramienta de propósito general para aplicar una función a lo largo de un eje (filas o columnas) de un DataFrame o a cada elemento de una Serie.
+Se utiliza para realizar transformaciones, cálculos y lógica condicional compleja, siendo una alternativa más eficiente y limpia que los bucles.
+Para usarlo, se le pasa la función a aplicar, y el parámetro axis determina si se aplica a las columnas ((0)) o a las filas ((1)''')
+        
+        st.code('''def categorizar(fila):
+    if pd.isnull(fila['Long_Prod']):
+        return 0
+    else:
+        return 1
+        
+df_ventas['Long_Prod_2'] = df_ventas.apply(categorizar, axis=1)''')
+        
+        
+        def categorizar(fila):
+            if pd.isnull(fila['Cantidad']):
+                return 'NO existe valor'
+            else:
+                return 'Valor correcto'
+        df_ventas['Cantidad_string'] = df_ventas.apply(categorizar, axis=1)
+        
+        st.dataframe(df_ventas.head(10))
+        st.write('---')
         st.write('##### Filtrado de datos')     
-        imagen = Image.open('Imagenes/pandas_27.png')
-        st.image(imagen, width=1479)   
+
+        st.code('''filtro = df_ventas['Producto'] == 'Electrónic'
+df_filtrado = df_ventas[filtro]''')
+       
+        filtro = df_ventas['Producto'] == 'Electrónic'
+        df_filtrado = df_ventas[filtro]
+        st.dataframe(df_filtrado.head())        
+        
+        st.write('**Multiples coniciones: & (and), | (or), ~ (not)**')
+        filtro = (df_ventas['Producto'] == 'Electrónic') | (df_ventas['Producto'] == 'Juguetes')
+        
+        st.code('''filtro = (df_ventas['Producto'] == 'Electrónic') | (df_ventas['Producto'] == 'Juguetes')
+df_filtrado = df_ventas[filtro]''')
+        
+        # Otra forma
+        st.write('Otra forma de filtrado')
+    
+        st.code('''filtro = df_ventas['Producto'].isin(['Electrónic','Juguetes'])
+df_filtrado = df_ventas[filtro]''')
+        
+        filtro = df_ventas['Producto'].isin(['Electrónic','Juguetes'])
+        df_filtrado = df_ventas[filtro]
+        st.dataframe(df_filtrado.head())
+        
+
         st.write('---')        
         
         st.write('##### Matriz de Correlación')     
         imagen = Image.open('Imagenes/pandas_52.png')
         st.image(imagen, width=1479)   
-        st.write('---')             
+        st.write('---')                      
         
-        
-    if opcion_seleccionada == 'Conversión de Tipos':   
-        imagen = Image.open('Imagenes/pandas_29.png')
-        st.image(imagen, width=1478)           
-        
-        st.write('##### Convertir a tipo numerico')     
-        imagen = Image.open('Imagenes/pandas_30.png')
-        st.image(imagen, width=1482) 
+        st.write('---')  
+        st.write('##### Reemplazar valores nulos.')  
+        st.write('**fillna()**: remplaza los valores NaN por otro valor.') 
+        st.code('df_ventas[\'Cantidad\'] = df_ventas[\'Cantidad\'].fillna(0) ')
+        df_ventas['Cantidad'] = df_ventas['Cantidad'].fillna(0)       
 
-        st.write('##### Convertir a tipo fecha')     
-        imagen = Image.open('Imagenes/pandas_31.png')
-        st.image(imagen, width=1476) 
 
-        st.write('##### Obtener años/mes/dia de un campo DateTime')   
-        imagen = Image.open('Imagenes/pandas_32.png')
-        st.image(imagen, width=1478) 
-        
-        
-        st.write('#### Obtener tupla con las columnas de un tipo determinado')
-        imagen = Image.open('Imagenes/pandas_55.png')
-        st.image(imagen, width=1479)        
-        
-        st.write('---')
-                  
-
-    if opcion_seleccionada == 'Limpieza y Manipulación de Datos':   
-        st.write('##### Valores faltantes')     
-        imagen = Image.open('Imagenes/pandas_40.png')
-        st.image(imagen, width=1479)
-        st.write('---')   
-    
-        st.write('##### Rellenar valores faltantes')    
-        imagen = Image.open('Imagenes/pandas_41.png')
-        st.image(imagen, width=1479) 
-        imagen = Image.open('Imagenes/pandas_42.png')
-        st.image(imagen, width=1475) 
+        st.code('mediana = df_ventas[\'Precio Unitario\'].median()')
+        st.code('df_ventas[\'Precio Unitario\'] = df_ventas[\'CantidPrecio Unitarioad\'].fillna(mediana) ')
+        #mediana = df_ventas['Precio Unitario'].median()
+        #df_ventas['Precio Unitario'] = df_ventas['Precio Unitario'].fillna(mediana)   
 
         st.write('---')
 
-        st.write('##### Eliminar valores faltantes')  
+        st.write('##### Eliminar valores faltantes.')  
         imagen = Image.open('Imagenes/pandas_43.png')
         st.image(imagen, width=1481) 
 
@@ -2262,7 +6136,44 @@ def pandas():
         imagen = Image.open('Imagenes/pandas_49.png')
         st.image(imagen, width=1479)          
         imagen = Image.open('Imagenes/pandas_50.png')
-        st.image(imagen, width=1479)                  
+        st.image(imagen, width=1479)  
+
+        
+    if opcion_seleccionada == 'Conversión de Tipos':   
+        imagen = Image.open('Imagenes/pandas_29.png')
+        st.image(imagen, width=1478)           
+        
+        st.write('##### Convertir a tipo numerico')     
+        imagen = Image.open('Imagenes/pandas_30.png')
+        st.image(imagen, width=1482) 
+
+        st.write('##### Convertir variables categoricas a binarias')
+        st.write('''**getdummies()**: se utiliza para convertir variables categóricas en variables ficticias o binarias (con valores de 0 o 1).   
+        Este proceso, también conocido como codificación one-hot, es fundamental para preparar datos para algoritmos de aprendizaje automático que requieren entradas numéricas.    
+        La función crea nuevas columnas para cada categoría única en la variable original, indicando la presencia (1) o ausencia (0) de esa categoría en cada fila''')
+
+        st.write('**drop_first**=True: elimina la primera categoría para evitar la multicolinealidad')
+        
+        st.code('df_ventas = pd.get_dummies(df_ventas[\'Meses\'], dtype=int, drop_first=True)')
+        df_ventas = pd.get_dummies(df_ventas['Meses'], dtype=int, drop_first=True)
+        st.dataframe(df_ventas.head(10))
+
+
+        st.write('##### Convertir a tipo fecha')     
+        imagen = Image.open('Imagenes/pandas_31.png')
+        st.image(imagen, width=1476) 
+
+        st.write('##### Obtener años/mes/dia de un campo DateTime')   
+        imagen = Image.open('Imagenes/pandas_32.png')
+        st.image(imagen, width=1478) 
+        
+        
+        st.write('##### Obtener tupla con las columnas de un tipo determinado')
+        imagen = Image.open('Imagenes/pandas_55.png')
+        st.image(imagen, width=1479)        
+        
+        st.write('---')
+
 
     if opcion_seleccionada == 'Fusionar, Combinar y Concatenar Data Frames': 
         st.write('''
@@ -2295,8 +6206,42 @@ def pandas():
         st.write('---')   
 
     if opcion_seleccionada == 'Reporte ydata-profiling':    
-        imagen = Image.open('Imagenes/pandas_54.png')
-        st.image(imagen, width=1482)
+        
+        st.code('''
+import ydata_profiling as prof
+from IPython.display import HTML
+
+profile = prof.ProfileReport(df_ventas, title='Reporte')
+profile.to_file('output.html')
+
+try:
+    with open("./output.html", "r", encoding="utf-8") as file:
+        html_content = file.read()
+except FileNotFoundError:
+    st.error("El archivo HTML no fue encontrado.")
+    html_content = ""
+
+if html_content:
+    st.components.v1.html(html_content, height=11100) # Puedes ajustar la altura
+     
+''')
+        
+        import ydata_profiling as prof
+        from IPython.display import HTML
+
+        profile = prof.ProfileReport(df_ventas, title='Reporte')
+        profile.to_file('output.html')
+    
+        try:
+            with open("./output.html", "r", encoding="utf-8") as file:
+                html_content = file.read()
+        except FileNotFoundError:
+            st.error("El archivo HTML no fue encontrado.")
+            html_content = ""
+
+
+        if html_content:
+            st.components.v1.html(html_content, height=7500) 
 
 
 def matplotlib():
@@ -2644,21 +6589,25 @@ tips.head()''')
         
         st.write('''
         * hue -> argumento para diferenciar colores por categoria.    
-        * palette -> define la paleta de colores: deep, muted, bright, pastel, dark, colorblind, husl, RdYBlyu, magma, YlOrBr, crest, rocket_r, mako, viridis''')
+        * palette -> define la paleta de colores: deep, muted, bright, pastel, dark, colorblind, husl, RdYBlyu, magma, YlOrBr, crest, rocket_r, mako, viridis
+        * corner -> Si es True no muestra la parte superior de la diagonal.''')
+        
         
         st.code('''graf = sns.pairplot(
     data = df,
     hue= 'sex',
+    corner= True,
     palette='rocket_r'
 )
 
 st.pyplot(graf)''')
 
         # displot
-        with st.container(border=True):
+        with st.container(border=True, width=800):
             graf = sns.pairplot(
                 data = df,
                 hue= 'sex',
+                corner= True,
                 palette='rocket_r'
             )
             
@@ -2696,6 +6645,13 @@ en un conjunto de archivos a lo largo del tiempo de modo que se pueda recuperar 
 - Ver quien modifico un archivo en un momento especifico.
 - Recuperar archivos perdidos o arruinados.            
 ''')
+
+
+
+def aws():
+    st.write('##### Definición')
+    st.write('''Amazon Web Services es una colección de servicios de computación en la nube pública que en conjunto forman una plataforma de computación en la nube, 
+ofrecidas a través de Internet por Amazon.com. Es usado en aplicaciones populares como Dropbox, Foursquare, HootSuite.''')
 
 def docker():
     st.write('##### Definición')
