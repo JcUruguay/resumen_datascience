@@ -122,25 +122,134 @@ def main():
         
         
 def ml_introduccion():
-    opciones_mlmodleado = ['Machine Learning', 'EDA']
+        import matplotlib.pyplot as plt 
+        opciones_mlmodleado = ['Machine Learning', 'Analisis de Datos (Diabetes)', 'Analisis de Datos (Countries)', 'Procesamiento de Datos']
     
-    col1, col2 = st.columns([2,2])
+        col1, col2 = st.columns([2,2])
     
-    with col1:
-        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlmodleado)
-        st.success(f'##### **{opcion_seleccionada}** ')
+        with col1:
+                opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_mlmodleado)
+                st.success(f'##### **{opcion_seleccionada}** ')
+    
+
+        if opcion_seleccionada == 'Procesamiento de Datos':
+                st.write('##### Definición')
+                st.write('''El Procesamiento de Datos transforma los datos brutos en informacion estructurada para entrenar modelos, lo que implica limpieza, normalizacion, manejo de valores nulos y codificaicon
+de variables categoricas.''')        
     
     
-    if opcion_seleccionada == 'EDA':
-        st.write('##### Definición')
-        st.write('''El Analisis Exploratorio de Datos en machine learning es un enfoque critico para analizar conjuntos de datos y resuminr sus caracteristicas principales,    
-utilizando metodos estadisticos y visualizacion de datos. Permite a los cientificos de datos entender la estructura de datos, detectar anomalias, probar suposiciones   
-y encontrar patrones ocultos antes del modelado formal.''')
+                st.write('''Los pasos clave del procesamiento de datos incluyen:
+                         
+**Recopilación de datos**: Obtención de fuentes estructuradas o no estructuradas (CSV, bases de datos).   
+**Limpieza de datos**: Tratamiento de datos faltantes, eliminación de duplicados y gestión de valores atípicos.   
+**Ingeniería de características (Feature Engineering)**: Selección, creación o transformación de variables para mejorar la capacidad predictiva.  
+**Normalización y Escalado**: Ajustar los valores numéricos a una escala común (ej. entre 0 y 1) para que características con mayores magnitudes no dominen el modelo.    
+**Codificación de categóricas**: Conversión de variables de texto en números (ej. one-hot encoding) para que los algoritmos puedan procesarlas. ''')
     
-        st.write('---')
-        st.write('##### Carga de datos en un dataset')
+
+                st.code('''columns =  ['preg','plas','pres','skin','test','mass','pedi','age','class']
+df_diabetes = pd.read_csv('DataFrames/pima-indians-diabetes.csv', names=columns)
+df_diabetes''')
+                
+                columns =  ['preg','plas','pres','skin','test','mass','pedi','age','class']
+                df_diabetes = pd.read_csv('DataFrames/pima-indians-diabetes.csv', names=columns)
+
+                st.dataframe(df_diabetes.head(10))    
+    
+                st.divider()
+                st.write('##### Metodos de Transformacion de datos')
+                
+                st.write('''**Escalamiento**: esta transformacion es util para los algoritmos de optimizacion utilizados en el nucleo de los algoritmos de aprendizaje automatico como Gradiente Descendiente.  
+Tambien es util para algoritmos que ponderan entradas como Regression y Neural Networks y algoritmos que usan medidas de distancia como k-Nearest Neighbours.   
+Puede reescalar sus datos usando la clase MinMaxScaler. Despues de reescalar puede ver que todos los valores estan en el rango [0,1]''')
+    
+    
+                st.code('''# MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range=(0,1))
+rescaled_diabetes = scaler.fit_transform(df_diabetes)''')
+
+                from sklearn.preprocessing import MinMaxScaler
+
+                scaler = MinMaxScaler(feature_range=(0,1))
+                rescaled_diabetes = scaler.fit_transform(df_diabetes)
+                rescaled_diabetes
+                
+                
+                st.write('''**Estandarizacion**: Es mas adecuada para tecnicas que asumen una distribucion gausssiana en las variables de entrada y funcionan mejor con datos reescalados, como LiR,
+LoR y LDA.      
+Puede estandarizar datos utilizando la clase StandardScaler. Los valores para cada atributo ahora tienen un valor medio de 0 y una desviacion estandar de 1.''')
+                
+                st.code('''# StandardScaler
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler().fit(df_diabetes)
+rescaled_diabetes = scaler.transform(df_diabetes)''')                
+                
+                from sklearn.preprocessing import StandardScaler
+
+                scaler = StandardScaler().fit(df_diabetes)
+                rescaled_diabetes = scaler.transform(df_diabetes)
+                rescaled_diabetes
+    
         
-        st.write('''**read_csv()** : Es una funcion que se utiliza para importar archivos CSV a un DataFrame. Lee los datos, y separa los valores por comas por defecto.   
+                st.write('''**Normalizacion**: los valores de los datos se pueden escalar en el rango de [0,1]. Este metodo de preprocesamiento puede ser util para conjuntos de datos dispersos
+(muchos ceros) con atributos de escalas variables.      
+Cuando se utilizan algoritmos que ponderan valores de entrada como NN y algoritmos que usan medidas de distancia como k-NN. Para normalizar datos se utiliza la clase Normalizer.''')
+
+                st.code('''# Normalizer
+from sklearn.preprocessing import Normalizer
+scaler = Normalizer().fit(df_diabetes)
+rescaled_diabetes = scaler.transform(df_diabetes)''')                
+                
+                from sklearn.preprocessing import Normalizer
+
+                scaler = Normalizer().fit(df_diabetes)
+                rescaled_diabetes = scaler.transform(df_diabetes)
+                rescaled_diabetes        
+
+                st.write('''**Binarizacion**: puede crear nuevos atributos binarios en Python usando la clase Binarizer.        
+Puede ver que todos los valores iguales o menores que 0 estan marcados con 0 y todos los que estan por encima de 0 estan marcados con 1.''')
+        
+        
+                st.code('''# Binarizer
+from sklearn.preprocessing import Binarizer
+binarizer = Binarizer(threshold=0.0).fit(df_diabetes)
+binary_diabetes = binarizer.transform(df_diabetes)''')                
+                
+                from sklearn.preprocessing import Binarizer
+
+                binarizer = Binarizer(threshold=0.0).fit(df_diabetes)
+                binary_diabetes = binarizer.transform(df_diabetes)     
+                binary_diabetes
+        
+        
+                st.write('''**Box-Cox**: los atributos representan un sesgo o inclinacion (Gaussiana desplazada).       
+Box-Cox asume todos los atributos positivos. Aplica la transformacion a los atributos que parecen tener sesgo.  
+Corrige la no linealidad en la relacion (mejorar correlacion entre las variables.)''')
+        
+                st.write('''**Yeo-Johnson**: igual que Box-Cox pero soporta valores en bruto que son iguales a cero y negativos.''')        
+        
+                st.divider()
+                st.write('##### Metodos de remuestreo')        
+        
+                st.write('''**Objetivo**: Evaluar los algoritmos.       
+Dividir los datos para la evaluacion. Existen 4 enfoques de division:   
+* Como dividir un conjunto de datos en subconjuntos por porcentaje para entrenamiento/validacion.
+* Como evaluar la robustez del modelo utilizando la validacion cruzada, k-fold, con y sin repeticiones.
+* Como evaluar la robustez del modelo usando una validacion cruzada dejando uno afuera (LOOCV).
+Division en train/test repetidos aleatoriamente.''')
+        
+        
+        if opcion_seleccionada == 'Analisis de Datos (Countries)':
+                st.write('##### Definición')
+                st.write('''El Analisis Exploratorio de Datos en machine learning es un enfoque critico para analizar conjuntos de datos y resuminr sus caracteristicas principales, utilizando metodos estadisticos
+y visualizacion de datos.       
+Permite a los cientificos de datos entender la estructura de datos, detectar anomalias, probar suposiciones y encontrar patrones ocultos antes del modelado formal.''')
+        
+                st.divider()
+                st.write('##### Carga de datos en un dataset')
+                
+                st.write('''**read_csv()** : Es una funcion que se utiliza para importar archivos CSV a un DataFrame. Lee los datos, y separa los valores por comas por defecto.   
 
 **Parametros**  
 
@@ -149,263 +258,605 @@ y encontrar patrones ocultos antes del modelado formal.''')
 * names: una lista de nombres de columna para usar en caso de que el archivo no tenga encabezado. 
 * index_col: especifica la columna a usar como índice del DataFrame.  
 * na_values: se utiliza para especificar que valores deben interpretarse como valores faltantes (NaN) al cargarlo en un DataFrame.  
-Se pueden pasar una lista de cadenas (n/a, ---, ?, etc.) ademas de los valores predeterminados como '', 'NULL', 'NA', etc.                 
+Se pueden pasar una lista de cadenas (n/a, ---, ?, etc.) ademas de los valores predeterminados como '', 'NULL', 'NA', etc.''')
+                
+                
+                st.code('''df_countries = pd.read_csv('DataFrames/countries.csv', sep=';')''')        
+                df_countries = pd.read_csv('DataFrames/countries.csv', sep=';')
+                
+                st.divider()
+                st.write('''**shape** : se utiliza para conocer las dimensiones de un DataFrame o Serie, devolviendo una tupla con la estrucutra 
+        (numero de filas, numero de columnas)''')
+
+                st.code('''df_countries.shape''')
+                df_countries.shape
+        
+                st.divider()
+                st.write('''**columns** : se utiliza para visualizar o modificar los nombres de las columnas en un DataFrame, devolviendo un objeto de tipo indice (Index). 
+        Es fundamental para la manipulacion de datos tabulares, permitiendo renombrar, seleccionar, añadir o eliminar columnas.''')
+
+                st.code('''df_countries.columns''')
+                st.code(df_countries.columns)
+
+                st.divider()
+                st.write('''**head()** : se utiliza para visualizar rapidamente las primeras filas de un DataFrame o Series, siendo el valor 5 el valor predeterminado.''')
+
+                st.code('''df_countries.head(10)''')
+                st.code(df_countries.head(10), language='html')
+
+
+                st.divider()
+                st.write('''**info()** : proporciona un resumen conciso y esencial de un DataFrame, mostrando el numero de filas (entradas), nombres de columnas, tipos de datos (dtypes),  
+        valores no nulos y el uso total de memoria.''')
+
+                st.code('''df_countries.info()''')
+
+                buffer = io.StringIO()   
+                df_countries.info(buf=buffer)             
+                st.code(buffer.getvalue(), language='html')  
+
+                
+                st.divider()        
+        
+                st.write('##### Ver valores nulos')
+                st.write('''**isnull().sum()** : cuenta el numero total de nulos por columna.''')     
+                st.code('''df_countries.isnull().sum()''')          
+                st.code(df_countries.isnull().sum(), language='html')  
+        
+                st.divider()
+                
+                # Matriz de correlacion 
+
+                # Tomar valores numericos
+                st.write('**Tomar valores numericos**')
+                st.code('''df_countries_numericos = df_countries.select_dtypes(include=['float64','int64'])
+df_countries_numericos.head()''')
+                
+                df_countries_numericos = df_countries.select_dtypes(include=['float64','int64'])
+                st.dataframe(df_countries_numericos.head())
+        
+        
+                st.write('**Matriz de correlacion**')
+                st.code('''correlacion = df_countries_numericos.corr(method='pearson')
+correlacion''')
+        
+                correlacion = df_countries_numericos.corr(method='pearson')
+                correlacion
+
+                st.code('''fig, ax = plt.subplots()
+cax = ax.matshow(correlacion, vmin=-1, vmax=1)
+fig.colorbar(cax)
+st.pyplot(fig) ''')
+                
+                with st.container(width=600):
+                        fig, ax = plt.subplots()
+                        cax = ax.matshow(correlacion, vmin=-1, vmax=1)
+                        fig.colorbar(cax)       
+                        
+                        st.pyplot(fig) 
+                
+                st.write('**heatmap()**')
+                st.code('''fig, ax = plt.subplots(figsize=(10,10))
+sns.heatmap(correlacion, vmax=1, square=True, annot=True, cmap='viridis')
+plt.title('Correlacion entre variables.')''')
+                
+                with st.container(width=800):
+                        fig, ax = plt.subplots(figsize=(10,10))
+                        sns.heatmap(correlacion, vmax=1, square=True, annot=True, cmap='viridis')   
+                        plt.title('Correlacion entre variables.')
+                        st.pyplot(fig) 
+        
+                st.divider()
+
+
+                st.write('##### Deteccion y analisis de outliers')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        
+        
+        
+        
+        
+        if opcion_seleccionada == 'Analisis de Datos (Diabetes)':
+                st.write('##### Definición')
+                st.write('''El Analisis Exploratorio de Datos en machine learning es un enfoque critico para analizar conjuntos de datos y resuminr sus caracteristicas principales, utilizando metodos estadisticos
+y visualizacion de datos.       
+Permite a los cientificos de datos entender la estructura de datos, detectar anomalias, probar suposiciones y encontrar patrones ocultos antes del modelado formal.''')
+        
+                st.divider()
+                st.write('##### Carga de datos en un dataset')
+                
+                st.write('''**read_csv()** : Es una funcion que se utiliza para importar archivos CSV a un DataFrame. Lee los datos, y separa los valores por comas por defecto.   
+
+**Parametros**  
+
+* sep: el caracter utilizado para separar los valores (delimitador). El predeterminado es la coma ','.    
+* header: la fila que se usará como encabezado, header=0 (primera fila) o header=None.    
+* names: una lista de nombres de columna para usar en caso de que el archivo no tenga encabezado. 
+* index_col: especifica la columna a usar como índice del DataFrame.  
+* na_values: se utiliza para especificar que valores deben interpretarse como valores faltantes (NaN) al cargarlo en un DataFrame.  
+Se pueden pasar una lista de cadenas (n/a, ---, ?, etc.) ademas de los valores predeterminados como '', 'NULL', 'NA', etc.''')
+                st.code('''columns =  ['preg','plas','pres','skin','test','mass','pedi','age','class']''')
+                st.code('''df_diabetes = pd.read_csv('DataFrames/prima-indians-diabetes.csv', names=columns)''')
+                
+                columns =  ['preg','plas','pres','skin','test','mass','pedi','age','class']
+                df_diabetes = pd.read_csv('DataFrames/pima-indians-diabetes.csv', names=columns)
+                
+
+                st.divider()
+                st.write('''**shape** : se utiliza para conocer las dimensiones de un DataFrame o Serie, devolviendo una tupla con la estrucutra 
+        (numero de filas, numero de columnas)''')
+
+                st.code('''df_diabetes.shape''')
+                df_diabetes.shape
+        
+                st.divider()
+                st.write('''**columns** : se utiliza para visualizar o modificar los nombres de las columnas en un DataFrame, devolviendo un objeto de tipo indice (Index). 
+        Es fundamental para la manipulacion de datos tabulares, permitiendo renombrar, seleccionar, añadir o eliminar columnas.''')
+
+                st.code('''df_diabetes.columns''')
+                st.code(df_diabetes.columns)
+
+                st.divider()
+                st.write('''**head()** : se utiliza para visualizar rapidamente las primeras filas de un DataFrame o Series, siendo el valor 5 el valor predeterminado.''')
+
+                st.code('''df_diabetes.head(20)''')
+                st.code(df_diabetes.head(20), language='html')
+                
+                st.divider()
+                        
+                st.write('''**dtypes** : devuelve una serie con el tipo de datos de cada columna en un DataFrame.''')       
+                st.code('''df_diabetes.dtypes''')
+                st.code(df_diabetes.dtypes, language='html')
+        
+
+                
+                st.divider()
+                st.write('''**info()** : proporciona un resumen conciso y esencial de un DataFrame, mostrando el numero de filas (entradas), nombres de columnas, tipos de datos (dtypes),  
+        valores no nulos y el uso total de memoria.''')
+
+                st.code('''df_diabetes.info()''')
+
+                buffer = io.StringIO()   
+                df_diabetes.info(buf=buffer)             
+                st.code(buffer.getvalue(), language='html')    
+                
+                
+                st.divider()
+                st.write('''**describe()** : funcion esencial para el analisis exploratorio de datos, que genera un resumen estadistico descriptivo de las columnas numericas en un DataFrame.  
+        Proporciona metricas clave como el conteo (count), media (mean), desviacion estandar (std), valores minimos/maximos y percentiles (25%, 50%, 75%)''')        
+                
+                st.code('''df_diabetes.describe().T''')
+                st.code(df_diabetes.describe().T, language='html')
+                
+                st.divider()
+        
+        
+        
+                st.write('''**groupby().size()** : el metodo size() utilizado tras un groupby() devuelve el numero de filas o elementos en cada grupo como una Serie.   
+        A diferencia de count(), incluye valores NaN (nulos) en el conteo total. Se utiliza principalmente para obtener la frecuencia de ocurrencia de cada grupo.''')       
+                st.code('''df_diabetes.groupy('class').size()''')
+                st.code(df_diabetes.groupby('class').size(), language='html')                
+                        
+                st.divider()
+        
+                st.write('##### Correlaciones')
+                st.write('''Se define la relacion entre pares de atributos numericos. Los valores superiores a aprox. 0.75 e inferiores a -0.75 son los mas interesantes ya que muestran una alta correlacion.  
+        1 y -1 correlacion positiva o negativa completa.''')
+                st.write('''**corr()** : metodo que calcula la matriz de correlacion de Pearson para columans numericas, mostrando relaciones lineales entre -1 y 1.
+        Ignora los valores no numericos y es esencial para analisis exploratorio de datos, permitiendo identificar como varian conjuntamente las variables.''')        
+                
+                st.code('''correlacion = df_diabetes.corr(method='pearson') ''')
+                correlacion = df_diabetes.corr(method='pearson')        
+        
+        
+                st.write('##### Matriz de correlacion')
+                
+                st.code('''fig, ax = plt.subplots()
+cax = ax.matshow(correlacion, vmin=-1, vmax=1)
+fig.colorbar(cax)   
+plt.show()''')
+
+                        
+                with st.container(width=800):
+                        fig, ax = plt.subplots()
+                        cax = ax.matshow(correlacion, vmin=-1, vmax=1)
+                        fig.colorbar(cax)       
+                        
+                        st.pyplot(fig) 
+                
+                st.write('**heatmap()**')
+                st.code('''fig, ax = plt.subplots(figsize=(10,10))
+sns.heatmap(correlacion, vmax=1, square=True, annot=True, cmap='viridis')  ''')
+                
+                with st.container(width=800):
+                        fig, ax = plt.subplots(figsize=(10,10))
+                        sns.heatmap(correlacion, vmax=1, square=True, annot=True, cmap='viridis')   
+
+                        st.pyplot(fig) 
+        
+                st.divider()
+                
+                st.write('##### Matriz de dispersion')
+                st.write('Es util para mirar las relaciones por partes desde diferentes perspectivas.')
+                
+                st.write('''**scatter_matrix**: muestra una matriz de graficos de dispersion cruzando las caracteristicas cuantitativas del dataframe indicado.''')
+                
+                st.code('''from pandas.plotting import scatter_matrix
+
+fig, ax = plt.subplots(figsize=(18,18))
+scatter_matrix(df_diabetes, ax=ax)
+st.pyplot(fig)''')
+        
+                from pandas.plotting import scatter_matrix
+
+                
+                with st.container(width=1200):
+                        fig, ax = plt.subplots(figsize=(20,20)) 
+                        scatter_matrix(df_diabetes, ax=ax)
+                        st.pyplot(fig)
                  
-                   
-''')
-        
-        st.code('''df_creditos = pd.read_csv('DataFrames/creditos.csv')''')
-        
-        df_creditos = pd.read_csv('DataFrames/creditos.csv')
-        
-
-        st.write('---')
-        st.write('''**shape** : se utiliza para conocer las dimensiones de un DataFrame o Serie, devolviendo una tupla con la estrucutra 
-(numero de filas, numero de columnas)''')
-
-        st.code('''df_creditos.shape''')
-        df_creditos.shape
-    
-        st.write('---')
-        st.write('''**columns** : se utiliza para visualizar o modificar los nombres de las columnas en un DataFrame, devolviendo un objeto de tipo indice (Index). 
-Es fundamental para la manipulacion de datos tabulares, permitiendo renombrar, seleccionar, añadir o eliminar columnas.''')
-
-        st.code('''df_creditos.columns''')
-        st.code(df_creditos.columns)
-
-        st.write('---')
-        st.write('''**head()** : se utiliza para visualizar rapidamente las primeras filas de un DataFrame o Series, siendo el valor 5 el valor predeterminado.''')
-
-        st.code('''df_creditos.head(10)''')
-        st.code(df_creditos.head(10), language='html')
-
-        st.write('---')
-        st.write('''**info()** : proporciona un resumen conciso y esencial de un DataFrame, mostrando el numero de filas (entradas), nombres de columnas, tipos de datos (dtypes),  
-valores no nulos y el uso total de memoria.''')
-
-        st.code('''df_creditos.info()''')
-
-        buffer = io.StringIO()   
-        df_creditos.info(buf=buffer)             
-        st.code(buffer.getvalue(), language='html')    
+                
+                st.write('**sns.pairplot()**')
+                st.code('''fig = sns.pairplot(df_diabetes)
+st.pyplot(fig)''')
+                
+                with st.container(width=1200):
+                        fig = sns.pairplot(df_diabetes)
+                        st.pyplot(fig)
+                
+                st.write('**Pairplot por clase**')
+                st.code('''fig = sns.pairplot(df_diabetes, hue='class, diag_kind='hist')
+st.pyplot(fig) ''')
+                
+                with st.container(width=1200):
+                        fig = sns.pairplot(df_diabetes, hue = 'class', diag_kind='hist')
+                        st.pyplot(fig) 
         
         
-        st.write('---')
-        st.write('''**describe()** : funcion esencial para el analisis exploratorio de datos, que genera un resumen estadistico descriptivo de las columnas numericas en un DataFrame.  
-Proporciona metricas clave como el conteo (count), media (mean), desviacion estandar (std), valores minimos/maximos y percentiles (25%, 50%, 75%)''')        
+                st.divider()
+                st.write('##### Asimetria')
+                st.write('''Si una distribucion parece casi gaussiana pero se empuja hacia la izquiera o hacia la derecha, es util conocer el sesgo. 
+        Valores cercanos a cero tienen un menor sesgo, sin embargo, sesgo a la izquierda sera con valores negativos y sesgo a la derecha seran valores positivos.''')   
+                st.write('''**skew()** : metodo que calcula la asimetria (sesgo) de la distribucion de los datos en un DataFrame o Serie, indicando so los datos son simetricos o estan inclinados hacia un lado respecto a la media.
+        Un valor cercano a cero indica simetria, positivo sigifica cola a la derecha, y negativo, cola a la izquierda.''')        
+                
+                st.code('''df_diabetes.skew()''')   
+                st.code(df_diabetes.skew(), language='htmls')
+                
+                st.divider()
+                st.write('##### Ver si existen valores nulos.')
+                
+                st.write('''**isnull()** : funcion que se utiliza para detectar valores faltantes (NaN, None, NaT) en un DataFrame o Series, devolviendo un objeto booleano del mismo tamaño    
+        donde True indica un valor nulo y False uno valido.''')
+                
+                st.code('''df_diabetes.isnull()''')
+                st.code(df_diabetes.isnull(), language='html')
+                
+                st.write('''**isnull().any()** : se utiliza para detectar rapidamente si alguma columna de un DataFrame contiene valores nulos (Nan, None), devolviendo una Serie booleana (True/False) por columna.''')
+                st.code('''df_diabetes.isnull().any()''')
+                st.code(df_diabetes.isnull().any(), language='html')     
         
-        st.code('''df_creditos.describe().T''')
-        st.code(df_creditos.describe().T, language='html')
-        
-        st.write('---')
-        st.write('##### Ver si existen valores nulos.')
-        
-        st.write('''**isnull()** : funcion que se utiliza para detectar valores faltantes (NaN, None, NaT) en un DataFrame o Series, devolviendo un objeto booleano del mismo tamaño    
-donde True indica un valor nulo y False uno valido.''')
-        
-        st.code('''df_creditos.isnull()''')
-        st.code(df_creditos.isnull(), language='html')
-        
-        st.write('''**isnull().any()** : se utiliza para detectar rapidamente si alguma columna de un DataFrame contiene valores nulos (Nan, None), devolviendo una Serie booleana (True/False) por columna.''')
-        st.code('''df_creditos.isnull().any()''')
-        st.code(df_creditos.isnull().any(), language='html')     
-     
-        st.write('''**isnull().any().any()** : comprueba si hay cualquier valor nulo en todo el DataFrame (devuelve un unico booleano)''')     
-        st.code('''df_creditos.isnull().any().any()''')
-        st.code(df_creditos.isnull().any().any(), language='html')        
+                st.write('''**isnull().any().any()** : comprueba si hay cualquier valor nulo en todo el DataFrame (devuelve un unico booleano)''')     
+                st.code('''df_diabetes.isnull().any().any()''')
+                st.code(df_diabetes.isnull().any().any(), language='html')        
 
-        st.write('''**isnull().sum()** : cuenta el numero total de nulos por columna.''')     
-        st.code('''df_creditos.isnull().sum()''')          
-        st.code(df_creditos.isnull().sum(), language='html')  
+                st.write('''**isnull().sum()** : cuenta el numero total de nulos por columna.''')     
+                st.code('''df_diabetes.isnull().sum()''')          
+                st.code(df_diabetes.isnull().sum(), language='html')  
+                
+
+                st.divider()
+                st.write('##### Valores unicos.')
+
+                st.write('''**unique()** : permite saber cuales son valores unicos de una columna''')
+                st.code('''df_diabetes['class'].unique()''')
+                st.code(df_diabetes['class'].unique())
+
+                st.write('''**nunique()** : devuelve la cantidad de valores unicos''')
+                st.code('''df_diabetes['class'].nunique()''')
+                st.code(df_diabetes['class'].nunique())
+
+
+                st.divider()
+                st.write('##### Correccion de Inconsistencias.')
+
+                st.write('''**map()** : permite substituir cada valor de una columna por otro valor basandose en un diccionario, una funcion u otra columna.''')
+
+                st.code('''data = {0:'No Tiene', 1:'Tiene'}  
+                        
+df_diabetes['class_texto'] = df_diabetes['class'].map(data)''')
+                
+                data = {0:'No Tiene', 1:'Tiene'} 
+                df_diabetes['class_texto'] = df_diabetes['class'].map(data)
+
+                st.code(df_diabetes.head(), language='html')
+
+                st.divider()
+                st.write('##### Reemplazar valores nulos.')
+
+                st.write('''**fillna()** : remplaza los valores NaN por otro valor.''')
+
+                st.code('''df_diabetes['test'] = df_diabetes['test'].fillna(0)''')
+
+
+                st.write('Si no se establece una columna entonces reemplaza las de todas.')
+                st.code('''df_diabetes.fillna(0, inplace=True)''')
+        # df_creditos.fillna(0, inplace=True)
+
+                st.divider()
+                st.write('##### Rvision de valores.')
+
+                st.write('''**value_counts()** : obtiene la cantidad de una variable agrupada por categoría.''')
+                st.code('''df_diabetes['class'].value_counts()''')
+                st.code(df_diabetes['class'].value_counts(), language='html')        
         
-        st.write('---')
-        st.write('''**set_index()** : metodo que establece una o varias columnas existentes como el nuevo indice (etiqueta de fila) de un DataFrame,    
-reemplanzando el indice entero predeterminado.  
+                st.divider()
+                st.write('''**replace()** : permite reemplazar los valores por otra etiqueta o crear una nueva columna en base a los valores de la otra columna.''')
+                st.code('''df_diabetes['class_Bool'] = df_diabetes['class'].replace({0:False, 1:True})''')
+                df_diabetes['class_Bool'] = df_diabetes['class'].replace({0:False, 1:True})
+                
+                st.code(df_diabetes.head(), language='html')
+                
+                st.divider()
+                st.write('''**aply()** : Es una herramienta de propósito general para aplicar una función a lo largo de un eje (filas o columnas) de un DataFrame o a cada elemento de una Serie.       
+        Se utiliza para realizar transformaciones, cálculos y lógica condicional compleja, siendo una alternativa más eficiente y limpia que los bucles.        
+        Para usarlo, se le pasa la función a aplicar, y el parámetro axis determina si se aplica a las columnas (0) o a las filas (1)''')     
 
-inplace: por defecto devuelve una copia, para aplicar directamente sobre el DataFrame modificar inplace=True.   
-drop: por defecto, la columna utilizada se elimina de los datos, usar drop=False para mantenera.    
-Multiples indices: se pueden usar listas para indices jerarquicos (['col1', 'col2']).''')  
+                        
+                st.divider()
+                st.write('##### Conversion de tipos de datos.')
+                
+                st.write('''**astype()** : convierte a otro tipo de dato (string, int64, float)''')         
 
-        st.code('''df_creditos.set_index(\'ID\', inplace=True)''')
-        df_creditos.set_index('ID', inplace=True)
-        st.code(df_creditos.head(), language='html')
+                st.code('''df_diabetes['class_Bool'] = df_diabetes['class_Bool'].astype('int')''')
+                df_diabetes['class_Bool'] = df_diabetes['class_Bool'].astype('int')
+                st.code(df_diabetes.head(), language='html')
 
-        st.write('---')
-        st.write('##### Eliminar informacion duplicada.')
 
-        st.write('''**drop()** : metodo que elimina filas (axis=0), o columnas (axis=1) de un DataFrame. Devuelve una copia modificada por defecto, 
+                st.write('Conversion de mas de una columna')
+                
+                st.code('''columnas_cod = ['class_Bool','class_texto']
+df_diabetes[columnas_cod] = df_diabetes[columnas_cod].astype('string')''')
+                
+                
+                st.write('##### Eliminar informacion duplicada.')
+
+                st.write('''**drop()** : metodo que elimina filas (axis=0), o columnas (axis=1) de un DataFrame. Devuelve una copia modificada por defecto, 
 aunque puede alterar el original con inplace=True''')
-        
-        st.code('''df_creditos.drop('provincia_codigo', axis=1, inplace=True)''')
-        df_creditos.drop('provincia_codigo', axis=1, inplace=True)
-        st.code(df_creditos.head(), language='html')
-
-        st.write('---')
-        st.write('##### Valores unicos.')
-
-        st.write('''**unique()** : permite saber cuales son valores unicos de una columna''')
-        st.code('''df_creditos['autonomo'].unique()''')
-        st.code(df_creditos['autonomo'].unique())
-        st.code('''df_creditos['Es_jubilado'].unique()''')
-        st.code(df_creditos['Es_jubilado'].unique())
-        st.code('''df_creditos['Es_jubilado'].unique()''')
-        st.code(df_creditos['Es_jubilado'].unique())
-        st.code('''df_creditos['relacion_dependencia'].unique()''')
-        st.code(df_creditos['relacion_dependencia'].unique(), language='html')
-
-
-        st.write('''**nunique()** : devuelve la cantidad de valores unicos''')
-        st.code('''df_creditos['autonomo'].nunique()''')
-        st.code(df_creditos['autonomo'].nunique())
-
-
-        st.write('---')
-        st.write('##### Correccion de Inconsistencias.')
-
-        st.write('''**map()** : permite substituir cada valor de una columna por otro valor basandose en un diccionario, una funcion u otra columna.''')
-
-        st.code('''data = {'F':False, 'V':True, '0':False}  
-                   
-df_creditos['autonomo'] = df_creditos['autonomo'].map(data)                     
-df_creditos['Es_jubilado'] = df_creditos['Es_jubilado'].map(data)   
-''')
-        
-        data = {'F':False, 'V':True, '0':False}
-        df_creditos['autonomo'] = df_creditos['autonomo'].map(data)
-        df_creditos['Es_jubilado'] = df_creditos['Es_jubilado'].map(data)
-
-        st.code(df_creditos.head(), language='html')
-
-        
-
-        st.write('---')
-        st.write('##### Reemplazar valores nulos.')
-
-        st.write('''**fillna()** : remplaza los valores NaN por otro valor.''')
-
-        st.code('''df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].fillna(0)''')
-        df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].fillna(0)
-        
-        st.code('''df_creditos['Cantidad_consultas_7_dias'] = df_creditos['Cantidad_consultas_7_dias'].fillna(0)''')
-        df_creditos['Cantidad_consultas_7_dias'] = df_creditos['Cantidad_consultas_7_dias'].fillna(0)
-        
-        
-        
-        st.write('Si no se establece una columna entonces reemplaza las de todas.')
-        st.code('''df_creditos.fillna(0, inplace=True)''')
-       # df_creditos.fillna(0, inplace=True)
-
-        st.write('---')
-        st.write('##### Rvision de valores.')
-
-        st.write('''**value_counts()** : obtiene la cantidad de una variable agrupada por categoría.''')
-        st.code('''df_creditos['autonomo'].value_counts()''')
-        st.code(df_creditos['autonomo'].value_counts(), language='html')        
-        
-        st.code('''df_creditos['Es_jubilado'].value_counts()''')
-        st.code(df_creditos['Es_jubilado'].value_counts(), language='html')
-
-        st.code('''df_creditos['relacion_dependencia'].value_counts()''')
-        st.code(df_creditos['relacion_dependencia'].value_counts(), language='html')
-
-
-        st.write('---')
-        st.write('''**replace()** : permite reemplazar los valores por otra etiqueta o crear una nueva columna en base a los valores de la otra columna.''')
-        st.code('''df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].replace({'0':0})''')
-    
-
-        df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].replace({'0':0})
-        st.code('''df_creditos['relacion_dependencia'].value_counts()''')
-        st.code(df_creditos['relacion_dependencia'].value_counts(), language='html')
-
-      
-        st.write('---')
-        st.write('''**aply()** : Es una herramienta de propósito general para aplicar una función a lo largo de un eje (filas o columnas) de un DataFrame o a cada elemento de una Serie.       
-Se utiliza para realizar transformaciones, cálculos y lógica condicional compleja, siendo una alternativa más eficiente y limpia que los bucles.        
-Para usarlo, se le pasa la función a aplicar, y el parámetro axis determina si se aplica a las columnas (0) o a las filas (1)''')     
-
                 
-        st.write('---')
-        st.write('##### Conversion de tipos de datos.')
-              
-        st.write('''**astype()** : convierte a otro tipo de dato (string, int64, float)''')         
-
-        st.code('''df_creditos['PRODUCTO'] = df_creditos['PRODUCTO'].astype('string')''')
-        df_creditos['PRODUCTO'] = df_creditos['PRODUCTO'].astype('string')
-
-        st.write('Conversion de mas de una columna')
-        
-        st.code('''columnas_cod = ['PROVINCIA','BCRA_Peor_Situacion','Nivel_Socioeconomico']
-df_creditos[columnas_cod] = df_creditos[columnas_cod].astype('string')''')
-        
-        columnas_cod = ['PROVINCIA','BCRA_Peor_Situacion','Nivel_Socioeconomico']
-        df_creditos[columnas_cod] = df_creditos[columnas_cod].astype('string')
-        
-        
-        st.write('**Convertir relacion de dependencia a bool (False, True)**')
-        st.code('''df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].astype(bool)''')
-        df_creditos['relacion_dependencia'] = df_creditos['relacion_dependencia'].astype(bool)
-        
-        
-        st.write('---')
-        st.write('##### Codificado get_dummies')
-        
-        st.write('''**get_dummies()** : se utiliza para convertir variables categóricas en variables ficticias o binarias (con valores de 0 o 1).       
-Este proceso, también conocido como codificación one-hot, es fundamental para preparar datos para algoritmos de aprendizaje automático que requieren entradas numéricas.        
-La función crea nuevas columnas para cada categoría única en la variable original, indicando la presencia (1) o ausencia (0) de esa categoría en cada fila      
-El parametro drop_first = True elimina la primera categoria para evitar multicolinealidad.''')
-        
-        st.code('''df_creditos = pd.get_dummies(df_creditos, dtype=int)''')
-        df_creditos = pd.get_dummies(df_creditos, dtype=int)     
-        
-        df_creditos.info()   
+                data = ['class_texto', 'class_Bool']
+                st.code('''data = ['class_texto', 'class_Bool']
+df_diabetes.drop(data, axis=1, inplace=True)''')
                 
-        st.write('---')
-        st.write('##### Escalamiento')                
-        st.write('''La mayoria de los algorimos de Machine Learning funcionan mucho mejor si las caracteristicas estan en la misma escala.      
-Sin embargo, algunos como los basados en arboles de decision que no lo necesitan.''')
+                df_diabetes.drop(data, axis=1, inplace=True)
+                st.code(df_diabetes.head(), language='html')        
+                
+                st.divider()
+                
+                st.write('##### Histogramas')   
         
-        st.write('''**Normalizacion:*** Consiste en el re-escalado de las caracteristicas dentro de un rango [0...1], [min...max].      
-Se aplica la siguiente expresion: Xnorm = (X-Xmin)/(Xmax-Xmin)''')                
-
-        st.write('''**Estandarizacion:*** Requiere que se tome cada dato, se le reste el valor medio de esa caracteristica, y esa diferencia se divida por el desvio estandar.  
-La estandarizacion puede ser mas conveniente para modelos que usan algoritmos del descenso del gradiente, porque facilita la convergencia del mismo.''')
+                st.code('''import matplotlib.pyplot as plt
+                
+fig = plt.figure(figsize=(8,8))                
+df_diabetes.hist(ax=fig.gca())                
+plt.show()''')
+        
+        
+                with st.container(width=1000):
+                        fig = plt.figure(figsize=(8,8))
+                        df_diabetes.hist(ax=fig.gca())
+                        st.pyplot(fig)
                 
                 
+                st.divider()
+
+                st.code('''import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(3,3, figsize=(12,12))
+sns.distplot(df_diabetes['preg'], ax=ax[0,0])
+sns.distplot(df_diabetes['plas'], ax=ax[0,1])
+sns.distplot(df_diabetes['pres'], ax=ax[0,2])
+sns.distplot(df_diabetes['skin'], ax=ax[1,0])
+sns.distplot(df_diabetes['test'], ax=ax[1,1])
+sns.distplot(df_diabetes['mass'], ax=ax[1,2])
+sns.distplot(df_diabetes['pedi'], ax=ax[2,0])
+sns.distplot(df_diabetes['age'], ax=ax[2,1])''')
+        
+                with st.container(width=1000):
+                        fig, ax = plt.subplots(3,3, figsize=(12,12))
+                        sns.distplot(df_diabetes['preg'], ax=ax[0,0])
+                        sns.distplot(df_diabetes['plas'], ax=ax[0,1])
+                        sns.distplot(df_diabetes['pres'], ax=ax[0,2])
+                        sns.distplot(df_diabetes['skin'], ax=ax[1,0])
+                        sns.distplot(df_diabetes['test'], ax=ax[1,1])
+                        sns.distplot(df_diabetes['mass'], ax=ax[1,2])
+                        sns.distplot(df_diabetes['pedi'], ax=ax[2,0])
+                        sns.distplot(df_diabetes['age'], ax=ax[2,1])        
+                
+                st.pyplot(fig)
+                
+                st.divider()    
                 
                 
+                st.write('##### Diagrama de Densidad')
+                
+                st.code('''fig = plt.figure(figsize=(12,12))
+df_diabetes.plot(ax=fig.gca(), kind='density', subplots=True, layout=(3,3), sharex=False)
+plt.show()''')
+                
+                fig = plt.figure(figsize=(12,12))
+                df_diabetes.plot(ax=fig.gca(), kind='density', subplots=True, layout=(3,3), sharex=False)
+
+                st.pyplot(fig)
+        
+                st.code('''fig, ax = plt.subplots(3,3, figsize=(12,12))
+sns.distplot(df_diabetes['preg'], hist=False, rug=True, ax=ax[0,0])
+sns.distplot(df_diabetes['plas'], hist=False, rug=True, ax=ax[0,1])
+sns.distplot(df_diabetes['pres'], hist=False, rug=True, ax=ax[0,2])
+sns.distplot(df_diabetes['skin'], hist=False, rug=True, ax=ax[1,0])
+sns.distplot(df_diabetes['test'], hist=False, rug=True, ax=ax[1,1])
+sns.distplot(df_diabetes['mass'], hist=False, rug=True, ax=ax[1,2])
+sns.distplot(df_diabetes['pedi'], hist=False, rug=True, ax=ax[2,0])
+sns.distplot(df_diabetes['age'], hist=False, rug=True, ax=ax[2,1])''')
+                
+                fig, ax = plt.subplots(3,3, figsize=(12,12))
+                sns.distplot(df_diabetes['preg'], hist=False, rug=True, ax=ax[0,0])
+                sns.distplot(df_diabetes['plas'], hist=False, rug=True, ax=ax[0,1])
+                sns.distplot(df_diabetes['pres'], hist=False, rug=True, ax=ax[0,2])
+                sns.distplot(df_diabetes['skin'], hist=False, rug=True, ax=ax[1,0])
+                sns.distplot(df_diabetes['test'], hist=False, rug=True, ax=ax[1,1])
+                sns.distplot(df_diabetes['mass'], hist=False, rug=True, ax=ax[1,2])
+                sns.distplot(df_diabetes['pedi'], hist=False, rug=True, ax=ax[2,0])
+                sns.distplot(df_diabetes['age'], hist=False, rug=True, ax=ax[2,1]) 
+                st.pyplot(fig)        
+        
+                st.divider()          
+                
+                st.write('##### Boxplot')
+
+                st.code('''fig = plt.figure(figsize=(12,12))
+df_diabetes.plot(ax=fig.gca(), kind='box', subplots=True, layout=(3,3), sharex=False)
+plt.show()''')
+
+                fig = plt.figure(figsize=(12,12))
+                df_diabetes.plot(ax=fig.gca(), kind='box', subplots=True, layout=(3,3), sharex=False)
+                st.pyplot(fig)
+                
+                st.divider()    
+        
+        
+                st.code('''fig, ax = plt.subplots(3,3, figsize=(12,12))
+sns.boxplot(df_diabetes['preg'], ax=ax[0,0])
+sns.boxplot(df_diabetes['plas'], ax=ax[0,1])
+sns.boxplot(df_diabetes['pres'], ax=ax[0,2])
+sns.boxplot(df_diabetes['skin'], ax=ax[1,0])
+sns.boxplot(df_diabetes['test'], ax=ax[1,1])
+sns.boxplot(df_diabetes['mass'], ax=ax[1,2])
+sns.boxplot(df_diabetes['pedi'], ax=ax[2,0])
+sns.boxplot(df_diabetes['age'], ax=ax[2,1])''')
+        
+        
+                fig, ax = plt.subplots(3,3, figsize=(12,12))
+                sns.boxplot(df_diabetes['preg'], ax=ax[0,0])
+                sns.boxplot(df_diabetes['plas'], ax=ax[0,1])
+                sns.boxplot(df_diabetes['pres'], ax=ax[0,2])
+                sns.boxplot(df_diabetes['skin'], ax=ax[1,0])
+                sns.boxplot(df_diabetes['test'], ax=ax[1,1])
+                sns.boxplot(df_diabetes['mass'], ax=ax[1,2])
+                sns.boxplot(df_diabetes['pedi'], ax=ax[2,0])
+                sns.boxplot(df_diabetes['age'], ax=ax[2,1])
+                
+                st.pyplot(fig)          
+        
+        
+        
+        
+        
+        
+        
+                st.write('##### Codificado get_dummies')
+                
+                st.write('''**get_dummies()** : se utiliza para convertir variables categóricas en variables ficticias o binarias (con valores de 0 o 1).       
+        Este proceso, también conocido como codificación one-hot, es fundamental para preparar datos para algoritmos de aprendizaje automático que requieren entradas numéricas.        
+        La función crea nuevas columnas para cada categoría única en la variable original, indicando la presencia (1) o ausencia (0) de esa categoría en cada fila      
+        El parametro drop_first = True elimina la primera categoria para evitar multicolinealidad.''')
                 
 
-    if opcion_seleccionada == 'Machine Learning':
-        st.write('**Inteligencia Artificial**')
-        st.write('''Subdisciplina del campo de la informática, que busca la creación de máquinas que puedan imitar comportamientos inteligentes.    
-La inteligencia artificial puede ser Fuerte: sistemas que pueden realizar multitud de tareas, incluso con un alto nivel de complejidad.     
-Puede ser débil: sistemas qye pueden cumplir con un conjunto limitado de tareas.
+                st.divider()
+                st.write('##### Escalamiento')                
+                st.write('''La mayoria de los algorimos de Machine Learning funcionan mucho mejor si las caracteristicas estan en la misma escala.      
+        Sin embargo, algunos como los basados en arboles de decision que no lo necesitan.''')
+                
+                st.write('''**Normalizacion:** Consiste en el re-escalado de las caracteristicas dentro de un rango [0...1], [min...max].      
+        Se aplica la siguiente expresion: Xnorm = (X-Xmin)/(Xmax-Xmin)''')                
 
+                st.write('''**Estandarizacion:** Requiere que se tome cada dato, se le reste el valor medio de esa caracteristica, y esa diferencia se divida por el desvio estandar.  
+        La estandarizacion puede ser mas conveniente para modelos que usan algoritmos del descenso del gradiente, porque facilita la convergencia del mismo.''')
+                
+
+                st.divider()
+                st.write('##### Valoraciones Cruzadas')
+                
+                st.write('''Es una tecnica utilizada para evaluar los resultados de un analisis estadistico y garantizar que son independientes de la particion entre datos de entrenamimento y prueba.         
+Los resultados solo son significativos si los conjuntos se extraen de la misma poblacion.       
+Consiste an ajustar y predecir usando el mismo modelo y promediar el rendimiento obtenido de las medidas de evaluacion sobre diferentes particiones provenientes del mismo conjunto de entrenamiento.   
+
+Existen 2 metodos:   
+        
+**Con retencion**: Se separa el dataset en 2 subconjuntos: entrenamiento y prueba. Se ajusta el modelo con el conjunto de entrenamiento y se observa el rendimiento sobre el conjuto de testeo,   
+repitiendo varias veces el mismo proceso hasta seleccionar los mejores parametros del modelo. Sin embargo, de esta manjera el conjunto de testeo acaba por ser parte del entrenamiento y el modelo puede sobreajustarse.             
+Para evitar este efecto, conviene dividir el dataset en 3 subconjuntos: entrenamiento, prueba y validacion. El modelo se entrena con el conjunto de entrenamiento, se utiliza la validacion para obtener mejores parametros y solo se usa el conjunto de testeo para determinar el rendimiento del modelo.          
+El inconveniente es que la estimacion del rendimiento puede ser muy sensible a como se divide el dataset.
+
+**K iteraciones (k-fold CV)**: es una tecnica mas robusta y precisa por la manera de dividir el dataset. Se separa el dataset en conjunto de entrenamiento y conjunto de testeo.        
+Se divide aleatoriamente el conjunto de entrenamiento en k subconjuntos sin reemplazo. De estos, k-1 se usan para entrenar el modelo y el restante para evaluar el rendimiento. 
+Luego se calcula el rendimiento medio de los modelos a partir de las estimaciones independientes. Finalmente, elegido el modelo con los parametros que dan el mejor rendimiento,        
+se lo vuele a entrenar con el conjunto de entrenamiento entero y se obtiene una estimacion final del modelo con el conjunto de testeo independiente.
+
+Para conjuntos de datos pequeños, se puede usar un enfoque alternativo: LOOCV (validacion cruzada dejando uno afuera). Se toma k=n (nro de muestras) y en cada iteracion, se deja una sola sobre la cual se testea.     
+Al final, todas las muestras fueron usadas para testear dentro del conjunto de entrenamiento.   
+Para clases desbalanceadas, es mejor usar Validacion Cruzada Estratificada de iteraciones (k-fold stratified CV), ya que mejora la estimacion de sesgo y varianza.      
+Se respetan las proporciones de clase en cada iteracion, lo que garantiza que siempre se respeten las proporciones del conjunto de entrenamiento.''') 
+        
+                
+        if opcion_seleccionada == 'Machine Learning':
+                st.write('##### Inteligencia Artificial')
+                st.write('''Subdisciplina del campo de la informática, que busca la creación de máquinas que puedan imitar comportamientos inteligentes.    
+        La inteligencia artificial puede ser Fuerte: sistemas que pueden realizar multitud de tareas, incluso con un alto nivel de complejidad.     
+        Puede ser débil: sistemas que pueden cumplir con un conjunto limitado de tareas.
+        
 **Areas de aplicación:** Visión, Voz, Procesado de Lenguaje Natural (PLN), Sistemas Expertos, Robots, Machine Learning (Deep Learning)''')
-        st.write('---')
-        st.write('**Machine Learning**')
-        st.write('''Se refiere a un amplio conjunto de técnicas informáticas que nos permiten dar a las computadoras la capacidad de aprender sin ser explícitamente programadas.''')
+                st.write('---')
+                st.write('##### Machine Learning')
+                st.write('''Se refiere a un amplio conjunto de técnicas informáticas que nos permiten dar a las computadoras la capacidad de aprender sin ser explícitamente programadas.''')
 
-        st.write('**Conceptos fundamentales en el aprendizaje**')
-        st.write('**Paradigma de aprendizaje:** Información de la que dispone la red.')     
-        st.write('''**Aprendizaje supervisado**: Estos algoritmos aprenden a partir de casos previamentes etiquetados. Objetivo aprender a mapear las entradas en salidas,     
-midiendo el error de lo aprendido con el dato real. Pueden ser de Clasifiacion o Regresion.   
-**Aprendizaje No supervisado**: Estos algoritmos no cuentan con un conocimiento previo. Se enfrentan al caos de datos con el objetivo de encontrar patrones que permitan    
-organizarlos de alguna manera. Pueden ser de Clustering o Reduccion de dimensiones.      
+                st.write('##### Aprendizaje Supervisado')
+                
+                st.write('''Estos algoritmos aprenden a partir de casos previamentes etiquetados. Objetivo aprender a mapear las entradas en salidas,     
+midiendo el error de lo aprendido con el dato real. Pueden ser de Clasificacion o Regresion.''')
+
+                st.write('''**Clasificacion** :  El algoritmo intenta etiquetar cada ejemplo eligiendo entre dos o mas clases diferentes. Usan las caracteristicas aprendidas de los datos de capacitacion sobre datos nuevos,
+no vistos previamente, para predecir sus etiquetas de clase. Elegir entre dos clases se denomina clasificacion binaria. Elegir entre mas de dos clases se denomina clasifiacion multiclase.''')
+
+                st.write('''**Regresion** : Donde se predice un valor real basado en entradas pasadas. Estos algoritmos se usan para predecir valores de salida basados en algunas caracteristicas de entrada obtenidas de los datos.
+Los valores de salida en este caso son continuos.''')
+
+                st.write('##### Aprendizaje No supervisado')
+                st.write('''Estos algoritmos no cuentan con un conocimiento previo. Se enfrentan al caos de datos con el objetivo de encontrar patrones que permitan organizarlos de alguna manera. 
+Pueden ser de Clustering o Reduccion de dimensiones.            
+
 **Aprendizaje por Refuerzo:** Ei sistema aprende a partir de su propia experiencia, en base a un proceso de prueba, error y recompensas si toma decisiones correctas.''')
-        
-        st.write('---')
-        st.write('**Tipos de Problemas para cada Paradigma de Aprendizaje**')
-        st.write('Aprendizajae Supervisado: Clasificación y Regresión')
-        st.write('Aprendizaje No Supervisado: Análisis Clúster y Reducción de Dimensionalidad')
-        
-        st.write('---')
-        st.write('**Algoritmo de aprendizaje:** Procedimiento numérico de ajuste de los pesos.')
-
-        st.write('**Conceptos Básicos**')
-        st.write('''La informacion se organiza en observaciones con atributos. En algunos casos, estas observaciones tienen una variable target que queremos predecir.  
-Los modelos de Machine Learning solo son capaces de aprender de representaciones numericas.''')
+                
 
 
 def ml_aprendizaje_NoSupervisado():
@@ -5034,10 +5485,52 @@ def ml_regresion_lineal():
     st.write('''
 La regresión lineal es un método estadístico que trata de modelar la relación entre una variable continua y una o más variables independientes mediante el ajuste de una ecuación lineal.   
 Se llama regresión lineal simple cuando solo hay una variable independiente y regresión lineal múltiple cuando hay más de una.  
-Dependiendo del contexto, a la variable modelada se le conoce como variable dependiente o variable respuesta, y a las variables independientes como regresores, predictores o features.''')
-    st.write('---')
+Dependiendo del contexto, a la variable modelada se le conoce como variable dependiente o variable respuesta, y a las variables independientes como regresores, predictores o features.         
+
+**Regresion lineal simple**     
+
+El objetivo de este regresion es predecir el valor de una variable dependiente a partir de una variable independiente.     
+Cuanto mayor sea la relacion lineal entre la variable independiente y la variable dependiente, mas precisa sera la prediccion.  
+Esto va unido al hecho de que cuanto mayor sea la proporcion de la varianza de la variable dependiente que pueda explicar la variable independiente, mas exacta sera la prediccion.     
+La tarea de la regresion lineal simple consiste en determinar exactamente la linea recta que mejor describe la relacion lineal entre la variable dependiente y la independiente.        
+Para determinar esta linea recta, se utiliza el metodo de los minimos cuadrados.''')
     
-    opciones_mlreglin = ['USA Housing', 'Ecommerce Customers']
+    st.write('**Parametros principales**')
+    st.write('''* fit_intercept: por defecto es True. Determina si se debe calcular la intereseccion para este modelo. Si es False, no se calculara (los datos se asumen centrados).
+* copy_x: por defecto es True. Si es True, se copia X; de lo contrario, puede ser sobrescrito.
+* n_jobs: por defecto None. Numero de trabajos a utilizar para el calcuilo. -1 significa usar todos los procesadores.
+''')
+
+    st.write('**Atributos principales**')
+    st.write('''* coef_: determina la pendiente de la recta.
+* intercept_: lugar de intercepcion de la recta con el eje x.
+''')
+
+    
+    st.divider()
+    
+    st.write('##### Tipos')
+    st.write('**Regresion Ridge**')
+    st.write('''Tambien conocida como regularizacion L2, es un metodo estadistico para reducir errores causados por el sobreajuste de los datos de entrenamiento. La regresion corrige especificamente
+la multicolinealidad en el analisis de regresion. Esto resulta util cuando se desarrollan modelos de machine learning que tienen un gran numero de parametros, sobre todo si esos parametros
+tambien tienen pesos elevados. ''')
+    
+    st.write('**Regresion Lasso**')
+    st.write('''Es una tecnica de regularizacion que aplica una penalizacion para evitar el sobreajuste y mejorar la precision de los modelos estadisticos. Tambien es conocida como regularizacion L1, 
+es una forma de regularizacion para modelos de regresion linel, es un metodo estadistico para reducir los errores causados por el sobreajuste de los datos de entrenamiento.''')
+    
+    st.write('**Elasticnet**')
+    st.write('''Es un algoritmo de regresion linea regularizada que combina penalizacione L1 (Lasso) y L2 (Ridge). Esta tecnica mejor la precision y gestiona la colinealidad (alta correlacion entre variables)
+al contraer coeficientes y establecer algunos a cero, logrando modelos mas dispersos y robustos. Se usa para evitar el sobreajuste cuando hay muchas variables predictoras.''')
+    
+    st.write('**Descenso de Gradiente**')
+    st.write('''Es un algoritmo de optimizacion para encontrar la linea de mejor ajuste (y = mx + b) que obtimiza el error entre los valores predichos y los reales. Utiliza el descenso de gradiente
+para ajustar iterativamente los parametros m (pendiente) y b (interseccion) mediante el calculo de derivadas, reduciendo el error cuadratico medio hasta converger al minimo.''')
+    
+    
+    st.divider()
+    
+    opciones_mlreglin = ['Peso de un material','USA Housing', 'Ecommerce Customers']
     col1, col2 = st.columns([2,2])
     
     with col1:
@@ -5051,9 +5544,154 @@ Dependiendo del contexto, a la variable modelada se le conoce como variable depe
             
             return df
     
+    if opcion_seleccionada == 'Peso de un material':
+        from sklearn import linear_model
+
+        st.write('###### Data Frame con los pesos y longitud de materiales metalicos.')
+
+        st.code('''# Peso especifico (Unidades de g/cm3 )
+# barras de base 1 cm2 y largo 'l' 
+# R peso especifico -> hay que estimar 
+# se pesan las barras con una balanza con errores (pequeños pero desconocidos)
+# barra de largo 'm' -> volumen m cm3
+# Peso = R*m, peso se mide con errores, m se conoce
+
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+from sklearn import linear_model''')
+            
+        # Coeficiente de correlacion de Pearson 
+        
+        st.write('**Coeficiente de correlacion de Pearson**')
+        
+        st.write('''Dados, dos np.arrays x e y, calcula el coeficiente de correlacion para un ajuste lineal calculado
+por minimos cuadrados. Es el coeficiente de correlacion de Pearson, que indica que tan buena es la relacion
+lineal entre dos variables, siendo 1 o -1 correlacion perfecta y 0 nula correlacion)''')
+        
+        st.code('''def coef_corr(x,y): 
+        arriba = sum(((x - x.mean())*(y - y.mean())))
+        abajo = sum(((x - x.mean())**2)) * sum(((y - y.mean())**2))
+
+        corr = arriba / np.sqrt(abajo)
+
+        return corr''')
+ 
+            
+        def coef_corr(x,y): 
+
+
+                arriba = sum(((x - x.mean())*(y - y.mean())))
+                abajo = sum(((x - x.mean())**2)) * sum(((y - y.mean())**2))
+
+                corr = arriba / np.sqrt(abajo)
+
+                return corr
+
+
+        # Carga de los datos desde el csv
+        df = pd.read_csv('DataFrames/longitudes_y_pesos.csv')
+        st.dataframe(df.head(10))       # head
+
+        codigo = '''# info
+df.info()'''
+        st.code(codigo)        
+        
+        df.info(buf=buffer)             # info
+        st.code(buffer.getvalue(), language='html')
+        
+        codigo = '''# describre
+df.describre()'''
+        st.code(codigo)        
+        
+        st.write(df.describe())           
+
+        st.divider()
+
+        st.code('''# Separacion de los datos del modelo 
+X = df[['longitud']]
+y = df['peso'] ''')
+
+
+        # Separacion de los datos del modelo 
+        X = df[['longitud']]
+        y = df['peso']    
+
+        st.code('''# Entrenamiento del Modelo
+lm = linear_model.LinearRegression(fit_intercept=False)  # no hay ordenada al origen
+lm.fit(X, y)''')
+
+        # Entrenamiento del Modelo
+        lm = linear_model.LinearRegression(fit_intercept=False)  # no hay ordenada al origen
+        lm.fit(X, y)
+
+
+        st.code('''# coeficiente para la caracteristica (pendiente)
+R = lm.coef_  
+R''')
+
+        # coeficiente para la caracteristica (pendiente)
+        R = lm.coef_  
+        st.code(R)
+        
+        
+        st.code('''errores = y - (lm.predict(X))
+ecm = (errores**2).mean
+ecm''')        
+        
+        errores = y - (lm.predict(X))
+        ecm = (errores**2).mean
+        st.code(ecm, language='html')
+
+        st.code('''# Coeficiente de correlacion 
+r2 = coef_corr(df['longitud'], df['peso'])
+r2''') 
+
+        # Coeficiente de correlacion 
+        r2 = coef_corr(df['longitud'], df['peso'])
+        st.code(r2, language='html')
+
+        st.divider()
+        
+        st.code('''minlong = 0   #limite inferior para el ajuste
+maxlong = 30  #limite superior
+grilla_longitud = np.linspace(start=minlong, stop=maxlong, num=1000)
+grilla_peso = grilla_longitud * R  # recta de ajusta x minimos cuadrados''')
+        
+        minlong = 0   #limite inferior para el ajuste
+        maxlong = 30  #limite superior
+        grilla_longitud = np.linspace(start=minlong, stop=maxlong, num=1000)
+        grilla_peso = grilla_longitud * R  # recta de ajusta x minimos cuadrados
+        
+        st.code('''fig,ax = plt.subplots() 
+                
+plt.scatter(X, y, c='purple', marker='x')
+
+plt.plot(grilla_longitud, grilla_peso, c='magenta')
+plt.xlabel('Longitud')
+plt.ylabel('Peso')
+plt.tight_layout()
+
+st.pyplot(fig)''')
+        
+        
+        with st.container(width=800):
+                fig,ax = plt.subplots() 
+                
+                plt.scatter(X, y, c='purple', marker='x')
+
+                plt.plot(grilla_longitud, grilla_peso, c='magenta')
+                plt.xlabel('Longitud')
+                plt.ylabel('Peso')
+                plt.tight_layout()
+
+                st.pyplot(fig)
+
+
+    
     # Precios de casa en Estados Unidos
     if opcion_seleccionada == 'USA Housing':
-        st.write('##### Data Frame con los precios de casas en Estados Unidos')
+        st.write('###### Data Frame con los precios de casas en Estados Unidos')
         
         codigo = '''# Carga de csv con los datos
 df = pd.read_csv('DataFrames/USA_housing.csv')
@@ -5496,7 +6134,7 @@ def python():
         imagen = Image.open('Imagenes/cadena_3.png')
         st.image(imagen, width=1468)
 
-        st.write('---')
+        st.divider()
         st.write('**Indexación de Strings**')
         st.write('''
         * [0:3] : devuelve a partir de la posición 0 hasta la 2 (la posición 3 no se incluye)     
@@ -5538,18 +6176,18 @@ def python():
         imagen = Image.open('Imagenes/random_1.png')
         st.image(imagen, width=1471)
  
-        st.write('---')
+        st.divider()
         st.write('**shuffle()** reordena los items de una lista de forma aleatoria') 
         imagen = Image.open('Imagenes/random_2.png')
         st.image(imagen, width=1469)
  
-        st.write('---')
+        st.divider()
         st.write('**choice()** retorna un elemento de una lista') 
         imagen = Image.open('Imagenes/random_3.png')
         st.image(imagen, width=1469)
  
  
-        st.write('---')
+        st.divider()
         st.write('##### Referencias externas')       
      
     if opcion_seleccionada == 'Módulo statistics':      
@@ -5557,7 +6195,7 @@ def python():
         imagen = Image.open('Imagenes/statistics.png')
         st.image(imagen, width=1467)
  
-        st.write('---')
+        st.divider()
         st.write('##### Referencias externas')       
      
  
@@ -5824,462 +6462,778 @@ def pandas():
     
     
     
-    buffer = io.StringIO()
+        buffer = io.StringIO()
     
-    opciones_pd = ['Series','Data Frames','Conversión de Tipos','Fusionar, Combinar y Concatenar Data Frames',
-                    'Respaldos','Reporte ydata-profiling']
-    
-    
-    df_ventas = pd.read_csv('DataFrames/Resumen_ventas.csv', index_col=0)
+        opciones_pd = ['Series','Data Frames','Conversión de Tipos','Fusionar, Combinar y Concatenar Data Frames',
+                    'Respaldos']
     
     
-    col1, col2 = st.columns([2,2])
+        df_ventas = pd.read_csv('DataFrames/Resumen_ventas.csv', index_col=0)
     
-    with col1:
-        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_pd)
-        st.success(f'##### **{opcion_seleccionada}** ')
+    
+        col1, col2 = st.columns([2,2])
+    
+        with col1:
+                opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_pd)
+                st.success(f'##### **{opcion_seleccionada}** ')
 
-    if opcion_seleccionada == 'Series':         
-        st.write('''Una Serie es una estructura de datos unidimensional que puede contener cualquier tipo de datos.
-    Es como una columna de una tabla.
-    ''')
+        if opcion_seleccionada == 'Series':         
+                st.write('''Una Serie es una estructura de datos unidimensional que puede contener cualquier tipo de datos.
+Es como una columna de una tabla.''')
         
-        st.write('##### Creación de una Serie')
-        imagen = Image.open('Imagenes/pandas_1.png')
-        st.image(imagen, width=1478)
-        imagen = Image.open('Imagenes/pandas_2.png')
-        st.image(imagen, width=1478)        
-        st.write('---')
-        st.write('##### Acceso a los valores de una Serie')
-        imagen = Image.open('Imagenes/pandas_3.png')
-        st.image(imagen, width=1479) 
-        st.write('---')
-        st.write('##### Operaciones con Series')
-        imagen = Image.open('Imagenes/pandas_4.png')
-        st.image(imagen, width=1479) 
-        imagen = Image.open('Imagenes/pandas_5.png')
-        st.image(imagen, width=1478) 
-        imagen = Image.open('Imagenes/pandas_6.png')
-        st.image(imagen, width=1477) 
-        st.write('---')
-        st.write('##### Filtrado')
-        imagen = Image.open('Imagenes/pandas_7.png')
-        st.image(imagen, width=1479) 
-        st.write('##### Valores faltantes')
-        imagen = Image.open('Imagenes/pandas_8.png')
-        st.image(imagen, width=1479) 
-
-
-    if opcion_seleccionada == 'Data Frames':         
-        st.write('''Un DataFrame es una estructura de datos bidimensional con etiquetas que se asemeja a una hoja de cálculo o una tabla
-    de base de datos.   
-    Se compone de filas y columnas, donde cada columna puede contener un tipo de dato diferente.
-    ''')
-        st.write('##### Creación de un DataFrame')
-        imagen = Image.open('Imagenes/pandas_9.png')
-        st.image(imagen, width=1478) 
-        imagen = Image.open('Imagenes/pandas_10.png')
-        st.image(imagen, width=1480) 
-        st.write('---')
-
-        st.write('##### DataSet')
-        st.write('''Un DataSet son los datos que estan organizados de cierta manera en un archivo txt, csv, xlsx, etc.
-    ''')
-        
-        st.write('''
-        Parámetros del read_csv 
-        - sep: el caracter utilizado para separar los valores (delimitador). El predeterminado es la coma ','.
-        - header: la fila que se usará como encabezado, header=0 (primera fila) o header=None.
-        - names: una lista de nombres de columna para usar en caso de que el archivo no tenga encabezado.
-        - index_col: especifica la columna a usar como índice del DataFrame.
-        - na_values: se utiliza para especificar que valores deben interpretarse como valores faltantes (NaN) al cargarlo en un DataFrame. 
-        Se pueden pasar una lista de cadenas (n/a, ---, ?, etc.) ademas de los valores predeterminados como '', 'NULL', 'NA', etc.
-        ''')
-        
-        
-        st.write('##### Cargar datos desde un archivos csv')
-        st.code('pd.read_csv(\'DataFrames/tips.csv\')')
-        
-        df_tips = pd.read_csv('DataFrames/tips.csv')
-        st.dataframe(df_tips.head())
-        
-        st.write('**Renombrar columnas**')
-        df_tips.columns = ['Total Factura','Propina','Sexo','Fumador','Dia','Horario','Nro Clientes']
-        
-        st.code('df_tips.columns = [\'Total Factura\',\'Propina\',\'Sexo\',\'Fumador\',\'Dia\',\'Horario\',\'Nro Clientes\']')
-        st.dataframe(df_tips.head())
-        
-        imagen = Image.open('Imagenes/pandas_12.png')
-        st.image(imagen, width=1477) 
-        imagen = Image.open('Imagenes/pandas_13.png')
-        st.image(imagen, width=1478) 
-        imagen = Image.open('Imagenes/pandas_14.png')
-        st.image(imagen, width=1480) 
-        st.write('---')
-
-        st.write('##### Acceder a columnas y filas')     
-        imagen = Image.open('Imagenes/pandas_18.png')
-        st.image(imagen, width=1478)                       
- 
-        st.write('''
-        ##### Acceder por el metodo loc:
-        Se utiliza para seleccionar datos de un DataFrame utilizando etiquetas (nombres) de fila y columna  
-        ''')
-     
-        imagen = Image.open('Imagenes/pandas_19.png')
-        st.image(imagen, width=1476)              
-        imagen = Image.open('Imagenes/pandas_20.png')
-        st.image(imagen, width=1478)          
-        
-        st.write('''
-        ##### Acceder por el metodo iloc:
-        Permite seleccionar los datos en un DataFrame utilizando posiciones enteras  
-        ''')
-        imagen = Image.open('Imagenes/pandas_21.png')
-        st.image(imagen, width=1481)         
-        st.write('---')
-
-        st.write('##### Transponer un DataFrame')
-        imagen = Image.open('Imagenes/pandas_51.png')
-        st.image(imagen, width=1481)   
+                st.write('##### Creación de una Serie')
+                imagen = Image.open('Imagenes/pandas_1.png')
+                st.image(imagen, width=1478)
+                imagen = Image.open('Imagenes/pandas_2.png')
+                st.image(imagen, width=1478)        
+                st.write('---')
+                st.write('##### Acceso a los valores de una Serie')
+                imagen = Image.open('Imagenes/pandas_3.png')
+                st.image(imagen, width=1479) 
+                st.write('---')
+                st.write('##### Operaciones con Series')
+                imagen = Image.open('Imagenes/pandas_4.png')
+                st.image(imagen, width=1479) 
+                imagen = Image.open('Imagenes/pandas_5.png')
+                st.image(imagen, width=1478) 
+                imagen = Image.open('Imagenes/pandas_6.png')
+                st.image(imagen, width=1477) 
+                st.write('---')
+                st.write('##### Filtrado')
+                imagen = Image.open('Imagenes/pandas_7.png')
+                st.image(imagen, width=1479) 
+                st.write('##### Valores faltantes')
+                imagen = Image.open('Imagenes/pandas_8.png')
+                st.image(imagen, width=1479) 
 
 
-        st.write('---')
-        st.code('''df = pd.read_csv('Archivos/Resumen_ventas.csv', index_col=0)
-df.head()''')
-        st.dataframe(df_ventas.head())
-
-        st.write('---') 
-        st.write('**value_counts()**: obtiene la cantidad de una variable agrupada por categoría')              
-        st.code('df[\'Producto\'].value_counts()')
-        st.code(df_ventas['Producto'].value_counts(), language='html')
-
-        st.write('---')
-
-        st.write('##### Renombrar columnas')     
-        st.code('''data = {
-    'Total Venta':'Total de Ventas',
-    'Meses':'Nro Mes'            
-} 
-  
-df.rename(columns=data, inplace=True)
-st.dataframe(df.head())              
-''')
-        data = {
-            'Total Venta':'Total de Ventas',
-            'Meses':'Nro Mes'
-        }
+        if opcion_seleccionada == 'Data Frames':         
+                st.write('''Un DataFrame es una estructura de datos bidimensional con etiquetas que se asemeja a una hoja de cálculo o una tabla
+de base de datos.   
+Se compone de filas y columnas, donde cada columna puede contener un tipo de dato diferente.''')
+                st.write('##### Creación de un DataFrame')
         
-        df_ventas.rename(columns=data, inplace=True)
-        st.dataframe(df_ventas.head())
-        
-        st.write('---')
-        st.write('##### Reemplazar valores') 
-        
-        st.write('**replace()**: permite reemplazar los valores por otra etiqueta o crear una nueva columna en base a los valores de la otra columna.')
-        st.code('''data = {
-    1:'Enero',
-    2:'Febrero',
-    3:'Marzo',
-    4:'Abril',
-    5:'Mayo',
-    6:'Junio',
-    7:'Julio',
-    8:'Agosto',
-    9:'Setiembre',
-    10:'Octubre',
-    11:'Noviembre',
-    12:'Diciembre'                
+                # Creacion de un DataFrame (utilizando un diccionario)
+                st.code('''# Creacion de un DataFrame (utilizando un diccionario)
+datos = {
+        'Nombre':['Ana','Luis','Carlos','Sara'], 
+        'Edad':[25,30,22,27], 
+        'Ciudad':['Madrid','Barcelona','Valencia','Bilbao']
 }
 
-df['Mes_Texto'] = df['Nro Mes'].replace(data)
-df.head()''')
-        
-        data = {
-            1:'Enero',
-            2:'Febrero',
-            3:'Marzo',
-            4:'Abril',
-            5:'Mayo',
-            6:'Junio',
-            7:'Julio',
-            8:'Agosto',
-            9:'Setiembre',
-            10:'Octubre',
-            11:'Noviembre',
-            12:'Diciembre'
-        }
-        
-        df_ventas['Mes_Texto'] = df_ventas['Nro Mes'].replace(data)
-        st.dataframe(df_ventas.head())
-        
-        st.write('**regex**=True: especifica que el patron se esta reeemplazando es una expresion regular.')
+indice = [1,2,3,4]
 
+df = pd.DataFrame(data=datos, index=indice)
+df.head()''')        
         
-        imagen = Image.open('Imagenes/pandas_39.png')
-        st.image(imagen, width=1479)          
-        
-        imagen = Image.open('Imagenes/pandas_26.png')
-        st.image(imagen, width=1477) 
-        
-        st.write('---')
-        st.write('**map()**: permite substituir cada valor de una columna por otro valor basandose en un diccionario, una funcion u otra columna.')
-        st.code('''df['Long_Prod'] = df['Producto'].map(lambda x:len(x))
-df.head()''')
-        
-        df_ventas['Long_Prod'] = df_ventas['Producto'].map(lambda x:len(x))
-        st.dataframe(df_ventas.head())  
-          
-        st.write('---')
-        
-        st.write('''**apply()**: Es una herramienta de propósito general para aplicar una función a lo largo de un eje (filas o columnas) de un DataFrame o a cada elemento de una Serie.
-Se utiliza para realizar transformaciones, cálculos y lógica condicional compleja, siendo una alternativa más eficiente y limpia que los bucles.
-Para usarlo, se le pasa la función a aplicar, y el parámetro axis determina si se aplica a las columnas ((0)) o a las filas ((1)''')
-        
-        st.code('''def categorizar(fila):
-    if pd.isnull(fila['Long_Prod']):
-        return 0
-    else:
-        return 1
-        
-df_ventas['Long_Prod_2'] = df_ventas.apply(categorizar, axis=1)''')
-        
-        
-        def categorizar(fila):
-            if pd.isnull(fila['Cantidad']):
-                return 'NO existe valor'
-            else:
-                return 'Valor correcto'
-        df_ventas['Cantidad_string'] = df_ventas.apply(categorizar, axis=1)
-        
-        st.dataframe(df_ventas.head(10))
-        st.write('---')
-        st.write('##### Filtrado de datos')     
+                datos = {
+                        'Nombre':['Ana','Luis','Carlos','Sara'], 
+                        'Edad':[25,30,22,27], 
+                        'Ciudad':['Madrid','Barcelona','Valencia','Bilbao']
+                }
 
-        st.code('''filtro = df_ventas['Producto'] == 'Electrónic'
-df_filtrado = df_ventas[filtro]''')
+                indice = [1,2,3,4]
+        
+                df = pd.DataFrame(data=datos, index=indice)
+                st.dataframe(df.head())        
+        
+        
+                st.write('''**set_index**: se utiliza para convertir una o mas columnas existentes en el indice de un DataFrame.''')
+        
+                st.code('''# set_index 
+df.set_index('Nombre', inplace=True)
+df.head()''')
        
-        filtro = df_ventas['Producto'] == 'Electrónic'
-        df_filtrado = df_ventas[filtro]
-        st.dataframe(df_filtrado.head())        
+                df.set_index('Nombre', inplace=True)
+                st.dataframe(df.head())
+                
+                st.divider()
+
+                st.write('##### DataSet')
+                st.write('''Un DataSet son los datos que estan organizados de cierta manera en un archivo txt, csv, xlsx, etc.''')
         
-        st.write('**Multiples coniciones: & (and), | (or), ~ (not)**')
-        filtro = (df_ventas['Producto'] == 'Electrónic') | (df_ventas['Producto'] == 'Juguetes')
+                st.write('''**Parámetros del read_csv**
+                  
+* sep -> el caracter utilizado para separar los valores (delimitador). El predeterminado es la coma ','.        
+* header -> la fila que se usará como encabezado, header=0 (primera fila) o header=None.
+* names -> una lista de nombres de columna para usar en caso de que el archivo no tenga encabezado.
+* index_col -> especifica la columna a usar como índice del DataFrame.
+* na_values -> se utiliza para especificar que valores deben interpretarse como valores faltantes (NaN) al cargarlo en un DataFrame. 
+Se pueden pasar una lista de cadenas (n/a, ---, ?, etc.) ademas de los valores predeterminados como '', 'NULL', 'NA', etc.''')
         
-        st.code('''filtro = (df_ventas['Producto'] == 'Electrónic') | (df_ventas['Producto'] == 'Juguetes')
-df_filtrado = df_ventas[filtro]''')
+                st.divider()
+                st.write('##### Cargar datos desde un archivos csv')
+                st.code('''df_tips = pd.read_csv('DataFrames/tips.csv')
+df_tips''')
         
-        # Otra forma
-        st.write('Otra forma de filtrado')
-    
-        st.code('''filtro = df_ventas['Producto'].isin(['Electrónic','Juguetes'])
-df_filtrado = df_ventas[filtro]''')
+                df_tips = pd.read_csv('DataFrames/tips.csv')
+                st.dataframe(df_tips.head(10))
         
-        filtro = df_ventas['Producto'].isin(['Electrónic','Juguetes'])
-        df_filtrado = df_ventas[filtro]
-        st.dataframe(df_filtrado.head())
+                st.divider()
+                st.write('##### Renombrar columnas')
+                df_tips.columns = ['Total Factura','Propina','Sexo','Fumador','Dia','Horario','Nro Clientes']
         
-
-        st.write('---')        
+                st.code('df_tips.columns = [\'Total Factura\',\'Propina\',\'Sexo\',\'Fumador\',\'Dia\',\'Horario\',\'Nro Clientes\']')
+                st.dataframe(df_tips.head())
         
-        st.write('##### Matriz de Correlación')     
-        imagen = Image.open('Imagenes/pandas_52.png')
-        st.image(imagen, width=1479)   
-        st.write('---')                      
+                st.write('**Renombrar columnas especificas**')
+                
+                df_tips = pd.read_csv('DataFrames/tips.csv')
         
-        st.write('---')  
-        st.write('##### Reemplazar valores nulos.')  
-        st.write('**fillna()**: remplaza los valores NaN por otro valor.') 
-        st.code('df_ventas[\'Cantidad\'] = df_ventas[\'Cantidad\'].fillna(0) ')
-        df_ventas['Cantidad'] = df_ventas['Cantidad'].fillna(0)       
-
-
-        st.code('mediana = df_ventas[\'Precio Unitario\'].median()')
-        st.code('df_ventas[\'Precio Unitario\'] = df_ventas[\'CantidPrecio Unitarioad\'].fillna(mediana) ')
-        #mediana = df_ventas['Precio Unitario'].median()
-        #df_ventas['Precio Unitario'] = df_ventas['Precio Unitario'].fillna(mediana)   
-
-        st.write('---')
-
-        st.write('##### Eliminar valores faltantes.')  
-        imagen = Image.open('Imagenes/pandas_43.png')
-        st.image(imagen, width=1481) 
-
-        st.write('---')
-
-        st.write('##### Eliminar columna')  
-        imagen = Image.open('Imagenes/pandas_44.png')
-        st.image(imagen, width=1481) 
-
-        st.write('---')
-
-        st.write('##### Eliminar fila')  
-        imagen = Image.open('Imagenes/pandas_45.png')
-        st.image(imagen, width=1479) 
-
-        st.write('##### Eliminar filas duplicadas')  
-        imagen = Image.open('Imagenes/pandas_46.png')
-        st.image(imagen, width=1479) 
-
-        st.write('---')
+                st.code('''datos = {'total_bill':'Total Facturas', 'tip':'Propina'}
+df_tips.rename(columns=datos, inplace=True)''')
         
-        st.write('##### Agrupación')  
-        imagen = Image.open('Imagenes/pandas_47.png')
-        st.image(imagen, width=1479)         
-        imagen = Image.open('Imagenes/pandas_48.png')
-        st.image(imagen, width=1480)  
+                datos = {'total_bill':'Total Facturas', 'tip':'Propina'}
+                df_tips.rename(columns=datos, inplace=True)
+                st.dataframe(df_tips.head())
         
         
-        st.write('---')
+                st.divider()
+                st.write('##### Cargar datos desde un archivos xls')
+
+                st.code('''df_temp = pd.read_excel('DataFrames/Temperaturas.xlsx', sheet_name='Sheet1')
+df_temp''')
         
-        st.write('##### Ordenar')          
-        imagen = Image.open('Imagenes/pandas_49.png')
-        st.image(imagen, width=1479)          
-        imagen = Image.open('Imagenes/pandas_50.png')
-        st.image(imagen, width=1479)  
+                df_temp = pd.read_excel('DataFrames/Temperaturas.xlsx', sheet_name='Sheet1')
+                st.dataframe(df_temp.head(10))
+                
+                
+                st.divider()
+                st.write('##### Cargar un archivo txt dese una url')
 
-        
-    if opcion_seleccionada == 'Conversión de Tipos':   
-        imagen = Image.open('Imagenes/pandas_29.png')
-        st.image(imagen, width=1478)           
-        
-        st.write('##### Convertir a tipo numerico')     
-        imagen = Image.open('Imagenes/pandas_30.png')
-        st.image(imagen, width=1482) 
-
-        st.write('##### Convertir variables categoricas a binarias')
-        st.write('''**getdummies()**: se utiliza para convertir variables categóricas en variables ficticias o binarias (con valores de 0 o 1).   
-        Este proceso, también conocido como codificación one-hot, es fundamental para preparar datos para algoritmos de aprendizaje automático que requieren entradas numéricas.    
-        La función crea nuevas columnas para cada categoría única en la variable original, indicando la presencia (1) o ausencia (0) de esa categoría en cada fila''')
-
-        st.write('**drop_first**=True: elimina la primera categoría para evitar la multicolinealidad')
-        
-        st.code('df_ventas = pd.get_dummies(df_ventas[\'Meses\'], dtype=int, drop_first=True)')
-        df_ventas = pd.get_dummies(df_ventas['Meses'], dtype=int, drop_first=True)
-        st.dataframe(df_ventas.head(10))
-
-
-        st.write('##### Convertir a tipo fecha')     
-        imagen = Image.open('Imagenes/pandas_31.png')
-        st.image(imagen, width=1476) 
-
-        st.write('##### Obtener años/mes/dia de un campo DateTime')   
-        imagen = Image.open('Imagenes/pandas_32.png')
-        st.image(imagen, width=1478) 
+                st.code('''url = 'https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt'
+df_diabetes = pd.readcsv(url, sep='\ t')''')
+                
+                url = 'https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt'
+                df_diabetes = pd.read_csv(url, sep='\t')
+                st.dataframe(df_diabetes.head(10))        
         
         
-        st.write('##### Obtener tupla con las columnas de un tipo determinado')
-        imagen = Image.open('Imagenes/pandas_55.png')
-        st.image(imagen, width=1479)        
-        
-        st.write('---')
+                st.divider()
+
+                st.write('##### Acceder a columnas y filas') 
+
+                st.code('''df_ventas = pd.read_excel('DataFrames/Ventas.csv', sep=';')
+df_ventas''')
+                
+                df_ventas = pd.read_csv('DataFrames/Ventas.csv', sep=';')
+                st.dataframe(df_ventas.head(20))
+                        
 
 
-    if opcion_seleccionada == 'Fusionar, Combinar y Concatenar Data Frames': 
-        st.write('''
-            **merge():** fusiona dos DataFarmes basandose en valores comunes de una o mas columnas.  
-        ''') 
-        imagen = Image.open('Imagenes/pandas_34.png')
-        st.image(imagen, width=1476) 
-        imagen = Image.open('Imagenes/pandas_35.png')
-        st.image(imagen, width=1474) 
-        st.write('---')
-        
-        st.write('''
-            **join():**: permite unir dos DataFrames a partir de un indice o una columna clave .  
-        ''') 
-        imagen = Image.open('Imagenes/pandas_36.png')
-        st.image(imagen, width=1475) 
-        st.write('---')
-        
-        st.write('''
-            **concat():**: permite unir dos DataFrames a partir de un eje (vertical o horizontal) .  
-        ''')         
-        imagen = Image.open('Imagenes/pandas_37.png')
-        st.image(imagen, width=1477)       
-        imagen = Image.open('Imagenes/pandas_38.png')
-        st.image(imagen, width=1480)            
-
-    if opcion_seleccionada == 'Respaldos':    
-        imagen = Image.open('Imagenes/pandas_53.png')
-        st.image(imagen, width=1481)
-        st.write('---')   
-
-    if opcion_seleccionada == 'Reporte ydata-profiling':    
-        
-        st.code('''
-import ydata_profiling as prof
-from IPython.display import HTML
-
-profile = prof.ProfileReport(df_ventas, title='Reporte')
-profile.to_file('output.html')
-
-try:
-    with open("./output.html", "r", encoding="utf-8") as file:
-        html_content = file.read()
-except FileNotFoundError:
-    st.error("El archivo HTML no fue encontrado.")
-    html_content = ""
-
-if html_content:
-    st.components.v1.html(html_content, height=11100) # Puedes ajustar la altura
+                st.write('**Acceder a una columna**')
+                
+                
+                st.code('''Venta_Motos = df_ventas[['Total Venta Motorcycles']]
+Venta_Motos.head()''')
+                
+                Venta_Motos = df_ventas[['Total Venta Motorcycles']]
+                st.dataframe(Venta_Motos.head())
+                
+                st.write('''**Acceder por el metodo loc**      
+Se utiliza para seleccionar datos de un DataFrame utilizando etiquetas (nombres) de fila y columna''')
+                
+                
+                st.code('''# Acceder a una fila especifica
+fila_3 = df_ventas.loc[[3]]
+fila_3''')
+                
+                fila_3 = df_ventas.loc[[3]]
+                fila_3
+                
+                st.code('''# Acceder a  mas de una fila (pasando una lista)
+filas = df_ventas.loc[[2,5,8]]
+filas''')        
+                filas = df_ventas.loc[[2,5,8]]
+                filas
      
-''')
+           
+                st.code('''# Acceder a  filas segun una condicion
+filtro = df_ventas['Total Venta Classic Cars'] > 200000
+autos = df_ventas.loc[filtro]
+autos''')                   
+                
+                filtro = df_ventas['Total Venta Classic Cars'] > 200000
+                autos = df_ventas.loc[filtro]
+                autos 
+                
+                st.code('''# Acceder a un rango de filas y columnas especificas
+columnas = df_ventas.loc[2:5, ['Total Venta Planes','Total Venta Ships']]
+columnas''')                   
+                        
+                columnas = df_ventas.loc[2:5, ['Total Venta Planes','Total Venta Ships']]
+                columnas           
         
-        import ydata_profiling as prof
-        from IPython.display import HTML
+                st.divider()
+           
+                st.write('''**Acceder por el metodo iloc**      
+Permite seleccionar los datos en un DataFrame utilizando posiciones enteras ''')
 
-        profile = prof.ProfileReport(df_ventas, title='Reporte')
-        profile.to_file('output.html')
+        
+                st.code('''# # Acceder a las 3 primeras filas y a las columnas con indice 2 y 6
+datos = df_ventas.iloc[:3, [3,5]]
+datos''')   
+        
+        
+                datos = df_ventas.iloc[:3, [3,5]]
+                datos
+        
+                st.divider()
+                
+                
+                st.write('##### Transponer un DataFrame')      
+        
+                st.code('''df_ventas_t = df_ventas.T
+df_ventas_t''')   
+  
+                df_ventas_t = df_ventas.T
+                st.dataframe(df_ventas_t)
+                
+                
+                st.divider()
+
+
+                st.write('**value_counts()**: obtiene la cantidad de una variable agrupada por categoría')              
+        
+        
+                df_tips = pd.read_csv('DataFrames/tips.csv')
+                st.dataframe(df_tips.head(10))
+        
+       
+                st.code('''df_tips[\'day\'].value_counts()
+dias''')       
+        
+                dias = df_tips['day'].value_counts()
+                dias
+
+                st.code('''df_tips[\'sex\'].value_counts()
+sex''')   
+                sexo = df_tips['sex'].value_counts()
+                sexo
+
+                st.code('''df_tips[\'time\'].value_counts()
+time''')   
+                time = df_tips['time'].value_counts()
+                time
+
+
+                st.divider()
+        
+                df_tips.columns = ['Total Factura','Propina','Sexo','Fumador','Dia','Horario','Nro Clientes']
+                
+                st.write('##### Reemplazar valores') 
+                st.write('''**replace()**: permite reemplazar los valores por otra etiqueta o crear una nueva columna en base a los valores de la otra columna.
+No altera valores no especificados en el diccionario.''')
+
+                st.code('''dia = {'Sat':'Sabado', 'Sun':'Domingo', 'Thur':'Jueves', 'Fri':'Viernes'
+df_tips['Dia'].replace(dia, inplace=True)}''')
+
+
+                dia = {'Sat':'Sabado', 'Sun':'Domingo', 'Thur':'Jueves', 'Fri':'Viernes'}
+                df_tips['Dia'].replace(dia, inplace=True)
+
+                st.code('''sexo = {'Female':'Mujer', 'Male':'Hombre'}
+df_tips['Sexo''].replace(sexo, inplace=True)}''')
+
+                sexo = {'Female':'Mujer', 'Male':'Hombre'}
+                df_tips['Sexo'].replace(sexo, inplace=True)
+                
+                st.code('''horario = {'Dinner':'Cena', 'Lunch':'Almuerzo'}
+df_tips['Horario''].replace(horario, inplace=True)}''')        
+                
+                horario = {'Dinner':'Cena', 'Lunch':'Almuerzo'}
+                df_tips['Horario'].replace(horario, inplace=True)
+        
+                st.dataframe(df_tips.head(10))        
+                
+                st.divider()        
+                st.write('''**map()**: permite substituir cada valor de una columna por otro valor basandose en un diccionario, una funcion u otra columna.
+Si un valor no esta en el diccionario lo convierte en NaN''')
+
+                st.code('''datos = {3:'Tres', 4:'Cuatro'}
+df_tips['Clientes_G'] = df_tips['Nro Clientes'].map(datos)
+df_tips''')
+
+                datos  = {3:'Tres', 4:'Cuatro'}
+
+                df_tips['Clientes_G'] = df_tips['Nro Clientes'].map(datos)
+                st.dataframe(df_tips.head(20))
+        
+
+
+                st.divider()
+
+        
+                st.write('''**apply()**: Es una herramienta de propósito general para aplicar una función a lo largo de un eje (filas o columnas) de un DataFrame o a cada elemento de una Serie.
+Se utiliza para realizar transformaciones, cálculos y lógica condicional compleja, siendo una alternativa más eficiente y limpia que los bucles.
+Para usarlo, se le pasa la función a aplicar, y el parámetro axis determina si se aplica a las columnas (0) o a las filas (1)''')
+                
+                st.code('''def categorizar(fila):
+        if fila['Nro Clientes'] > 2:
+                return 'Familia'
+        else:
+                return 'Pareja'
+                
+df_tips['Tipo Clientes'] = df_tips.apply(categorizar, axis=1)
+df_tips''')
+                
+                
+                def categorizar(fila):
+                        if fila['Nro Clientes'] > 2:
+                                return 'Familia'
+                        else:
+                                return 'Pareja'
+
+                df_tips['Tipo Clientes'] = df_tips.apply(categorizar, axis=1)
+                
+                st.dataframe(df_tips.head(10))
+        
+       
+        
+                st.divider()
+                st.write('##### Filtrado de datos')     
+
+                st.code('''filtro = df_tips['Dia'] == 'Sabado'
+df_tips_sabado = df_tips[filtro]               
+df_tips_sabado.head()''')
+
+                filtro = df_tips['Dia'] == 'Sabado'
+                df_tips_sabado = df_tips[filtro]
+                st.dataframe(df_tips_sabado.head(10))
+
+
+                st.write('**Multiples coniciones: & (and), | (or), ~ (not)**')  
+                
+                st.code('''filtro = (df_tips['Dia'] == 'Jueves') | (df_tips['Dia'] == 'Viernes')
+df_tips_jv = df_tips[filtro]                
+df_tips_jv.head()''')
+        
+                filtro = (df_tips['Dia'] == 'Jueves') | (df_tips['Dia'] == 'Viernes')
+                df_tips_jv = df_tips[filtro]
+                st.dataframe(df_tips_jv.head(10))
+        
+        
+                # Otra forma
+                st.write('Otra forma de filtrado')
+        
+                st.code('''filtro = df_tips['Dia'].isin(['Jueves','Viernes'])
+df_tips_jv = df_tips[filtro]
+df_tips_jv.head()''')
+                
+                filtro = df_tips['Dia'].isin(['Jueves','Viernes'])
+                df_tips_jv = df_tips[filtro]
+                st.dataframe(df_tips_jv.head(10))
+                
+
+                st.divider()
+                st.write('##### Reemplazar valores nulos.')  
+        
+                df_ventas = pd.read_csv('DataFrames/Ventas.csv', sep=';')
+                st.dataframe(df_ventas.head(10))     
+
+                
+                st.write('''**fillna()**: remplaza los valores NaN por otro valor.''') 
+                
+                st.code('''df_ventas['Total Venta Planes'] = df_ventas['Total Venta Planes'].fillna(0)''')
+                
+                df_ventas['Total Venta Planes'] = df_ventas['Total Venta Planes'].fillna(0)
+                
+        
+        
+                st.code('''mediana = df_ventas['Total Venta Trains'].median()
+df_ventas['Total Venta Trains'] = df_ventas['Total Venta Trains'].fillna(mediana)''')
+                
+                mediana = df_ventas['Total Venta Trains'].median()
+                df_ventas['Total Venta Trains'] = df_ventas['Total Venta Trains'].fillna(mediana)
+                
+                st.dataframe(df_ventas.head(10))
+
+                st.divider()
+                st.write('##### dropna(): Eliminar valores faltantes.') 
+                
+                st.code('''# Se eliminan las filas que tengan algun valor NaN
+df_ventas.dropna()''')
+                df_ventas.dropna()
+
+                st.code('''# Se eliminan las filas que tengan minimo 2 valores NaN
+df_ventas.dropna(thresh=2)''')        
+                df_ventas.dropna(thresh=2)
+                
+                st.code('''# Las columnas que contengan al menos algun valor NaN
+df_ventas.dropna(axis=1)''')                
+                df_ventas.dropna(axis=1)
+        
+        
+
+
+                st.divider()
+                st.write('##### Eliminar columna')  
+                
+                st.write('**drop()**: elimina una columna del DataFrame, para eliminar mas de una columna se pasa una lista como parametro.')
+                
+                st.code('''df_ventas.drop('Total Venta Vintage Cars', axis=1, inplace=True)
+df_ventas.head()''')
+                
+                df_ventas.drop('Total Venta Vintage Cars', axis=1, inplace=True)
+                st.dataframe(df_ventas.head(10))
+                
+                st.divider()
+                st.write('##### Eliminar fila')
+                
+                
+                st.code('''df_ventas.drop(3, axis=0, inplace=True)
+df_ventas.head()''')        
+                df_ventas.drop(3, axis=0, inplace=True)                
+                st.dataframe(df_ventas.head(10))
+                
+                st.divider()
+                st.write('##### Eliminar filas duplicadas')  
+                
+                st.code('''df_ventas.drop_duplicates(subset='Total Venta Classic Cars')''')
+                df_ventas.drop_duplicates(subset='Total Venta Classic Cars')
+        
+        
+                st.divider()
+                
+                
+
+                
+                
+                st.write('##### Agrupación')  
+                
+                df_tips = pd.read_csv('DataFrames/tips.csv')
+                st.dataframe(df_tips.head(10))
+                
+                st.code('''# Agrupacion por dia mostrando la cantidad.
+group_day = df_tips.groupby('day')['total_bill'].count()                
+group_day''')
+                
+                group_day = df_tips.groupby('day')['total_bill'].count()
+                group_day
+                
+                
+                st.code('''# Agrupacion por dia mostrando la cantidad utilizando la funcion size (toma en cuenta los valores NaN).
+group_day_size = df_tips.groupby('day').size()                
+group_day_size''')                
+                group_day_size = df_tips.groupby('day').size()
+                group_day_size
+                
+                
+                st.code('''# Agrupacion por dia mostrando la media de total_bill.
+group_day = df_tips.groupby('day')['total_bill'].mean()                
+group_day''')
+                
+                group_day = df_tips.groupby('day')['total_bill'].mean()
+                group_day     
+        
+        
+                st.code('''# Agrupacion por dia mostrando media, mediana, desviacion standard
+group_day = df_tips.groupby('day')['total_bill'].agg(['mean','median','std'])              
+group_day''')
+        
+                group_day = df_tips.groupby('day')['total_bill'].agg(['mean','median','std'])
+                group_day           
+
+                
+                st.divider()
+                
+                st.write('##### Ordenar') 
+                
+                st.code('''# sort_values(): ordena una DataFrame por una columna de menor a mayor.
+df_tips_orden = df_tips.sort_values(by='total_bill')               
+df_tips_orden.head()''')
+                
+                df_tips_orden = df_tips.sort_values(by='total_bill')
+                st.dataframe(df_tips_orden.head(10))
+                
+                st.code('''# Orden descendente
+df_tips_orden = df_tips.sort_values(by='total_bill', ascending=False)               
+df_tips_orden.head()''')        
+                
+                df_tips_orden = df_tips.sort_values(by='total_bill', ascending=False)
+                st.dataframe(df_tips_orden.head(10))        
+        
     
-        try:
-            with open("./output.html", "r", encoding="utf-8") as file:
-                html_content = file.read()
-        except FileNotFoundError:
-            st.error("El archivo HTML no fue encontrado.")
-            html_content = ""
+                st.code('''# Orden por mas de una columna
+df_tips_orden = df_tips.sort_values(by=['size','total_bill'], ascending=[False, False])              
+df_tips_orden.head()''')           
+                
+                df_tips_orden = df_tips.sort_values(by=['size','total_bill'], ascending=[False, False])
+                st.dataframe(df_tips_orden.head(10))      
+        
+        
+ 
+        
+        if opcion_seleccionada == 'Conversión de Tipos':  
+                
+                st.code('''df_tips = pd.read_csv('DataFrames/tips.csv')
+df_tips.head()''')
+        
+                df_tips = pd.read_csv('DataFrames/tips.csv')
+                st.dataframe(df_tips.head(10))            
+            
+            
+                st.divider()
+                st.write('##### Devolver Tipo de Dato')   
+                st.write('**dtype()**: devuelve el tipo de dato.')
+                        
+                st.code('''df_tips['sex'].dtype''')
+                df_tips['sex'].dtype
+                
+                st.code('''df_tips['time'].dtype''')
+                df_tips['time'].dtype                
+                
+                st.code('''df_tips['total_bill'].dtype''')
+                df_tips['total_bill'].dtype               
+            
+                st.write('**dtypes()**: devuelve el tipo de dato de todos los campos.')
+                st.code('''data_types = df_tips.dtypes
+data_types''')
+                data_types = df_tips.dtypes
+                data_types
+             
+             
+                st.write('##### Seleccionar columnas con el tipo de dato indicado')   
+                st.write('**select_dtypes()**: seleccion por tipo de datos.')             
+                
+                st.code('''df_tips_numericos = df_tips.select_dtypes(include=['float64','int64'])
+df_tips_numericos.head()''')        
+
+                df_tips_numericos = df_tips.select_dtypes(include=['float64','int64'])
+                st.dataframe(df_tips_numericos.head(10))
+             
+             
+                st.divider()
+                
+                st.write('##### Convertir a tipo numerico')  
+                st.write('''**to_numeric()**: convierte un valor de tipo object a numerico (por defecto float).         
+errores='coerce': si encuentra un valor que no puede convertir a numero, lo reemplaza con un NaN.''') 
+                
+                
+                st.code('''df_tips['columna'] = pd.to_numeric(df_tips['columna'], errors='coerce').astype('Int64')''')
+                  
+                
+                st.write('''**astype()**: convierte un valor de tipo object a entero (int).''')                
+                st.code('''df_tips['columna'] = df_tips['columna'].astype(int)''')
+                
+                   
+                st.divider()
+
+                st.write('##### Convertir variables categoricas a binarias')
+                st.write('''**getdummies()**: se utiliza para convertir variables categóricas en variables ficticias o binarias (con valores de 0 o 1).   
+                Este proceso, también conocido como codificación one-hot, es fundamental para preparar datos para algoritmos de aprendizaje automático que requieren entradas numéricas.    
+                La función crea nuevas columnas para cada categoría única en la variable original, indicando la presencia (1) o ausencia (0) de esa categoría en cada fila''')
+
+                st.write('**drop_first**=True: elimina la primera categoría para evitar la multicolinealidad')
+                
+                
+                df_tips = pd.read_csv('DataFrames/tips.csv')
+                
+                st.code('''df_tips['sex'] = pd.get_dummies(df_tips['sex'], dtype=int, drop_first=True)
+df_tips['smoker'] = pd.get_dummies(df_tips['smoker'], dtype=int, drop_first=True)                        
+df_tips['time'] = pd.get_dummies(df_tips['time'], dtype=int, drop_first=True)''')
+                
+                df_tips['sex'] = pd.get_dummies(df_tips['sex'], dtype=int, drop_first=True)
+                df_tips['smoker'] = pd.get_dummies(df_tips['smoker'], dtype=int, drop_first=True)
+                df_tips['time'] = pd.get_dummies(df_tips['time'], dtype=int, drop_first=True)
+                
+                st.dataframe(df_tips.head(10))
+                
+                st.divider()
+                st.write('##### Convertir a tipo fecha') 
+                
+                st.write('**to_datetime()**: convierte valores de una columna tipo object a un tipo de dato DateTime')
+                st.code('''df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce')''')
+                
+                
+                st.divider()   
+
+                st.write('##### Obtener años/mes/dia de un campo DateTime')  
+                
+                st.code('''df['Anio'] = df['Fecha'].dt.year
+df['Mes'] = df['Mes'].dt.month                        
+df['Dia'] = df['Dia'].dt.day''')
+
+                 
+                st.write('**Dia de la semana en numero**')
+                st.code('''df['dia_semana'] = df['Fecha'].dt.day_of_week''')
+                
+  
+
+        if opcion_seleccionada == 'Fusionar, Combinar y Concatenar Data Frames': 
+                st.write('''
+                **merge():** fusiona dos DataFarmes basandose en valores comunes de una o mas columnas.  
+                ''') 
+                
+                st.code('''datos_1 = {'Id':[1,2,3], 'Nombre':['Ana','Luis','Carlos']}
+datos_2 = {'Id':[1,2,4],'Edad':[25,30,22]}''')
+                
+                datos_1 = {'Id':[1,2,3], 'Nombre':['Ana','Luis','Carlos']}
+                datos_2 = {'Id':[1,2,4],'Edad':[25,30,22]}
+                
+                
+                st.code('''df1 = pd.DataFrame(datos_1)
+df1''')
+                
+                df1 = pd.DataFrame(datos_1)
+                df1
+                
+                st.code('''df2 = pd.DataFrame(datos_2)
+df2''')                
+                
+                df2 = pd.DataFrame(datos_2)
+                df2
 
 
-        if html_content:
-            st.components.v1.html(html_content, height=7500) 
 
+                st.write('inner: se genera unicamente con los datos que coinciden en ambos DataFrame.')
+                
+                st.code('''df_combinado = pd.merge(df1, df2, on='Id')
+df_combinado''')                
+                
+                df_combinado = pd.merge(df1, df2, on='Id')
+                df_combinado
+                
+  
+                st.write('outer: combina todas las filas agregando None donde no encuentren los resultados.')
+                st.code('''df_combinado = pd.merge(df1, df2, on='Id', how='outer')
+df_combinado''')                    
+                
+                df_combinado = pd.merge(df1, df2, on='Id', how='outer')
+                df_combinado  
+                
+                st.divider()
+                st.write('''**join():**: permite unir dos DataFrames a partir de un indice o una columna clave .  
+                ''') 
+                
+                st.code('''datos_1 = {'Salario':[30000,45000,38000], 'Antiguedad':[9,13,12]}
+datos_2 = {'Ciudad':['Madrid', 'Barcelona', 'Valencia'], 'Jerarquia':['Baja','Media','Alta']}''')                
+                
+                datos_1 = {'Salario':[30000,45000,38000], 'Antiguedad':[9,13,12]}
+                datos_2 = {'Ciudad':['Madrid', 'Barcelona', 'Valencia'], 'Jerarquia':['Baja','Media','Alta']}
+                
+                st.code('''df1 = pd.DataFrame(datos_1, index=[1,2,3])
+df1''')
+                
+                df1 = pd.DataFrame(datos_1, index=[1,2,3])
+                df1
+                
+                st.code('''df2 = pd.DataFrame(datos_2, index=[1,2,4])
+df1''')
+                df2 = pd.DataFrame(datos_2, index=[1,2,4])
+                df2
+                
+                st.write('Por defecto join tiene el parametro how = left')
+                
+                st.code('''df_unido = df1.join(df2)
+df_unido''')                
+                df_unido = df1.join(df2)
+                df_unido
+                
+                
+                st.divider()
+                
+                st.write('''
+                **concat():**: permite unir dos DataFrames a partir de un eje (vertical o horizontal) .  
+                ''')         
+                
+                st.code('''datos_1 = {'Nombre':['Juan','Gabrieal','Elena']}
+datos_2 = {'Nombre':['Carmela','Max','Laura']}''')                            
+                
+                datos_1 = {'Nombre':['Juan','Gabrieal','Elena']}
+                datos_2 = {'Nombre':['Carmela','Max','Laura']}
+                
+                
+                st.code('''df1 = pd.DataFrame(datos_1)
+df1''')                 
+                df1 = pd.DataFrame(datos_1)
+                df1
+                
+                
+                st.code('''df2 = pd.DataFrame(datos_2)
+df2''')                     
+                df2 = pd.DataFrame(datos_2)
+                df2
+                
+                st.write('''Por defecto el concat es vertical, para que sea horizontal debe tener el parametro axis = 1.
+keys: permite identificar a que DataFrame pertenece cada indice.        
+ignore_index: si es True el indice del 2do DataFrame continua al del indice del DataFrame 1.''')
+                
+                st.code('''df_concatenado = pd.concat([df1, df2], keys=['df1', 'df2'])
+df_concatenado''')                      
+                
+                df_concatenado = pd.concat([df1, df2], keys=['df1', 'df2'])
+                df_concatenado
+                
+                
+                st.code('''df_contatenado_h = pd.concat([df1, df2],keys=['df1', 'df2'], axis=1)
+df_contatenado_h''')                 
+                df_contatenado_h = pd.concat([df1, df2],keys=['df1', 'df2'], axis=1)
+                df_contatenado_h
+         
+
+        if opcion_seleccionada == 'Respaldos':   
+                
+                st.code('''df_tips = pd.read_csv('DataFrames/tips.csv')''')
+                df_tips = pd.read_csv('DataFrames/tips.csv')
+                
+                st.write('**copy()**: permite crear una copia independiente del DataFrame original guardandola en una nueva variable.')
+                st.code('''df_backup = df_tips.copy()''')
+                df_backup = df_tips.copy()
+                
+                
+                st.write('**to_csv()**: permite exportar un DataFrame en formaro csv, usando comas como separador y sin incluir el indice del DataFrame en el archivo.')
+                st.code('''def descargar_df_csv(dataframe, nombre_archivo):
+        dataframe.to_csv(nombre_archivo, index=False)''')
+                
+                def descargar_df_csv(dataframe, nombre_archivo):
+                        dataframe.to_csv(nombre_archivo, index=False)
+                        
+                st.write('Exportar fichero')
+                st.code('''descargar_df_csv(df_backup, 'DataFrames/tips_bkp.csv')''')
+                descargar_df_csv(df_backup, 'DataFrames/tips_bkp.csv')
+                 
+
+ 
+ 
+ 
+ 
+ 
 
 def matplotlib():
 
-    opciones_plt = ['plot','scatter','hist','bar','boxplot','pie']
+        opciones_plt = ['plot','scatter','hist','bar','boxplot','pie']
     
-    # Carga de Datos
-    df = pd.read_csv('DataFrames/tips.csv')
+        # Carga de Datos
+        df = pd.read_csv('DataFrames/tips.csv')
     
-    col1, col2 = st.columns([2,2])
+        col1, col2 = st.columns([2,2])
     
-    with col1:
-        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_plt)
-        st.success(f'##### **{opcion_seleccionada}** ')
+        with col1:
+                opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_plt)
+                st.success(f'##### **{opcion_seleccionada}** ')
+      
     
-    if opcion_seleccionada == 'plot':
-        st.write('Función que genera gráficos de línea')
+        if opcion_seleccionada == 'plot':
+                st.write('''Matplotlib grafica sus datos en Figuras, cada una de las cuales puede contener uno mas Ejes, una area donde los puntos se pueden especificar en terminos de coordenadas x-y.        
+La forma mas sencilla de crear una figura con ejes es utilizar pyplot.subplots()''')                
+
+                st.write('Función que genera gráficos de línea')
         
-        codigo = '''import matplotlib.pyplot as plt
-tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
-tips.head()'''
-        st.code(codigo)
-        st.dataframe(df.head())
 
-
-        codigo = '''x = np.linspace(0,5,11)     
+                codigo = '''x = np.linspace(0,5,11)     
 y = x**2
 z = x**3'''     
-        st.code(codigo)
+                st.code(codigo)
         
         
-        x = np.linspace(0,5,11)
-        y = x**2
-        z = x**3
+                x = np.linspace(0,5,11)
+                y = x**2
+                z = x**3
         
-        st.write('##### Parámetros')
+                st.write('##### Parámetros')
         
-        st.write('''
+                st.write('''
         * figsize -> (ancho, alto)          
         * label -> determina el nombre de la etiqueta     
         * color -> color del grafico (nombre o codigo hexadecimal)    
@@ -6296,7 +7250,8 @@ z = x**3'''
         * xlabel -> etiqueta eje x
         * ylabel -> etiqueta eje y''')
         
-        codigo = '''fig,ax = plt.subplots(figsize=(6,6))
+        
+                codigo = '''fig,ax = plt.subplots(figsize=(6,6))            
 ax.plot(x,y,label='X Square', color='blue', linewidth=3, linestyle='--')
 ax.plot(x,z,label='X Cubed', color='#ff8c00', linewidth=.8, marker='s', markersize=7, markerfacecolor='yellow', markeredgewidth=1, markeredgecolor='green')
 ax.legend(loc=0)
@@ -6306,171 +7261,295 @@ plt.xlabel("Eje X")
 plt.ylabel("Eje Y")
 
 st.pyplot(fig)'''
-        st.code(codigo)
+                st.code(codigo)
         
         
-        # plot
-        with st.container(width=800):
-            fig,ax = plt.subplots(figsize=(6,6))
-            
-            ax.plot(x,y,label='X Square', color='blue', linewidth=3, linestyle='--')  
-            ax.plot(x,z,label='X Cubed', color='#ff8c00', linewidth=.8, marker='s', markersize=7, markerfacecolor='yellow', markeredgewidth=1, markeredgecolor='green')
-            ax.legend(loc=0)
-            
-            plt.title('Grafico de lineas')
-            plt.xlabel("Eje X")
-            plt.ylabel("Eje Y")
-            
-            st.pyplot(fig)   
+                # plot
+                with st.container(width=800):
+                        fig,ax = plt.subplots(figsize=(6,6))
+                
+                        ax.plot(x,y,label='X Square', color='blue', linewidth=3, linestyle='--')  
+                        ax.plot(x,z,label='X Cubed', color='#ff8c00', linewidth=.8, marker='s', markersize=7, markerfacecolor='yellow', markeredgewidth=1, markeredgecolor='green')
+                        ax.legend(loc=0)
+                
+                        plt.title('Grafico de lineas')
+                        plt.xlabel("Eje X")
+                        plt.ylabel("Eje Y")
+                
+                        st.pyplot(fig)   
 
-
-    if opcion_seleccionada == 'scatter':
-        st.write('Función que se usa para crear diagramas de dispersión, que son gráficos que muestran la relación entre dos variables numéricas utilizando puntos en un plano cartesiano')
         
-        codigo = '''import matplotlib.pyplot as plt
+        
+                codigo = '''years = [1950,1960,1970,1980,1990,2000,2010]
+gdp = [300.2,543.3,1075.9,2862.5,5979.6,10289.7,10958.3] 
+
+fig,ax = plt.subplots(figsize=(6,6))
+ax.plot(years, gdp, color='green', marker='o', linestyle='solid')
+
+plt.title('Nominal GDP')
+plt.ylabel('Millions U$S')  
+
+st.pyplot(fig)'''
+                st.code(codigo)
+
+                with st.container(width=800):
+                        years = [1950,1960,1970,1980,1990,2000,2010]
+                        gdp = [300.2,543.3,1075.9,2862.5,5979.6,10289.7,10958.3]        
+                        
+                        fig,ax = plt.subplots(figsize=(6,6))
+                        ax.plot(years, gdp, color='green', marker='o', linestyle='solid')
+                        plt.title('Nominal GDP')
+                        plt.ylabel('Millions U$S')  
+                        
+                        st.pyplot(fig)     
+                
+                
+        if opcion_seleccionada == 'scatter':
+                st.write('Función que se usa para crear diagramas de dispersión, que son gráficos que muestran la relación entre dos variables numéricas utilizando puntos en un plano cartesiano')
+        
+                codigo = '''import matplotlib.pyplot as plt
 tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
 tips.head()'''
-        st.code(codigo)
-        st.dataframe(df.head())
+                st.code(codigo)
+                st.dataframe(df.head())
 
-        st.write('##### Parámetros')
-        st.write('''
+                st.write('##### Parámetros')
+                st.write('''
         * set_title -> Titulo del grafico          
         * st_xlabel -> Label eje x
         * st_ylabel -> Label eje y
+        * s -> tamaño del marker
+        * c -> color del marker
+        * marker -> o (circulos), ^ (triangulos), * (estrellas)
+        * alpha -> transparencia (0 a 1)
+        * cmap -> colormap (viridis, plasma)
         ''')
 
-        codigo = '''fig,ax = plt.subplots()   
-ax.scatter(x=df['total_bill'], y=df['tip'], color='#ff8c00')
+                codigo = '''fig,ax = plt.subplots()   
+ax.scatter(x=df['total_bill'], y=df['tip'], c='#ff8c00', s=5, alpha=.5)
 ax.set_title('Diagrama de Dispersión (Total de la Cuenta vs Propina)')
 ax.set_xlabel('Total de la cuenta')
 ax.set_ylabel('Propina')
 
 st.pyplot(fig)'''     
-        st.code(codigo)
+                st.code(codigo)
 
-        # scatter
-        with st.container(width=800):
-            fig,ax = plt.subplots()
+                # scatter
+                with st.container(width=700):
+                        fig,ax = plt.subplots()
 
-            ax.scatter(x=df['total_bill'], y=df['tip'], color='#ff8c00')
-            ax.set_title('Diagrama de Dispersión (Total de la Cuenta vs Propina)')
-            ax.set_xlabel('Total de la cuenta')
-            ax.set_ylabel('Propina')
-            st.pyplot(fig)
+                        ax.scatter(x=df['total_bill'], y=df['tip'], c='#ff8c00', s=5, alpha=.5)
+                        ax.set_title('Diagrama de Dispersión (Total de la Cuenta vs Propina)')
+                        ax.set_xlabel('Total de la cuenta')
+                        ax.set_ylabel('Propina')
+                        st.pyplot(fig)
             
-    if opcion_seleccionada == 'hist':
-        st.write('Función para crear histogramas y visualizar la distribución de datos numéricos, agrupándolos en intervalos (bins) y mostrando la frecuencia de los valores en cada uno.')
-        
-        codigo = '''import matplotlib.pyplot as plt
+        if opcion_seleccionada == 'hist':
+                st.write('Función para crear histogramas y visualizar la distribución de datos numéricos, agrupándolos en intervalos (bins) y mostrando la frecuencia de los valores en cada uno.')
+                
+                codigo = '''import matplotlib.pyplot as plt
 tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
 tips.head()'''
-        st.code(codigo)
-        st.dataframe(df.head())
+                
+                st.code(codigo)
+                st.dataframe(df.head())
 
-        st.write('##### Parámetros')
-        st.write('''
-        * bins -> define el nro de columnas que se muestran en el grafico         
-        * edgecolor -> estable el color de los bordes de las barras.  
-        * color -> define el color de la barra   
-        * alpha -> determina la opacidad''')
+                st.write('##### Parámetros')
+                st.write('''
+                * bins -> define el nro de columnas que se muestran en el grafico.
+                * range -> tupla que define el rango inferior y superior de los contenedores (minimo, maximo). Los valores fuera de rango se ignoran. 
+                * density -> si es True, el histograma se normaliza para que el area total sea 1.         
+                * edgecolor -> establece el color de los bordes de las barras.  
+                * color -> define el color de la barra.
+                * histtype -> tipo histograma: bar (predeterminado), barstacked, step, stepfilled. 
+                * orientation -> orientacion de las barras: vertical o horizontal.   
+                * alpha -> determina la opacidad''')
+                
 
 
-        codigo = '''fig,ax = plt.subplots()   
+                codigo = '''fig,ax = plt.subplots()   
 ax.hist(x=df['total_bill'], bins=15, edgecolor='#000000', color='#8b92cc', alpha=.8)
 ax.set_title('Histograma (Distribución del Total de la Cuenta)')
 ax.set_xlabel('Total de la Cuenta')
 ax.set_ylabel('Frecuencia')
 
 st.pyplot(fig)'''     
-        st.code(codigo)
+                st.code(codigo)
 
-        # hist
-        with st.container(width=800):
-            fig,ax = plt.subplots()
+                # hist
+                with st.container(width=700):
+                        fig,ax = plt.subplots()
 
-            ax.hist(x=df['total_bill'], bins=15, edgecolor='#000000', color='#8b92cc', alpha=.8)
-            ax.set_title('Histograma (Distribución del Total de la Cuenta)')
-            ax.set_xlabel('Total de la Cuenta')
-            ax.set_ylabel('Frecuencia')
-            st.pyplot(fig)
+                        ax.hist(x=df['total_bill'], bins=15, edgecolor='#000000', color='#8b92cc', alpha=.8)
+                        ax.set_title('Histograma (Distribución del Total de la Cuenta)')
+                        ax.set_xlabel('Total de la Cuenta')
+                        ax.set_ylabel('Frecuencia')
+                        st.pyplot(fig)
             
-    if opcion_seleccionada == 'bar':
-        st.write('Función para crear gráficos de barra.')
-        
-        codigo = '''import matplotlib.pyplot as plt
+        if opcion_seleccionada == 'bar':
+                st.write('Función para crear gráficos de barra.')
+                
+                codigo = '''import matplotlib.pyplot as plt
 tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
 tips.head()'''
-        st.code(codigo)
-        st.dataframe(df.head())        
+                st.code(codigo)
+                st.dataframe(df.head())        
+                
+                st.write('##### Parámetros')
+                
+                st.write('''
+                * edgecolor -> color borde de la barra.
+                * height -> altura de la barra.        
+                * width -> ancho de la barra.  
+                * bottom -> coordenadas y donde inician las barras, valor predeterminado 0.
+                * align -> alineacion de la barra respecto a la coordenada x: center (centrado) o edge (borde izquierdo).
+                * xticks() -> determina las etiquetas en el eje x
+                * axis -> rango de valores en el eje x e y (inicio-fin)
+''')         
             
             
-        codigo = '''fig,ax = plt.subplots()   
+                codigo = '''fig,ax = plt.subplots()   
 ax.bar(df['day'],df['total_bill'])
 ax.set_title('Total de la Cuenta por día')
 ax.set_xlabel('Día')
 ax.set_ylabel('Total de la Cuenta')
 
 st.pyplot(fig)'''     
-        st.code(codigo)
+                st.code(codigo)
 
         
-        with st.container(width=800):
-            fig,ax = plt.subplots()
+                with st.container(width=700):
+                        fig,ax = plt.subplots()
 
-            ax.bar(df['day'],df['total_bill'])
-            ax.set_title('Total de la Cuenta por día')
-            ax.set_xlabel('Día')
-            ax.set_ylabel('Total de la Cuenta')
-            st.pyplot(fig)            
-            
-            
+                        ax.bar(df['day'],df['total_bill'])
+                        ax.set_title('Total de la Cuenta por día')
+                        ax.set_xlabel('Día')
+                        ax.set_ylabel('Total de la Cuenta')
+                        st.pyplot(fig)            
+        
+        
+                codigo = '''movies = ['Annie Hall','Ben-Hur','Casablanca','Gandhi','West Side Story']
+num_oscars = [5,11,3,8,10]        
+        
+fig,ax = plt.subplots()   
+ax.bar(movies, num_oscars,edgecolor='black',width=.5)
+plt.title('Oscars por pelicula')
+plt.ylabel('Nro de Premios')
+
+st.pyplot(fig)'''     
+                st.code(codigo)
+
+                movies = ['Annie Hall','Ben-Hur','Casablanca','Gandhi','West Side Story']
+                num_oscars = [5,11,3,8,10]
+                
+                with st.container(width=700):
+                        fig,ax = plt.subplots()
+
+                        ax.bar(movies, num_oscars,edgecolor='black',width=.5)
+                        ax.set_title('Oscars por pelicula')
+
+                        ax.set_ylabel('Nro de Premios')
+                        st.pyplot(fig)  
+        
+        
+                codigo = '''mentions = [500,505]
+years = [2017,2018]       
+        
+fig,ax = plt.subplots()   
+ax.bar(years, mentions)
+ax.set_xticks(years)
+ax.axis([2016.5,2018.5,499,506])
+
+st.pyplot(fig)'''     
+                st.code(codigo)
+
+                mentions = [500,505]
+                years = [2017,2018]
+                
+                with st.container(width=700):
+                        fig,ax = plt.subplots()
+
+                        ax.bar(years, mentions,width=.6)
+                        ax.set_xticks(years)
+                        ax.axis([2016.5,2018.5,499,506])
+                        st.pyplot(fig)  
+
  
-    if opcion_seleccionada == 'boxplot':
-        st.write('Función para crear diagramas de caja.')
-        
-        codigo = '''import matplotlib.pyplot as plt
+        if opcion_seleccionada == 'boxplot':
+                st.write('Función para crear diagramas de caja.')
+                
+                codigo = '''import matplotlib.pyplot as plt
 tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
 tips.head()'''
-        st.code(codigo)
-        st.dataframe(df.head())              
+                st.code(codigo)
+                st.dataframe(df.head())              
             
+                st.write('##### Parámetros')
+                
+                st.write('''
+                * notch -> crea una muesca si es True en la mediana para mostrar el intervalo de confianza.
+                * vert -> cambia la orientacion del grafico de vertical a horizontal, si es False.
+                * patch_artist -> rellena las cajas con color si es True.
+                * showmeans -> muestra la media aritmetica con un marcador adicional si es True.
+                * showfliers -> oculta los valores atipicos si es False.
+                * labels -> lista de strings para etiquetas de cada caja.       
+                * width -> ancho de la caja.  
+                * boxprops -> estilo de la caja (color de borde, relleno).
+                * medianprops -> estilo de la linea de la mediana.
+                * whiskerprops -> estilo de los bigotes (lineas).
+                * capprops -> estilo de los 'gorros' en los extremos de los bigotes.
+                * flierprops -> estilo de los valores atipicos (puntos). 
+''')         
+                   
  
  
-        codigo = '''fig,ax = plt.subplots()   
-ax.boxplot(df['total_bill'])
+                codigo = '''outlier_style = dict(marker='o', markerfacecolor='red', markersize=6, markeredgecolor='black')
+                
+fig,ax = plt.subplots()   
+ax.boxplot(df['total_bill'], showmeans=True, flierprops=outlier_style)
 ax.set_title('Total de la Cuenta por día')
 ax.set_ylabel('Total de la Cuenta')
 
 st.pyplot(fig)'''     
-        st.code(codigo)
+                st.code(codigo)
 
+                outlier_style = dict(marker='o', markerfacecolor='red', markersize=6, markeredgecolor='black')
         
-        with st.container(width=800):
-            fig,ax = plt.subplots()
+                with st.container(width=800):
+                        fig,ax = plt.subplots()
 
-            ax.boxplot(df['total_bill'])
-            ax.set_title('Total de la Cuenta por día')
-            ax.set_ylabel('Total de la Cuenta')
-            st.pyplot(fig)     
+                        ax.boxplot(df['total_bill'], showmeans=True, flierprops=outlier_style)
+                        ax.set_title('Total de la Cuenta por día')
+                        ax.set_ylabel('Total de la Cuenta')
+                        st.pyplot(fig)     
 
  
-    if opcion_seleccionada == 'pie':
-        st.write('Función para crear gráficos circulares.')
-        
-        codigo = '''import matplotlib.pyplot as plt
+        if opcion_seleccionada == 'pie':
+                st.write('Función para crear gráficos circulares.')
+                
+                codigo = '''import matplotlib.pyplot as plt
 tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
 tips.head()'''
-        st.code(codigo)
-        st.dataframe(df.head())  
+                st.code(codigo)
+                st.dataframe(df.head())  
+        
+                st.write('##### Parámetros')
+                st.write('''
+                * labels -> lista de las cadenas para etiquetar cada sector.
+                * explode -> lista que especifica la fraccion del radio con la que se desplaza cada segmento del centro.
+                * autopct -> cadena de formato para añadir porcentajes dentro de las cuñas.
+                * startangle -> angulo en grados que rota el inicio de la primera porcion desde el eje X.
+                * shadow -> valor booleano para añadir sombra bajo el grafico.
+                * radius -> radio del grafico (1 por defecto).
+                * labeldistance -> distancia radial a la que se dibujan las etiquetas.
+                * pctdistance -> relacion entre el centro y el inicio del texto generado por autopct.
+                * counterclock -> booleano para especificar la direccion horaria o antihoraria.
+                * wedgeprops -> diccionario para personalizar el estilo de las cuñas (borde, grosor).
+                * textprops -> diccionario para personalizar el estilo del texto (color, tamaño). 
+                * colors -> colores''') 
  
-        st.write('##### Parámetros')
-        st.write('''
-        * autopct -> de que forma se ve el valor del %          
-        * colors -> colores''') 
  
- 
-        codigo = '''colores = ['#87ceeb', '#6095']
+                codigo = '''colores = ['#87ceeb', '#6095']
 value = df['sex'].value_counts()       
 
 fig,ax = plt.subplots()   
@@ -6478,148 +7557,487 @@ ax.pie(value,labels=value.index,autopct='%0.2f%%')
 ax.set_title('Total de registros por sexo')
 
 st.pyplot(fig)'''     
-        st.code(codigo)
+                st.code(codigo)
 
         
-        with st.container(width=800):
-            colores = ['#87ceeb', '#6095ed']
-            fig,ax = plt.subplots()
-            value = df['sex'].value_counts()
-            
-            ax.pie(value,labels=value.index,autopct='%0.2f%%', colors=colores)
-            ax.set_title('Total de registros por sexo')
-            st.pyplot(fig)     
+                with st.container(width=800):
+                        colores = ['#87ceeb', '#6095ed']
+                        fig,ax = plt.subplots()
+                        value = df['sex'].value_counts()
+                        
+                        ax.pie(value,labels=value.index,autopct='%0.2f%%', colors=colores)
+                        ax.set_title('Total de registros por sexo')
+                        st.pyplot(fig)     
  
  
  
 def seaborn():
     
-    opciones_sns = ['displot','jointplot','pairplot','rugplot','kdeplot','barplot']
+        opciones_sns = ['relplot','scatterplot','lineplot','displot','histplot','kdeplot', 'boxplot','barplot','violinplot','catplot','heatmap','pairplot']
     
-    # Carga de Datos
-    df = pd.read_csv('DataFrames/tips.csv')
+        # Carga de Datos
+        df = pd.read_csv('DataFrames/tips.csv')
     
-    col1, col2 = st.columns([2,2])
+        col1, col2 = st.columns([2,2])
     
-    with col1:
-        opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_sns)
-        st.success(f'##### **{opcion_seleccionada}** ')
+        with col1:
+                opcion_seleccionada = st.selectbox('Seleccionar: ', opciones_sns)
+                st.success(f'##### **{opcion_seleccionada}** ')
     
-    if opcion_seleccionada == 'displot':
-        st.write('Gráfico que se utiliza para conjuntos de observaciones univariantes y los visualiza mediante un histograma.')
+    
+        if opcion_seleccionada == 'relplot':
+                st.write('Grafico relacional, se utiliza para comprender la relacion entre dos variables numericas.')    
+
+                st.code('''import seaborn as sns
+df = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+df.head()''')
+                st.dataframe(df.head())
         
-        st.code('''import seaborn as sns
+                st.write('##### Tipos de Graficos')
+                st.write('''**kind** = 'scatter': crea un grafico de puntos (predeterminado), 'line': crea un grafico de lineas.
+                         
+                         ''')
+        
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * data -> DataFrame de pandas.      
+        * x,y -> nombres de las columnas para los ejes.    
+        * hue -> colorea los puntos/lineas basado en una variable categorica.
+        * col, row -> divide el grafico en subgraficos basados en variables.
+        * size -> modifica el tamaño de los puntos segun una variable numerica.
+''')        
+        
+                st.code('''fig, ax = plt.subplots()
+fig = sns.relplot(data=df,x='total_bill',y='tip',hue='sex')
+
+st.pyplot(graf)''')        
+        
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        fig = sns.relplot(data=df,x='total_bill',y='tip',hue='sex')
+        
+                        st.pyplot(fig) 
+        
+        
+        if opcion_seleccionada == 'scatterplot':
+                st.write('Grafico relacional, de dispersion para ver la relacion entre variables.')    
+        
+                st.code('''import seaborn as sns
+df = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+df.head()''')
+                st.dataframe(df.head())        
+        
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * hue -> colorea los puntos por una variable categorica.      
+        * size -> modifica el tamaño de los puntos segun una variable numerica.
+        * style -> cambiar la forma del marcador segun una variable.
+''')        
+        
+                st.code('''fig, ax = plt.subplots()
+sns.scatterplot(data=df,x='total_bill',y='tip',hue='time',style='sex')
+
+st.pyplot(fig) ''')        
+        
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.scatterplot(data=df,x='total_bill',y='tip',hue='time',style='sex')
+        
+                        st.pyplot(fig) 
+
+
+        if opcion_seleccionada == 'lineplot':
+                st.write('Grafico relacional, de lineas para tendencias en el tiempo.')    
+        
+        
+                st.code('''import seaborn as sns
+df = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+df.head()''')
+                st.dataframe(df.head())        
+        
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * data -> DataFrame de pandas.      
+        * x,y -> nombres de las columnas para los ejes.    
+        * hue -> colorea los puntos/lineas basado en una variable categorica.
+        * style -> cambiar la forma del marcador segun una variable.
+        * size -> modifica el grosor de la linea segun una variable.
+        * markers -> añade marcadores a los puntos de datos si es True.
+''')        
+        
+                st.code('''fig, ax = plt.subplots()
+sns.lineplot(data=df,x='day',y='total_bill')
+
+st.pyplot(fig) ''')        
+        
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.lineplot(data=df,x='day',y='total_bill')
+        
+                        st.pyplot(fig) 
+
+        
+        if opcion_seleccionada == 'displot':
+                st.write('Gráfico de distribucion, examina distribuciones univariantes o bivariantes.')
+        
+                st.code('''import seaborn as sns
 tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
 tips.head()''')
-        st.dataframe(df.head())
+                st.dataframe(df.head())
 
-        st.write('##### Parámetros')
+                st.write('##### Parámetros')
         
-        st.write('''
-        * bins -> define los intervalos en un histograma.        
-        * kde -> crea una curva suave que representa la función de densidad de probabilidad de los datos.     
+                st.write('''
+        * kind -> tipo de grafico: hist (predeterminado), kde, ecdf.
+        * kde -> añade una curva de estimacion de densidad de kernel sobrel el histograma si es True.
+        * hue -> define subconjuntos de datos por color.    
+          
 ''')
         
-        st.code('''graf = sns.displot(
-    data = df,
-    x='total_bill',
-    bins=20,
-    kde=True
-)
+                st.code('''fig, ax = plt.subplots()
+fig = sns.displot(data = df, x='total_bill', kde=True, hue='sex')
 
 st.pyplot(graf)''')
 
-        # displot
-        with st.container(border=True, width=800):
-            graf = sns.displot(
-                data = df,
-                x='total_bill',
-                bins=20, 
-                kde=True
-            )
+                # displot
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        fig = sns.displot(data = df, x='total_bill', kde=True, hue='sex')
             
-            st.pyplot(graf)  
+                        st.pyplot(fig)  
  
-    if opcion_seleccionada == 'jointplot':
-        st.write('''Gráfico que se utiliza para visualizar la relación entre dos variables.    
-Combina un gráfico bivariado en el centro con histogramas o gráficos de densidad en los márgenes para mostrar la distribución''')
+
+
+        if opcion_seleccionada == 'histplot':
+                st.write('Gráfico de distribucion, histogramas para visualizar la distribucion de una variable.')
         
-        st.code('''import seaborn as sns
+                st.code('''import seaborn as sns
 tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
 tips.head()''')
-        st.dataframe(df.head())
+                st.dataframe(df.head())
 
-        st.write('##### Parámetros')
+                st.write('##### Parámetros')
         
-        st.write('''
-        * kind -> permite definir el tipo de representacion (hex=hexagonal)(reg=regresion)(kde=densidad de puntos)        
+                st.write('''
+        * data -> DataFrame de pandas.      
+        * x,y -> nombres de las columnas para los ejes.    
+        * bins -> define el numero de barras o intervalos.
+        * kde -> para dibujar una curva de estimacion de densidad si es True.
+        * hue -> variable semantica para colorear grupos distintos.
+        * stat -> tipo de estadistica: count, frequency, density o probability.
 ''')
         
-        st.code('''graf = sns.jointplot(
-    data = df,
-    x='total_bill',
-    y='tip',
-    kind='reg'
-)
+                st.code('''fig, ax = plt.subplots()
+sns.histplot(data=df, x='total_bill', bins=12, stat='frequency', hue='time', kde=True)
 
 st.pyplot(graf)''')
 
-        # displot
-        with st.container(border=True, width=800):
-            graf = sns.jointplot(
-                data = df,
-                x='total_bill',
-                y='tip',
-                kind='reg'
-            )
+                # histplot
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.histplot(data=df, x='total_bill', bins=12, stat='frequency', hue='time', kde=True)
             
-            st.pyplot(graf)  
+                        st.pyplot(fig)  
  
- 
-    if opcion_seleccionada == 'pairplot':
-        st.write('''Crea una matriz de visulaizaciones para explorar relaciones entre variables en un conjunto de datos.    
-La función grafica diagramas de dispersión para las relaciones por pares y utiliza gráficos univariados en la diagonal para mostrar la distribución de cada variable individual.''')
+
+        if opcion_seleccionada == 'kdeplot':
+                st.write('Gráfico de distribucion, de densidad de nucleo.')
         
-        st.code('''import seaborn as sns
+                st.code('''import seaborn as sns
 tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
 tips.head()''')
-        st.dataframe(df.head())
+                st.dataframe(df.head())
 
-        st.write('##### Parámetros')
+                st.write('##### Parámetros')
         
-        st.write('''
-        * hue -> argumento para diferenciar colores por categoria.    
-        * palette -> define la paleta de colores: deep, muted, bright, pastel, dark, colorblind, husl, RdYBlyu, magma, YlOrBr, crest, rocket_r, mako, viridis
-        * corner -> Si es True no muestra la parte superior de la diagonal.''')
+                st.write('''
+        * data -> DataFrame de pandas.      
+        * x,y -> nombres de las columnas para los ejes.    
+        * fill -> rellena el area bajo la curva si es True.
+        * hue -> divide las observaciones por una variable categorica para comparar grupos.
+        * multiple -> define como graficar multiples distribuciones (layer, stack, fill, dodge) 
+''')
         
-        
-        st.code('''graf = sns.pairplot(
-    data = df,
-    hue= 'sex',
-    corner= True,
-    palette='rocket_r'
-)
+                st.code('''fig, ax = plt.subplots()
+sns.kdeplot(data=df, x='total_bill', fill=True, hue='sex', multiple='layer')
 
 st.pyplot(graf)''')
 
-        # displot
-        with st.container(border=True, width=800):
-            graf = sns.pairplot(
-                data = df,
-                hue= 'sex',
-                corner= True,
-                palette='rocket_r'
-            )
+                # kdeplot
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.kdeplot(data=df, x='total_bill', fill=True, hue='sex', multiple='layer')
             
-            st.pyplot(graf)   
- 
- 
- 
- 
- 
- 
- 
- 
+                        st.pyplot(fig)  
+
+
+
+        if opcion_seleccionada == 'boxplot':
+                st.write('Gráfico categorico, diagrama de caja para visualizar distribuciones, medianas y valores atipicos (outliers).')
+                st.write('''La caja (box) representa el rango intercuartilico (IQR), donde se encuentra el 50% central de los datos (entre cuartil 1 y el cuartil 3).   
+La linea central es la mediana de los datos.    
+Los bigotes (whiskers) son las lineas que se extienden desde la caja para mostrar la variabilidad fuera del 50% central, generalmente cubriendo hasta 1.5xIQR.  
+Los valores atipicos (outliers) son puntos individuales mas alla de los bigotes, considerados inusuales.''')
+        
+                st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+                st.dataframe(df.head())
+
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * data -> DataFrame de pandas.      
+        * x,y -> nombres de las columnas para los ejes, x categorica, y valor.    
+        * hue -> divide las observaciones por una variable categorica para comparar grupos.
+        * order / hue_order -> listas de strings para controlar el orden de las categorias en el eje.
+        * orient -> orientacion del grafico (v para vertical, h para horizontal).
+        * palette -> paleta de colores para definir los colores de las cajas.
+        * whis -> define la longitud de los bigotes, el valor por defecto es 1.5 (corresponde a 1.5 x IQR). 
+        * with -> ancho de las cajas. 
+        * showmeans -> para mostrar la media con un punto o linea adicional si es True.
+''')
+        
+                st.code('''fig, ax = plt.subplots()
+sns.boxplot(data=df, y='total_bill', width=.2, hue='smoker')
+
+st.pyplot(graf)''')
+
+
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.boxplot(data=df, y='total_bill', width=.2, hue='smoker')
+                        st.pyplot(fig)  
+
+                st.code('''fig, ax = plt.subplots()
+sns.boxplot(data=df, x='day', y='total_bill', palette='Set2')
+
+st.pyplot(graf)''')
+
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.boxplot(data=df, x='day', y='total_bill', palette='Set2')
+            
+                        st.pyplot(fig)  
+
+
+        if opcion_seleccionada == 'barplot':
+                st.write('Gráfico categorico, grafico de barras para comparar valores promedio entre categorias.')
+        
+                st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+                st.dataframe(df.head())
+
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * data -> DataFrame de pandas.      
+        * x,y -> nombres de las columnas para los ejes.  
+        * hue -> divide las observaciones por una variable categorica para comparar grupos.
+        * estimator -> funcion estadistica para estimar dentro de cada categoria. Por defecot es la media (mean), puede ser sum, median o funciones personalizadas.
+        * errobar -> controla la visualizacion de la incertidumbre, sd para la desviacion estandar o None para desactivarla.
+        * order / hue_order -> listas de strings para controlar el orden de las categorias en el eje.
+        * orient -> orientacion del grafico (v para vertical, h para horizontal).
+        * palette -> mapa de colores para las barras (viridis, pastel)
+        * capsize -> ancho de los bigotes en las barras de error.
+        * alpha -> transparencia de las barras (0 a 1).
+''')
+        
+                st.code('''fig, ax = plt.subplots()
+sns.barplot(data=df, x='day', y='total_bill', hue='sex', palette='viridis')
+
+st.pyplot(graf)''')
+
+
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.barplot(data=df, x='day', y='total_bill', hue='sex', palette='viridis')
+                        st.pyplot(fig)  
+
+
+        if opcion_seleccionada == 'violinplot':
+                st.write('Gráfico categorico, combina aspectos de boxplot y la densidad (kde)')
+
+        
+                st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+                st.dataframe(df.head())
+
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * data -> DataFrame de pandas.      
+        * x,y -> nombres de las columnas para los ejes, x categorico, y numerico.  
+        * hue -> divide las observaciones por una variable categorica para comparar grupos.
+        * order / hue_order -> listas de strings para controlar el orden de las categorias en el eje.
+        * split -> divide el violin en dos mitades (una por color) en lugar de mostrarlos por separado si es True.
+        * scale -> define como se escala el ancho de cada violin (area, count, width).
+        * inner -> representacion interna del violin (box, quartile, point, stick, None).
+        * bw -> metodo para el calculo del ancho de banda (bandwidth), ajusta la suavidad de la densidad (scott, silverman o un numero).
+        * palette -> colores a utilizar para los diferentes niveles de la variable hue.
+        * linewidth -> grosor de las lineas del borde del violin.
+''')
+        
+                st.code('''fig, ax = plt.subplots()
+sns.violinplot(data=df, x='day', y='total_bill', hue='smoker', palette='muted', split=True)
+
+st.pyplot(graf)''')
+
+
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.violinplot(data=df, x='day', y='total_bill', hue='smoker', palette='muted', split=True)
+                        st.pyplot(fig) 
+
+
+        if opcion_seleccionada == 'catplot':
+                st.write('Gráfico categorico, figura de nivel superior para organizar graficos categoricos en facetas.')
+
+        
+                st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+                st.dataframe(df.head())
+
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * data -> DataFrame de pandas.      
+        * x,y -> nombres de las columnas para los ejes.  
+        * kind -> tipo de grafico: strip (defecto), swarm, box, violin, boxen, point, bar o count.
+        * hue -> divide las observaciones por una variable categorica para comparar grupos.
+        * col, row -> variables categoricas para crear subgraficas (facets) organizadas en columnas o filas.
+        * palette -> mapa de colores para las barras (viridis, pastel).
+        * height / aspect -> tamaño de la figura (altura) y relacion de ancho-alto.
+        * order / hue_order -> listas de strings para controlar el orden de las categorias en el eje.
+''')
+        
+                st.code('''fig, ax = plt.subplots()
+fig = sns.catplot(data=df, x='day', y='total_bill', kind='point', hue='sex')
+
+st.pyplot(graf)''')
+
+
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        fig = sns.catplot(data=df, x='day', y='total_bill', kind='point', hue='sex')
+                        st.pyplot(fig) 
+
+
+        if opcion_seleccionada == 'heatmap':
+                st.write('Mapa de calor, util para visualizar matrices de correlacion.')
+
+                st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+                st.dataframe(df.head())
+
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * data -> conjunto de datos 2D (ndarray, DataFrame).
+        * annot -> muestra el valor numerico en cada celda si es True.
+        * annot_kws -> diccionario para modificar fuente de annot (size, color).
+        * fmt -> formato de cadena para las anotaciones (ej '.2f' para flotantes, 'd' para enteros).
+        * square -> fuerza que las celdas sean cuadradas si es True. 
+        * cmap -> mapa de colores (viridis, coolwarm, blues). 
+        * vmin, vmax -> valores para fijar los limites del mapa de color.
+        * center -> valor en el que se centra el mapa de colores al visualizar datos divergentes.
+        * cbar -> oculta la barra de color si es False.
+        * linewidths -> ancho de lina entre celdas.
+        * linecolor -> color de las lineas divisorias.
+        * xticklabels, yticklabels -> controla la visualizacion de las etiquetas de los ejes, si es False se oculta.    
+
+''')
+        
+                st.write('###### Conversion de datos categoricos')
+                
+                st.code('''sex = {'Female':0, 'Male':1}
+smoker = {'No':0, 'Yes':1}
+day = {'Sun':0, 'Sat':1, 'Thur':2, 'Fri':3}
+time = {'Lunch':0, 'Dinner':1}  
+
+df_mod = df.copy()
+df_mod['sex'] = df_mod['sex'].replace(sex)     
+df_mod['smoker'] = df_mod['smoker'].replace(smoker)  
+df_mod['day'] = df_mod['day'].replace(day)  
+df_mod['time'] = df_mod['time'].replace(time)         
+
+df_mod.head(10)''')
+                
+                sex = {'Female':0, 'Male':1}
+                smoker = {'No':0, 'Yes':1}
+                day = {'Sun':0, 'Sat':1, 'Thur':2, 'Fri':3}
+                time = {'Lunch':0, 'Dinner':1}
+
+                df_mod = df.copy()
+                df_mod['sex'] = df_mod['sex'].replace(sex)     
+                df_mod['smoker'] = df_mod['smoker'].replace(smoker)  
+                df_mod['day'] = df_mod['day'].replace(day)  
+                df_mod['time'] = df_mod['time'].replace(time)     
+                        
+                st.code(df_mod.head(10), language='html')           
+        
+        
+                st.code('''matriz_correlacion = df_mod.corr()
+                           
+fig, ax = plt.subplots()
+sns.heatmap(data=matriz_correlacion, annot=True, cmap='viridis', linecolor='white', linewidths=.4, annot_kws={'size':7, 'color':'white'})
+
+st.pyplot(graf)''')
+
+     
+                        
+                matriz_correlacion = df_mod.corr()
+                st.code(matriz_correlacion)
+                
+                with st.container(border=True, width=800):
+                        fig, ax = plt.subplots()
+                        sns.heatmap(data=matriz_correlacion, annot=True, cmap='viridis', linecolor='white', linewidths=.4, annot_kws={'size':7, 'color':'white'})
+                        st.pyplot(fig) 
+
+
+
+        if opcion_seleccionada == 'pairplot':
+                st.write('Crea una matriz de graficos de dispersion para todas las relaciones de pares en un conjunto de datos.')
+
+        
+                st.code('''import seaborn as sns
+tips = pd.read_csv('Archivos/tips.csv')     # Carga de DataFrame
+tips.head()''')
+                st.dataframe(df.head())
+
+                st.write('##### Parámetros')
+        
+                st.write('''
+        * data -> DataFrame de pandas.  
+        * hue -> divide las observaciones por una variable categorica para comparar grupos.    
+        * vars -> lista de nombres de variables para incluir, en lugar de usar todas las numericas. 
+        * kind -> tipo de grafico para las celdas fuera de la diagonal (scatter, kde, hist o reg). 
+        * diag_kind -> tipo de grafico para la diagonal principal (auto, hist, kde o None para ocultar). 
+        * palette -> mapa de colores para las barras (viridis, pastel)        
+        * height -> define la altura (en pulgadas) de cada subgrafico. 
+        * corner -> solo muestra la esquina infeior izquierda de la matruz si es True. 
+        * markers -> personaliza los marcadores para cada grupo de variables hue. 
+        * plot_kws y diag_kws -> diccionarios para pasar argumentos adicionales a los graficos de dispersion y diagonales, respectivamente.
+''')
+        
+                st.code('''fig, ax = plt.subplots()
+fig = sns.pairplot(data=df, diag_kind='kde', hue='sex')
+
+st.pyplot(fig) ''')
+
+
+                with st.container(border=True, width=1000):
+                        fig, ax = plt.subplots()
+                        fig = sns.pairplot(data=df, diag_kind='kde', hue='sex')
+                        st.pyplot(fig) 
+
  
             
 def git():
